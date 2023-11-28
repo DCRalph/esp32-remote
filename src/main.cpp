@@ -1,40 +1,35 @@
 #include <Arduino.h>
 #include "secrets.h"
 
-#include <TFT_eSPI.h>
-#include "driver/rm67162.h"
-#include "fonts/NotoSansBold36.h"
-
 #include <WiFi.h>
-
 #include <PubSubClient.h>
 
-#include <ClickButton.h>
+#include "battery.h"
+#include "buttons.h"
 
-#define UP_BTN 21
-#define DOWN_BTN 0
+#include <TFT_eSPI.h>
+#include "driver/rm67162.h"
+// #include "fonts/NotoSansBold36.h"
+
+#include "driver/Screen.h"
+#include "screens/Error.h"
+#include "screens/Menu.h"
+#include "screens/RSSIMeter.h"
+
 #define LED_PIN 38
-#define BAT_PIN 4
-
-ClickButton upButton(UP_BTN, LOW);
-ClickButton downButton(DOWN_BTN, LOW);
-
-TFT_eSPI tft = TFT_eSPI();
-TFT_eSprite sprite = TFT_eSprite(&tft);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-float batteryVoltage;
-String batteryString;
+TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&tft);
+
+ErrorScreen errorScreen(&sprite, "Error");
+MenuScreen menuScreen(&sprite, "Menu");
+RSSIMeter rssiMeter(&sprite, "RSSI");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
-
-unsigned long long prevMillis2;
-int interval2 = 30000;
-
-uint32_t bg_color = TFT_DARKGREY;
 
 void mqttConnect()
 {
@@ -54,12 +49,30 @@ void mqttConnect()
   }
 }
 
+void Push2TFT()
+{
+  lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t *)sprite.getPointer());
+}
+
 void setup()
 {
-  pinMode(UP_BTN, INPUT_PULLUP);
-  pinMode(DOWN_BTN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
-  pinMode(BAT_PIN, INPUT);
+
+  sprite.createSprite(LCD_WIDTH, LCD_HEIGHT);
+  sprite.setSwapBytes(1);
+
+  rm67162_init(); // amoled lcd initialization
+  lcd_setRotation(TFT_ROT);
+  lcd_brightness(255);
+
+  sprite.fillScreen(TFT_BLACK);
+  sprite.setTextColor(TFT_WHITE);
+  sprite.setTextSize(3);
+  sprite.setTextDatum(MC_DATUM);
+  sprite.drawString("Loading...", LCD_WIDTH / 2, LCD_HEIGHT / 2);
+  sprite.drawString("WiFi...", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
+
+  Push2TFT();
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -70,14 +83,38 @@ void setup()
   }
   WiFi.setAutoReconnect(true);
 
+  ClickButton21.Update();
+  if (ClickButton21.depressed)
+  {
+    sprite.fillScreen(TFT_BLACK);
+    sprite.drawString("WiFi Info", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 45);
+
+    sprite.setTextSize(2);
+
+    sprite.drawString(WiFi.SSID(), LCD_WIDTH / 2, LCD_HEIGHT / 2 - 15);
+    sprite.drawString(WiFi.localIP().toString(), LCD_WIDTH / 2, LCD_HEIGHT / 2 + 15);
+    sprite.drawString(WiFi.macAddress(), LCD_WIDTH / 2, LCD_HEIGHT / 2 + 45);
+
+    Push2TFT();
+
+    while (ClickButton21.depressed)
+    {
+      ClickButton21.Update();
+    }
+    while (ClickButton21.clicks != 1)
+    {
+      ClickButton21.Update();
+    }
+  }
+
   client.setServer(MQTT_SERVER, MQTT_PORT);
 
+  sprite.fillScreen(TFT_BLACK);
+  sprite.setTextSize(3);
+  sprite.drawString("Done", LCD_WIDTH / 2, LCD_HEIGHT / 2);
+  Push2TFT();
 
-  sprite.createSprite(LCD_WIDTH, LCD_HEIGHT);
-  sprite.setSwapBytes(1);
-  rm67162_init(); // amoled lcd initialization
-  lcd_setRotation(TFT_ROT);
-  lcd_brightness(255);
+  delay(500);
 }
 
 void loop()
@@ -88,60 +125,46 @@ void loop()
   }
   client.loop();
 
-  upButton.Update();
-  downButton.Update();
+  ClickButton21.Update();
+  ClickButton0.Update();
 
   if (millis() - prevMillis1 > interval1)
   {
-    prevMillis1 = millis();
-    batteryVoltage = ((analogRead(4) * 2 * 3.3 * 1000) / 4096) / 1000;
-    batteryString = "BAT:" + String(batteryVoltage);
+    battery.update();
   }
 
-  if (millis() - prevMillis2 > interval2)
-  {
-    prevMillis2 = millis();
-
-    char batt[10];
-    sprintf(batt, "%.2f", batteryVoltage);
-
-    client.publish("esp/batt", batt);
-  }
-
-  if (upButton.clicks == 1)
+  if (ClickButton21.clicks == -2)
   {
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-    if (bg_color == TFT_DARKGREY)
-      bg_color = TFT_BLUE;
-    else
-      bg_color = TFT_DARKGREY;
   }
 
-  // if (digitalRead(UP_BTN) == LOW)
-  // {
-  //   digitalWrite(LED_PIN, HIGH);
-  //   bg_color = TFT_BLUE;
-  // }
-  // else if (digitalRead(DOWN_BTN) == LOW)
-  // {
-  //   digitalWrite(LED_PIN, LOW);
-  //   bg_color = TFT_DARKGREY;
-  // }
+  if (ClickButton0.clicks > 1 || ClickButton0.clicks < 0)
+  {
+    char buf[10];
+    sprintf(buf, "%d", ClickButton0.clicks);
+    client.publish("esp/btn", buf);
+  }
 
-  sprite.loadFont(NotoSansBold36);
-  sprite.fillSprite(TFT_BLACK);
+  ///////////////////////////
 
-  sprite.fillRect(0, 0, LCD_WIDTH, LCD_HEIGHT, TFT_RED);
+  switch (currentScreen)
+  {
 
-  sprite.fillSmoothRoundRect(5, 5, LCD_WIDTH - 10, LCD_HEIGHT - 10, 10, bg_color);
+  case 0:
+    menuScreen.draw();
+    menuScreen.update();
+    break;
 
-  sprite.setTextColor(TFT_WHITE, TFT_BLACK);
+  case 1:
+    rssiMeter.draw();
+    rssiMeter.update();
+    break;
 
-  sprite.drawString("AMOLED", 10, 10);
-  sprite.drawString(batteryString, 10, 50);
-  sprite.drawString("WIFI: " + String(WiFi.localIP().toString()), 10, 90);
+  default:
+    errorScreen.draw();
+    errorScreen.update();
+    break;
+  }
 
-  sprite.unloadFont();
-
-  lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t *)sprite.getPointer());
+  Push2TFT();
 }
