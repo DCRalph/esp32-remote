@@ -25,7 +25,7 @@ void ErrorScreen::draw()
 
   sprite->setTextSize(5);
   sprite->setTextColor(TFT_RED);
-  sprite->drawString("RSSI", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
+  sprite->drawString("ERROR", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
 
   sprite->setTextSize(2);
   sprite->setTextColor(TFT_WHITE);

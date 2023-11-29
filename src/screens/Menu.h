@@ -49,9 +49,9 @@ void MenuScreen::draw()
     // sprite->drawString("Menu 1", 10, 120);
     // sprite->setTextColor(TFT_WHITE);
 
-    drawMenuItem(sprite, "RSSI", 10, 120, mainMenu == 0, TFT_RED);
-    drawMenuItem(sprite, "Menu 2", 10, 155, mainMenu == 1, TFT_GREEN);
-    drawMenuItem(sprite, "Menu 3", 10, 190, mainMenu == 2, TFT_BLUE);
+    drawMenuItem(sprite, "RSSI", 10, 0, mainMenu == 0, TFT_RED);
+    drawMenuItem(sprite, "Desk Lamp", 10, 1, mainMenu == 1, TFT_GREEN);
+    drawMenuItem(sprite, "Menu 3", 10, 2, mainMenu == 2, TFT_BLUE);
 
     break;
   }
@@ -63,23 +63,9 @@ void MenuScreen::draw()
     sprite->setTextColor(TFT_WHITE);
     sprite->setTextDatum(TL_DATUM);
 
-    if (mainMenu == 3)
-      sprite->setTextColor(TFT_BLUE);
-    else
-      sprite->setTextColor(TFT_WHITE);
-    sprite->drawString("Menu 4", 10, 120);
-
-    if (mainMenu == 4)
-      sprite->setTextColor(TFT_BLUE);
-    else
-      sprite->setTextColor(TFT_WHITE);
-    sprite->drawString("Menu 5", 10, 155);
-
-    if (mainMenu == 5)
-      sprite->setTextColor(TFT_BLUE);
-    else
-      sprite->setTextColor(TFT_WHITE);
-    sprite->drawString("Menu 6", 10, 190);
+    drawMenuItem(sprite, "Menu 4", 10, 0, mainMenu == 3, TFT_YELLOW);
+    drawMenuItem(sprite, "Menu 5", 10, 1, mainMenu == 4, TFT_ORANGE);
+    drawMenuItem(sprite, "Menu 6", 10, 2, mainMenu == 5, TFT_PURPLE);
 
     break;
   }
@@ -89,38 +75,32 @@ void MenuScreen::draw()
 void MenuScreen::update()
 {
 
+  if (ClickButton0.clicks == 1)
+    mainMenu--;
+  else if (ClickButton21.clicks == 1)
+    mainMenu++;
+
   switch (mainMenu)
   {
   case 0:
-  case 1:
-  case 2:
-  {
-
-    if (ClickButton0.clicks == -1 && mainMenu == 0)
+    if (ClickButton0.clicks == 2)
       currentScreen = 1;
-
-    if (ClickButton0.clicks == -1 && mainMenu == 1)
-      currentScreen = -1;
-
-    if (ClickButton0.clicks == 1)
-      mainMenu--;
-    else if (ClickButton21.clicks == 1)
-      mainMenu++;
-
     break;
-  }
+  case 1:
+    if (ClickButton0.clicks == 2)
+      currentScreen = 2;
+    break;
+  case 2:
+    if (ClickButton0.clicks == 2)
+      currentScreen = 3;
+    break;
+    /////////////////////////////
   case 3:
-  case 4:
-  case 5:
-  {
-
-    if (ClickButton0.clicks == 1)
-      mainMenu--;
-    else if (ClickButton21.clicks == 1)
-      mainMenu++;
-
     break;
-  }
+  case 4:
+    break;
+  case 5:
+    break;
   }
 
   mainMenu = constrain(mainMenu, 0, 5);

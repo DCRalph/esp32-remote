@@ -72,5 +72,5 @@ void drawMenuItem(TFT_eSprite *sprite, String name, int x, int y, bool selected,
   else
     sprite->setTextColor(unselectedColor);
 
-  sprite->drawString(name, x, y);
+  sprite->drawString(name, x, y * 35 + 120);
 }
