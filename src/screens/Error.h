@@ -10,7 +10,7 @@
 class ErrorScreen : public Screen
 {
 public:
-  ErrorScreen(TFT_eSprite *_sprite, String _name) : Screen(_sprite, _name){};
+  ErrorScreen(String _name, String _id) : Screen(_name, _id){};
 
   void draw() override;
   void update() override;
@@ -18,24 +18,21 @@ public:
 
 void ErrorScreen::draw()
 {
-  sprite->fillSprite(TFT_BLACK);
-  drawTopBar(sprite, name);
+  display.sprite.setTextDatum(MC_DATUM);
 
-  sprite->setTextDatum(MC_DATUM);
+  display.sprite.setTextSize(5);
+  display.sprite.setTextColor(TFT_RED);
+  display.sprite.drawString("ERROR", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
 
-  sprite->setTextSize(5);
-  sprite->setTextColor(TFT_RED);
-  sprite->drawString("ERROR", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
+  display.sprite.setTextSize(2);
+  display.sprite.setTextColor(TFT_WHITE);
 
-  sprite->setTextSize(2);
-  sprite->setTextColor(TFT_WHITE);
-
-  sprite->drawString("Press any button", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
-  sprite->drawString("to continue", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 60);
+  display.sprite.drawString("Press any button", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
+  display.sprite.drawString("to continue", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 60);
 }
 
 void ErrorScreen::update()
 {
   if (ClickButton0.clicks != 0 || ClickButton21.clicks != 0)
-    currentScreen = 0;
+    screenManager.setScreen("menu");
 }

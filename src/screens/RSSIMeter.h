@@ -11,7 +11,7 @@
 class RSSIMeter : public Screen
 {
 public:
-  RSSIMeter(TFT_eSprite *_sprite, String _name) : Screen(_sprite, _name){};
+  RSSIMeter(String _name, String _id) : Screen(_name, _id){};
 
   void draw() override;
   void update() override;
@@ -19,26 +19,23 @@ public:
 
 void RSSIMeter::draw()
 {
-  sprite->fillSprite(TFT_BLACK);
-  drawTopBar(sprite, name);
+  display.sprite.setTextDatum(MC_DATUM);
 
-  sprite->setTextDatum(MC_DATUM);
+  display.sprite.setTextSize(5);
+  display.sprite.setTextColor(TFT_CYAN);
+  display.sprite.drawString("RSSI", LCD_WIDTH / 2, 150);
 
-  sprite->setTextSize(5);
-  sprite->setTextColor(TFT_CYAN);
-  sprite->drawString("RSSI", LCD_WIDTH / 2, 150);
-
-  sprite->setTextSize(7);
-  sprite->setTextColor(TFT_WHITE);
+  display.sprite.setTextSize(7);
+  display.sprite.setTextColor(TFT_WHITE);
 
   char buf[20];
   sprintf(buf, "%i", WiFi.RSSI());
 
-  sprite->drawString(buf, LCD_WIDTH / 2, LCD_HEIGHT / 2);
+  display.sprite.drawString(buf, LCD_WIDTH / 2, LCD_HEIGHT / 2);
 }
 
 void RSSIMeter::update()
 {
   if (ClickButton0.clicks != 0 || ClickButton21.clicks != 0)
-    currentScreen = 0;
+    screenManager.setScreen("menu");
 }

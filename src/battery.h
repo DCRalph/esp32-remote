@@ -7,6 +7,8 @@ class Battery
 public:
   Battery(int _pin);
 
+  void init(void);
+
   float getVoltage();
   void update();
 
@@ -15,22 +17,4 @@ private:
   float voltage = -1;
 };
 
-Battery::Battery(int _pin)
-{
-  pin = _pin;
-}
-
-float Battery::getVoltage()
-{
-  return voltage;
-}
-
-void Battery::update()
-{
-  if (pin != -1)
-  {
-    voltage = ((analogRead(pin) * 2 * 3.3 * 1000) / 4096) / 1000;
-  }
-}
-
-Battery battery(4);
+extern Battery battery;

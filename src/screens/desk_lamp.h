@@ -1,9 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TFT_eSPI.h>
-
-#include "driver/Screen.h"
+#include "driver/Display.h"
 
 #include "buttons.h"
 #include "ha.h"
@@ -11,7 +9,7 @@
 class DeskLamp : public Screen
 {
 public:
-  DeskLamp(TFT_eSprite *_sprite, String _name) : Screen(_sprite, _name){};
+  DeskLamp(String _name, String _id) : Screen(_name, _id){};
 
   void draw() override;
   void update() override;
@@ -30,8 +28,6 @@ public:
 
 void DeskLamp::draw()
 {
-  sprite->fillSprite(TFT_BLACK);
-  drawTopBar(sprite, name);
 
   firstRun = millis() - prevMillis1 > 1000;
   prevMillis1 = millis();
@@ -42,22 +38,22 @@ void DeskLamp::draw()
     updateState();
   }
 
-  sprite->setTextSize(3);
-  sprite->setTextDatum(MC_DATUM);
-  sprite->setTextColor(TFT_VIOLET);
-  sprite->drawString("Desk Lamp", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
+  display.sprite.setTextSize(3);
+  display.sprite.setTextDatum(MC_DATUM);
+  display.sprite.setTextColor(TFT_VIOLET);
+  display.sprite.drawString("Desk Lamp", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 50);
 
-  sprite->setTextSize(5);
-  sprite->setTextDatum(MC_DATUM);
-  sprite->setTextColor(TFT_WHITE);
-  sprite->drawString(state, LCD_WIDTH / 2, LCD_HEIGHT / 2);
-  sprite->drawString(brightness, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 50);
+  display.sprite.setTextSize(5);
+  display.sprite.setTextDatum(MC_DATUM);
+  display.sprite.setTextColor(TFT_WHITE);
+  display.sprite.drawString(state, LCD_WIDTH / 2, LCD_HEIGHT / 2);
+  display.sprite.drawString(brightness, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 50);
 }
 
 void DeskLamp::update()
 {
   if (ClickButton0.clicks == -1)
-    currentScreen = 0;
+    screenManager.setScreen("menu");
 
   if (ClickButton0.clicks == 1)
     updateState(ha.callService("light", "toggle", "light.midesklamp1s_9479"), 0);
