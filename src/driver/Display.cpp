@@ -27,9 +27,9 @@ void Display::drawTopBar()
   sprite.drawString(buf, LCD_WIDTH - 10, 15);
 }
 
-void Display::fillScreen(uint16_t color)
+void Display::clearScreen(u16_t color)
 {
-  sprite.fillRect(0, 0, sprite.width(), sprite.height(), color);
+  sprite.fillRect(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
 
 void Display::push(void)
@@ -39,7 +39,7 @@ void Display::push(void)
 
 void Display::display(void)
 {
-  fillScreen(TFT_BLACK);
+  clearScreen();
 
   screenManager.draw();
   screenManager.update();

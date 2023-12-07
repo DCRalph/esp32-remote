@@ -1,9 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TFT_eSPI.h>
+#include "driver/Display.h"
 
-#include "driver/Screen.h"
 
 #include "buttons.h"
 

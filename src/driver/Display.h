@@ -20,7 +20,7 @@ public:
   void init(void);
 
   void drawTopBar(void);
-  void fillScreen(uint16_t color);
+  void clearScreen(u16_t color = TFT_BLACK);
 
   void push(void);
 
