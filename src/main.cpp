@@ -15,6 +15,8 @@
 #include "screens/Menu.h"
 #include "screens/RSSIMeter.h"
 #include "screens/desk_lamp.h"
+#include "screens/haLight.h"
+#include "screens/haSwitch.h"
 
 #define LED_PIN 38
 
@@ -24,7 +26,15 @@ PubSubClient client(espClient);
 ErrorScreen errorScreen("Error", "error");
 MenuScreen menuScreen("Menu", "menu");
 RSSIMeter rssiMeter("RSSI", "rssi");
-DeskLamp deskLamp(":)", "desk_lamp");
+// DeskLamp deskLamp(":)", "desk_lamp");
+
+HALight deskLamp("deskLamp", "light.midesklamp1s_9479");
+HALight leds("leds", "light.william_strip");
+HALight matrix("matrix", "light.matrix_lamp");
+HALight michaelLeds("michaelLeds", "light.micheals_leds");
+
+HASwitch bedLight("bedLight", "switch.sonoffbasic_1");
+HASwitch michaelFan("michaelFan", "switch.michael_plug_2");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
@@ -63,6 +73,12 @@ void setup()
   screenManager.addScreen(&menuScreen);
   screenManager.addScreen(&rssiMeter);
   screenManager.addScreen(&deskLamp);
+  screenManager.addScreen(&leds);
+  screenManager.addScreen(&matrix);
+  screenManager.addScreen(&bedLight);
+  screenManager.addScreen(&michaelFan);
+
+  screenManager.addScreen(&michaelLeds);
 
   screenManager.setScreen("menu");
 
@@ -174,14 +190,40 @@ void setup()
       ClickButton21.Update();
     }
 
-    // ha.begin(&espClient);
-
     display.sprite.fillScreen(TFT_BLACK);
+
     display.sprite.setTextSize(3);
-    display.sprite.drawString("Done", LCD_WIDTH / 2, LCD_HEIGHT / 2);
+    display.sprite.setTextDatum(MC_DATUM);
+    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.drawString("Loading...", LCD_WIDTH / 2, LCD_HEIGHT / 2);
+    display.sprite.drawString("Screens..", LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
+
+    if (setupDebug)
+    {
+      display.sprite.setTextSize(4);
+      display.sprite.setTextDatum(MC_DATUM);
+      display.sprite.setTextColor(TFT_SKYBLUE);
+      display.sprite.drawString("DEBUG", LCD_WIDTH / 2, 50);
+    }
 
     display.push();
   }
+
+  deskLamp.init();
+  leds.init();
+  matrix.init();
+  bedLight.init();
+
+  michaelLeds.init();
+  michaelFan.init();
+
+  // ha.begin(&espClient);
+
+  display.sprite.fillScreen(TFT_BLACK);
+  display.sprite.setTextSize(3);
+  display.sprite.drawString("Done", LCD_WIDTH / 2, LCD_HEIGHT / 2);
+
+  display.push();
 
   delay(500);
 

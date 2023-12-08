@@ -20,6 +20,7 @@ public:
   void draw(void);
 
   String getCurrentScreenName(void);
+  String getNameFromId(String id);
 
   void addScreen(Screen *screen);
 

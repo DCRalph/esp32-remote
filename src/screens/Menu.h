@@ -32,6 +32,11 @@ void MenuScreen::draw()
   case 0:
   case 1:
   case 2:
+  case 3:
+  case 4:
+  case 5:
+  case 6:
+
   {
 
     display.sprite.setTextSize(3);
@@ -39,25 +44,29 @@ void MenuScreen::draw()
     display.sprite.setTextDatum(TL_DATUM);
 
     screenUtils.drawMenuItem("RSSI", 10, 0, mainMenu == 0, TFT_RED);
-    screenUtils.drawMenuItem("Desk Lamp", 10, 1, mainMenu == 1, TFT_GREEN);
-    screenUtils.drawMenuItem("Menu 3", 10, 2, mainMenu == 2, TFT_BLUE);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("deskLamp"), 10, 1, mainMenu == 1, TFT_GREEN);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("leds"), 10, 2, mainMenu == 2, TFT_BLUE);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("matrix"), 10, 3, mainMenu == 3, TFT_BLUE);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("bedLight"), 10, 4, mainMenu == 4, TFT_YELLOW);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("michaelLeds"), 10, 5, mainMenu == 5, TFT_SKYBLUE);
+    screenUtils.drawMenuItem(screenManager.getNameFromId("michaelFan"), 10, 6, mainMenu == 6, TFT_SKYBLUE);
 
     break;
   }
-  case 3:
-  case 4:
-  case 5:
-  {
-    display.sprite.setTextSize(3);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.setTextDatum(TL_DATUM);
+    // case 3:
+    // case 4:
+    // case 5:
+    // {
+    //   display.sprite.setTextSize(3);
+    //   display.sprite.setTextColor(TFT_WHITE);
+    //   display.sprite.setTextDatum(TL_DATUM);
 
-    screenUtils.drawMenuItem("Menu 4", 10, 0, mainMenu == 3, TFT_YELLOW);
-    screenUtils.drawMenuItem("Menu 5", 10, 1, mainMenu == 4, TFT_ORANGE);
-    screenUtils.drawMenuItem("Menu 6", 10, 2, mainMenu == 5, TFT_PURPLE);
+    //   screenUtils.drawMenuItem("Menu 4", 10, 0, mainMenu == 3, TFT_YELLOW);
+    //   screenUtils.drawMenuItem("Menu 5", 10, 1, mainMenu == 4, TFT_ORANGE);
+    //   screenUtils.drawMenuItem("Menu 6", 10, 2, mainMenu == 5, TFT_PURPLE);
 
-    break;
-  }
+    //   break;
+    // }
   }
 }
 
@@ -77,20 +86,29 @@ void MenuScreen::update()
     break;
   case 1:
     if (ClickButton0.clicks == 2)
-      screenManager.setScreen("desk_lamp");
+      screenManager.setScreen("deskLamp");
     break;
   case 2:
     if (ClickButton0.clicks == 2)
-      screenManager.setScreen(-1);
+      screenManager.setScreen("leds");
     break;
-    /////////////////////////////
   case 3:
+    if (ClickButton0.clicks == 2)
+      screenManager.setScreen("matrix");
     break;
   case 4:
+    if (ClickButton0.clicks == 2)
+      screenManager.setScreen("bedLight");
     break;
   case 5:
+    if (ClickButton0.clicks == 2)
+      screenManager.setScreen("michaelLeds");
+    break;
+  case 6:
+    if (ClickButton0.clicks == 2)
+      screenManager.setScreen("michaelFan");
     break;
   }
 
-  mainMenu = constrain(mainMenu, 0, 5);
+  mainMenu = constrain(mainMenu, 0, 6);
 }

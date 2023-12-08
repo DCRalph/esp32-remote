@@ -20,7 +20,11 @@ void Display::drawTopBar()
   sprite.setTextColor(TFT_BLACK);
   sprite.setTextDatum(ML_DATUM);
 
-  sprite.drawString(screenManager.getCurrentScreenName(), 10, 15);
+  String name = screenManager.getCurrentScreenName();
+  if (name.length() > 8)
+    name = name.substring(0, 5) + "...";
+
+  sprite.drawString(name, 10, 15);
   char buf[20];
   sprintf(buf, "%.1fV", battery.getVoltage());
   sprite.setTextDatum(MR_DATUM);
@@ -34,7 +38,7 @@ void Display::clearScreen(u16_t color)
 
 void Display::push(void)
 {
-  lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (uint16_t *)sprite.getPointer());
+  lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (u16_t *)sprite.getPointer());
 }
 
 void Display::display(void)

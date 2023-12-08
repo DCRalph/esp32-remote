@@ -7,9 +7,28 @@
 
 #include "secrets.h"
 
+#define JSON_BUFFER_SIZE 8192
+
 class HA
 {
 public:
+  String getEntityName(String entity_id)
+  {
+    HTTPClient http;
+    String url = String(HA_SERVER) + "/api/states/" + entity_id;
+    http.begin(url);
+    http.addHeader("Authorization", HA_TOKEN);
+    int httpCode = http.GET();
+    String response = http.getString();
+    http.end();
+
+    DynamicJsonDocument doc(JSON_BUFFER_SIZE);
+    deserializeJson(doc, response);
+
+    String name = doc["attributes"]["friendly_name"];
+    return name;
+  }
+
   DynamicJsonDocument getState(String entity_id)
   {
     HTTPClient http;
@@ -20,7 +39,7 @@ public:
     String response = http.getString();
     http.end();
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(JSON_BUFFER_SIZE);
     deserializeJson(doc, response);
 
     // String state = doc["state"];
@@ -41,7 +60,7 @@ public:
     String response = http.getString();
     http.end();
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(JSON_BUFFER_SIZE);
     deserializeJson(doc, response);
 
     // String state = doc["state"];
@@ -60,7 +79,7 @@ public:
     String response = http.getString();
     http.end();
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(JSON_BUFFER_SIZE);
     deserializeJson(doc, response);
 
     // String state = doc["state"];

@@ -22,6 +22,17 @@ String ScreenManager::getCurrentScreenName(void)
   return screens[currentScreen]->name;
 }
 
+String ScreenManager::getNameFromId(String id)
+{
+  for (int i = 0; i < screens.size(); i++)
+  {
+    if (screens[i]->id == id)
+      return screens[i]->name;
+  }
+
+  return "unk";
+}
+
 void ScreenManager::addScreen(Screen *screen)
 {
   screens.push_back(screen);
