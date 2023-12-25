@@ -12,7 +12,7 @@ void ScreenUtils::drawMenuItem(String name, int x, int y, bool selected, u16_t s
   else
     display.sprite.setTextColor(unselectedColor);
 
-  display.sprite.drawString(name, x, y * 20 + 70);
+  display.sprite.drawString(name, x, y * 20 + 60);
 }
 
 ScreenUtils screenUtils;

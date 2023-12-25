@@ -5,6 +5,7 @@
 #include "driver/pins_config.h"
 #include "driver/ScreenManager.h"
 #include "driver/ScreenUtils.h"
+#include "WiFi.h"
 
 #include "battery.h"
 

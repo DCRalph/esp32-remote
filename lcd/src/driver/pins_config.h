@@ -2,7 +2,7 @@
 
 /***********************config*************************/
 
-#define TFT_ROT              0
+#define TFT_ROT              1
 
 #if TFT_ROT == 0 || TFT_ROT == 2
 #define LCD_WIDTH             170

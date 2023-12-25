@@ -5,18 +5,18 @@ void Display::init(void)
   sprite.createSprite(LCD_WIDTH, LCD_HEIGHT);
   sprite.setSwapBytes(1);
 
-  // rm67162_init(); // amoled lcd initialization
-  // lcd_setRotation(TFT_ROT);
-  // lcd_brightness(255);
-
   tft.begin();
   tft.setRotation(TFT_ROT);
 
-  // logger.println("\tTFT Display initialized");
+  clearScreen();
+  push();
 }
 
 void Display::drawTopBar()
 {
+
+  bool wifiConnected = WiFi.status() == WL_CONNECTED;
+
   sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_ORANGE);
 
   sprite.setTextSize(2);
@@ -29,7 +29,7 @@ void Display::drawTopBar()
 
   sprite.drawString(name, 10, 10);
   char buf[20];
-  sprintf(buf, "%.1fV", battery.getVoltage());
+  sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
   sprite.setTextDatum(MR_DATUM);
   sprite.drawString(buf, LCD_WIDTH - 10, 10);
 }

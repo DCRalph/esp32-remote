@@ -30,7 +30,7 @@ String ScreenManager::getNameFromId(String id)
       return screens[i]->name;
   }
 
-  return "unk";
+  return "???";
 }
 
 void ScreenManager::addScreen(Screen *screen)
@@ -45,13 +45,13 @@ void ScreenManager::setScreen(int screenIdx)
 
   if (screenIdx < 0 || screenIdx >= screens.size())
   {
-    currentScreen = -1;
+    currentScreen = 0;
     return;
   }
 
   if (screens[screenIdx]->id == "")
   {
-    currentScreen = -1;
+    currentScreen = 0;
     return;
   }
 
@@ -69,7 +69,7 @@ void ScreenManager::setScreen(String screenId)
     }
   }
 
-  currentScreen = -1;
+  currentScreen = 0;
 }
 
 void ScreenManager::removeScreen(int screenIdx)

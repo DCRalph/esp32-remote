@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "driver/Display.h"
 
-#include "buttons.h"
+#include "Buttons.h"
 #include "ha.h"
 
 class HASwitch : public Screen
@@ -63,16 +63,16 @@ void HASwitch::draw(void)
 
 void HASwitch::update(void)
 {
-  if (ClickButton0.clicks == -1)
+  if (ClickButtonDOWN.clicks == -1)
     screenManager.setScreen("menu");
 
-  if (ClickButton0.clicks == 1)
+  if (ClickButtonDOWN.clicks == 1)
   {
     ha.callService("switch", "toggle", entity_id);
     updateState();
   }
 
-  if (ClickButton0.clicks == 2)
+  if (ClickButtonDOWN.clicks == 2)
     updateState();
 }
 

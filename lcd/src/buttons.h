@@ -3,5 +3,21 @@
 #include <Arduino.h>
 #include <ClickButton.h>
 
-ClickButton ClickButton1(14, LOW);
-ClickButton ClickButton0(0, LOW);
+extern ClickButton ClickButtonUP;
+extern ClickButton ClickButtonDOWN;
+class Buttons
+{
+  const int sleepCountdownTime = 3000;
+  bool sleepCountdown = false;
+  unsigned long sleepCountdownMillis = 0;
+
+  long debounceTime = 20;
+  long multiclickTime = 100;
+  long longClickTime = 500;
+
+public:
+  void setup();
+  void update();
+};
+
+extern Buttons buttons;

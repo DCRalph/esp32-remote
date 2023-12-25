@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "driver/Display.h"
 
-#include "buttons.h"
+#include "Buttons.h"
 #include <WiFi.h>
 
 class RSSIMeter : public Screen
@@ -34,6 +34,6 @@ void RSSIMeter::draw()
 
 void RSSIMeter::update()
 {
-  if (ClickButton0.clicks != 0 || ClickButton1.clicks != 0)
+  if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
     screenManager.setScreen("menu");
 }
