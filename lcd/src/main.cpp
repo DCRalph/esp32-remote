@@ -14,7 +14,9 @@
 #include "screens/Error.h"
 #include "screens/Menu.h"
 #include "screens/RSSIMeter.h"
-#include "screens/Settings.h"
+#include "screens/SettingsScreen.h"
+#include "screens/Settings/batteryScreen.h"
+#include "screens/Settings/wifiScreen.h"
 
 
 #include "screens/desk_lamp.h"
@@ -30,6 +32,8 @@ ErrorScreen errorScreen("Error", "error");
 MenuScreen menuScreen("Menu", "menu");
 RSSIMeter rssiMeter("RSSI", "rssi");
 Settings settings("Settings", "settings");
+batteryScreen batteryScreen("Battery", "battery");
+wifiScreen wifiScreen("Wi-Fi", "wifi");
 
 
 
@@ -68,9 +72,6 @@ void mqttConnect()
     }
     else
     {
-      // Serial.print("failed, rc=");
-      // Serial.print(client.state());
-      // Serial.println(" try again in 5 seconds");
       delay(5000);
     }
   }
@@ -98,6 +99,8 @@ void setup()
   screenManager.addScreen(&menuScreen);
   screenManager.addScreen(&rssiMeter);
   screenManager.addScreen(&settings);
+  screenManager.addScreen(&batteryScreen);
+  screenManager.addScreen(&wifiScreen);
 
   screenManager.setScreen("menu");
 

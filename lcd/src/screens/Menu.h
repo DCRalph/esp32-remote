@@ -19,13 +19,13 @@ public:
 void MenuScreen::draw()
 {
 
-  display.sprite.fillSmoothRoundRect(0, 25, LCD_WIDTH, 30, 20, TFT_WHITE);
+  // display.sprite.fillSmoothRoundRect(0, 25, LCD_WIDTH, 30, 20, TFT_WHITE);
 
-  display.sprite.setTextSize(2);
-  display.sprite.setTextColor(TFT_BLACK);
-  display.sprite.setTextDatum(ML_DATUM);
+  // display.sprite.setTextSize(2);
+  // display.sprite.setTextColor(TFT_BLACK);
+  // display.sprite.setTextDatum(ML_DATUM);
 
-  display.sprite.drawString("Main menu", 10, 40);
+  // display.sprite.drawString("Main menu", 10, 40);
 
   switch (mainMenu)
   {
@@ -63,5 +63,5 @@ void MenuScreen::update()
 
   }
 
-  mainMenu = constrain(mainMenu, 0, 4);
+  mainMenu = constrain(mainMenu, 0, 1);
 }

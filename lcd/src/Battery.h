@@ -9,8 +9,12 @@ public:
 
   void init(void);
 
-  float getVoltage();
   void update();
+
+  float getVoltage();
+  float getPercentageF();
+  int getPercentageI();
+  int getPercentage10();
 
 private:
   int pin = -1;

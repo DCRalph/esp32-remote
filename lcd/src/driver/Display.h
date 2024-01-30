@@ -13,6 +13,9 @@ class Screen;
 
 class Display
 {
+private:
+  bool showMenuBar = true;
+
 public:
   TFT_eSPI tft = TFT_eSPI();
   TFT_eSprite sprite = TFT_eSprite(&tft);
@@ -21,6 +24,8 @@ public:
 
   void drawTopBar(void);
   void clearScreen(u16_t color = TFT_BLACK);
+
+  void noTopBar(void);
 
   void push(void);
 

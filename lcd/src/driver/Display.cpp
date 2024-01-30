@@ -17,19 +17,22 @@ void Display::drawTopBar()
 
   bool wifiConnected = WiFi.status() == WL_CONNECTED;
 
-  sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_ORANGE);
+  sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
 
   sprite.setTextSize(2);
   sprite.setTextColor(TFT_BLACK);
   sprite.setTextDatum(ML_DATUM);
 
   String name = screenManager.getCurrentScreenName();
-  if (name.length() > 8)
-    name = name.substring(0, 5) + "...";
+  // if (name.length() > 8)
+  //   name = name.substring(0, 5) + "...";
 
   sprite.drawString(name, 10, 10);
   char buf[20];
-  sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
+  // sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
+  // sprintf(buf, "%i %.2f%%", wifiConnected, battery.getPercentageF());
+  sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentageI());
+  // sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentage10());
   sprite.setTextDatum(MR_DATUM);
   sprite.drawString(buf, LCD_WIDTH - 10, 10);
 }
@@ -37,6 +40,11 @@ void Display::drawTopBar()
 void Display::clearScreen(u16_t color)
 {
   sprite.fillRect(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
+}
+
+void Display::noTopBar(void)
+{
+  showMenuBar = false;
 }
 
 void Display::push(void)
@@ -52,7 +60,10 @@ void Display::display(void)
   screenManager.draw();
   screenManager.update();
 
-  drawTopBar();
+  if (showMenuBar)
+    drawTopBar();
+  showMenuBar = true;
+
   push();
 }
 
