@@ -29,7 +29,7 @@ float Battery::getVoltage()
 float Battery::getPercentageF()
 {
 
-#define BATT_MAX 4.2
+#define BATT_MAX 4.0
 #define BATT_MIN 3.0
 
   return (voltage - BATT_MIN) * (100 - 0) / (BATT_MAX - BATT_MIN) + 0;

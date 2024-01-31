@@ -20,16 +20,13 @@ void Settings::draw()
 {
   switch (settingsMenu)
   {
-  case 0:
-  case 1:
-  case 2:
-  case 3:
-  case 4:
+  case 0 ... 3:
   {
 
     screenUtils.drawMenuItem("Back", 10, 0, settingsMenu == 0, TFT_RED);
     screenUtils.drawMenuItem("Battery", 10, 1, settingsMenu == 1, TFT_RED);
     screenUtils.drawMenuItem("Wi-Fi", 10, 2, settingsMenu == 2, TFT_RED);
+    screenUtils.drawMenuItem("RSSI", 10, 3, settingsMenu == 3, TFT_RED);
 
     break;
   }
@@ -57,7 +54,11 @@ void Settings::update()
     if (ClickButtonDOWN.clicks == 2)
       screenManager.setScreen("wifi");
     break;
+  case 3:
+    if (ClickButtonDOWN.clicks == 2)
+      screenManager.setScreen("rssi");
+    break;
   }
 
-  settingsMenu = constrain(settingsMenu, 0, 2);
+  settingsMenu = constrain(settingsMenu, 0, 3);
 }

@@ -3,29 +3,57 @@
 #include <Arduino.h>
 #include "driver/Display.h"
 #include "Buttons.h"
-#include "Battery.h"
+#include <WiFi.h>
 
-class wifiScreen : public Screen
+class WifiScreen : public Screen
 {
 public:
-  wifiScreen(String _name, String _id) : Screen(_name, _id){};
+  WifiScreen(String _name, String _id) : Screen(_name, _id){};
 
   void draw() override;
   void update() override;
 };
 
-void wifiScreen::draw()
+void WifiScreen::draw()
 {
   display.sprite.setTextDatum(TL_DATUM);
 
   display.sprite.setTextSize(3);
-  display.sprite.setTextColor(TFT_CYAN);
+  display.sprite.setTextColor(TFT_ORANGE);
   display.sprite.drawString("Wi-Fi", 10, 30);
 
- 
+  String ssid = WiFi.SSID();
+  String ip = WiFi.localIP().toString();
+  String mac = WiFi.macAddress();
+  String rssi = String(WiFi.RSSI());
+
+  if (WiFi.isConnected())
+  {
+    display.sprite.setTextSize(2);
+    display.sprite.setTextDatum(TL_DATUM);
+    display.sprite.setTextColor(TFT_WHITE);
+
+    display.sprite.drawString(rssi, 105, 33);
+
+    display.sprite.setTextColor(TFT_BLUE);
+    display.sprite.drawString(ssid, 160, 33);
+
+    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.drawString(ip, 10, 60);
+    display.sprite.drawString(mac, 10, 80);
+  }
+  else
+  {
+    display.sprite.setTextSize(4);
+    display.sprite.setTextDatum(TC_DATUM);
+    display.sprite.setTextColor(TFT_RED);
+    display.sprite.drawString("No Wi-Fi", LCD_WIDTH / 2, 80);
+  }
+
+  char buf[20];
 }
 
-void wifiScreen::update()
+void WifiScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
     screenManager.setScreen("settings");

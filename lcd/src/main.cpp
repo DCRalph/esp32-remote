@@ -8,8 +8,6 @@
 #include "Battery.h"
 #include "Buttons.h"
 
-// #include "fonts/NotoSansBold36.h"
-
 #include "driver/Display.h"
 #include "screens/Error.h"
 #include "screens/Menu.h"
@@ -17,7 +15,6 @@
 #include "screens/SettingsScreen.h"
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/wifiScreen.h"
-
 
 #include "screens/desk_lamp.h"
 #include "screens/haLight.h"
@@ -32,30 +29,15 @@ ErrorScreen errorScreen("Error", "error");
 MenuScreen menuScreen("Menu", "menu");
 RSSIMeter rssiMeter("RSSI", "rssi");
 Settings settings("Settings", "settings");
-batteryScreen batteryScreen("Battery", "battery");
-wifiScreen wifiScreen("Wi-Fi", "wifi");
-
-
-
-// DeskLamp deskLamp(":)", "desk_lamp");
+BatteryScreen batteryScreen("Battery", "battery");
+WifiScreen wifiScreen("Wi-Fi", "wifi");
 
 // HALight deskLamp("deskLamp", "light.midesklamp1s_9479");
 // HALight leds("leds", "light.william_strip");
 // HALight matrix("matrix", "light.matrix_lamp");
-// HALight michaelLeds("michaelLeds", "light.micheals_leds");
-
-// HALight livingRoom("livingRoom", "light.living_room");
-
-// // HASwitch bedLight("bedLight", "switch.sonoffbasic_1");
-// HASwitch bedLight("bedLight", "switch.sonoffmini_1");
-// // HASwitch michaelFan("michaelFan", "switch.michael_plug_2");
-// HASwitch michaelFan("michaelFan", "switch.sonoffmini_2");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
-
-unsigned long long prevMillis2;
-int interval2 = 10000;
 
 bool sleepCountdown = false;
 unsigned long long sleepCountdownMillis = 0;
@@ -71,9 +53,7 @@ void mqttConnect()
       client.publish("esp-remote/init", "Hello from ESP32");
     }
     else
-    {
       delay(5000);
-    }
   }
 }
 
@@ -82,7 +62,6 @@ void setup()
   // Serial.begin(115200);
   // pinMode(LED_PIN, OUTPUT);
 
-  // setup lcd
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
 
@@ -107,13 +86,13 @@ void setup()
   //********************************************
   // {
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
   //   while (WiFi.status() != WL_CONNECTED)
   //   {
   //     delay(500);
   //   }
-    WiFi.setAutoReconnect(true);
+  WiFi.setAutoReconnect(true);
 
   //   client.setServer(MQTT_SERVER, MQTT_PORT);
   //   client.setBufferSize(1024);
@@ -146,7 +125,6 @@ bool sleepLoop()
     display.sprite.setTextColor(TFT_WHITE);
     display.sprite.drawString("Sleeping...", LCD_WIDTH / 2, 60);
     display.sprite.drawString("Release to cancel", LCD_WIDTH / 2, 110);
-    // display.sprite.drawString("cancel", LCD_WIDTH / 2, 130);
 
     char buf[20];
     long msToGo = sleepCountdownTime - (millis() - sleepCountdownMillis);

@@ -1,12 +1,5 @@
 #include "driver/ScreenManager.h"
 
-// void ScreenManager::init(Display *_display)
-// {
-//   display = _display;
-
-//   // logger.println("\tScreen Manager initialized");
-// }
-
 void ScreenManager::update(void)
 {
   screens[currentScreen]->update();

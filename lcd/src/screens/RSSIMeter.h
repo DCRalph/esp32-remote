@@ -35,5 +35,5 @@ void RSSIMeter::draw()
 void RSSIMeter::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("menu");
+    screenManager.setScreen("settings");
 }
