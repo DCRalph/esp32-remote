@@ -88,9 +88,7 @@ void setup()
   Serial.println();
 
   if (((StartUpScreen *)screenManager.getCurrentScreen())->getState() != StartUpState::ApStarted)
-  {
     screenManager.setScreen("Home");
-  }
 }
 
 void loop()
@@ -100,25 +98,7 @@ void loop()
   ClickButtonEnc.Update();
 
   if (ClickButtonEnc.clicks == -3)
-  {
     latch.Off();
-  }
 
   display.display();
-
-  // display.u8g2.firstPage();
-  // do
-  // {
-  //   display.u8g2.setFont(u8g2_font_logisoso16_tr);
-
-  //   sprintf(buffer, "%s", WiFi.localIP().toString().c_str());
-  //   display.u8g2.drawStr(0, 16, buffer);
-
-  //   sprintf(buffer, "b: %d, s: %d", btn, sw);
-  //   display.u8g2.drawStr(0, 34, buffer);
-
-  //   sprintf(buffer, "bat: %.2f", battery);
-  //   display.u8g2.drawStr(0, 52, buffer);
-
-  // } while (display.u8g2.nextPage());
 }

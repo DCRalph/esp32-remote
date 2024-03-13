@@ -87,26 +87,21 @@ void Menu::draw()
     if (active == i + topItem)
     {
       display.u8g2.setDrawColor(1);
-      display.u8g2.drawBox(0, 12 + (i * 18), DISPLAY_WIDTH, 16);
+      display.u8g2.drawBox(0, 12 + (i * 18), DISPLAY_WIDTH - 4, 16);
       display.u8g2.setDrawColor(0);
     }
     else
       display.u8g2.setDrawColor(1);
-    display.u8g2.drawStr(0, 28 + (i * 18), item->getName().c_str());
+    display.u8g2.drawStr(1, 28 + (i * 18), item->getName().c_str());
   }
 
-  // for (u16 i = 0; i < items.size(); i++)
-  // {
-  //   if (active == i)
-  //   {
-  //     display.u8g2.setDrawColor(1);
-  //     display.u8g2.drawBox(0, 12 + (i * 18), DISPLAY_WIDTH, 16);
-  //     display.u8g2.setDrawColor(0);
-  //   }
-  //   else
-  //     display.u8g2.setDrawColor(1);
-  //   display.u8g2.drawStr(0, 28 + (i * 18), items[i].name.c_str());
-  // }
+  display.u8g2.setDrawColor(1);
+
+  u8 scrollBarPosition = (DISPLAY_HEIGHT - 13) / items.size() * active;
+  u8 scrollBarHeight = items.size() - 1 == active ? DISPLAY_HEIGHT - 12 - scrollBarPosition : (DISPLAY_HEIGHT - 13) / items.size();
+
+  display.u8g2.drawLine(DISPLAY_WIDTH - 2, 12, DISPLAY_WIDTH - 2, DISPLAY_HEIGHT - 1);
+  display.u8g2.drawBox(DISPLAY_WIDTH - 3, 12 + scrollBarPosition, 3, scrollBarHeight);
 }
 
 void Menu::update()
