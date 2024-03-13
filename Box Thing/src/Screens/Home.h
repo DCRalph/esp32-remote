@@ -37,7 +37,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
 
 void HomeScreen::draw()
 {
-  display.u8g2.setFont(u8g2_font_t0_11b_tf);
+  display.u8g2.setFont(u8g2_font_profont12_tf);
   display.u8g2.setDrawColor(1);
   display.u8g2.drawStr(0, 8, "Home");
   display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);

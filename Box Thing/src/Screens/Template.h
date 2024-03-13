@@ -15,7 +15,7 @@ public:
 
 void templateScreen::draw()
 {
-  display.u8g2.setFont(u8g2_font_t0_11b_tf);
+  display.u8g2.setFont(u8g2_font_profont12_tf);
   display.u8g2.setDrawColor(1);
   display.u8g2.drawStr(0, 8, "Template");
   display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);

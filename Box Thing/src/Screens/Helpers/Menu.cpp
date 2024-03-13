@@ -74,7 +74,8 @@ void Menu::addMenuItem(MenuItem *_item)
 void Menu::draw()
 {
 
-  display.u8g2.setFont(u8g2_font_logisoso16_tf);
+  // display.u8g2.setFont(u8g2_font_logisoso16_tf);
+  display.u8g2.setFont(u8g2_font_profont22_tf);
 
   u8 numItems = items.size() < itemsPerPage ? items.size() : itemsPerPage;
 
@@ -92,7 +93,7 @@ void Menu::draw()
     }
     else
       display.u8g2.setDrawColor(1);
-    display.u8g2.drawStr(1, 28 + (i * 18), item->getName().c_str());
+    display.u8g2.drawStr(1, 27 + (i * 18), item->getName().c_str());
   }
 
   display.u8g2.setDrawColor(1);

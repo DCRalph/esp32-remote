@@ -19,7 +19,7 @@ public:
   MenuItem wifiInfoItem = MenuItem("WiFi Info", []()
                                    { screenManager.setScreen("WiFi Info"); });
 
-  MenuItem configPortalItem = MenuItem("Start Config", [&]()
+  MenuItem configPortalItem = MenuItem("Start Conf", [&]()
                                        {
                                          if (wm.getConfigPortalActive() || wm.getWebPortalActive())
                                          {
@@ -28,17 +28,17 @@ public:
 
                                             wm.autoConnect(AP_SSID);
 
-                                            configPortalItem.setName("Start Config");
+                                            configPortalItem.setName("Start Conf");
                                          }
                                          else
                                          {
                                             wm.disconnect();
                                             wm.startConfigPortal(AP_SSID);
 
-                                            configPortalItem.setName("Stop Config");
+                                            configPortalItem.setName("Stop Conf");
                                          } });
 
-  MenuItem wifiForgetItem = MenuItem("Forget WiFi", []()
+  MenuItem wifiForgetItem = MenuItem("Reset WiFi", []()
                                      { wm.resetSettings(); });
 
   void draw() override;
@@ -57,14 +57,14 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
   menu.addMenuItem(&wifiForgetItem);
 
   if (wm.getConfigPortalActive() || wm.getWebPortalActive())
-    configPortalItem.setName("Stop Config");
+    configPortalItem.setName("Stop Conf");
   else
-    configPortalItem.setName("Start Config");
+    configPortalItem.setName("Start Conf");
 }
 
 void WiFiSettingsScreen::draw()
 {
-  display.u8g2.setFont(u8g2_font_t0_11b_tf);
+  display.u8g2.setFont(u8g2_font_profont12_tf);
   display.u8g2.setDrawColor(1);
   display.u8g2.drawStr(0, 8, "WiFi Settings");
   display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);

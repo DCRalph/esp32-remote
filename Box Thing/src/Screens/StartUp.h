@@ -69,7 +69,7 @@ void StartUpScreen::draw()
 
     display.drawCenteredText(30, "AP Started");
 
-    display.u8g2.setFont(u8g2_font_t0_11b_tf);
+    display.u8g2.setFont(u8g2_font_profont12_tf);
     display.u8g2.setDrawColor(1);
 
     display.drawCenteredText(64, "Press to continue...");
