@@ -2,7 +2,7 @@
 
 GPIO led(LED_PIN, Output, LOW);
 GPIO latch(LATCH_PIN, Output);
-GPIO switchPin(SWITCH_PIN, InputPullup);
+GPIO switchPin(SWITCH_PIN, InputPullup, LOW);
 GPIO encoderButton(ENCODER_PIN_BUTTON, Input);
 
 EncoderHelper encoder;
@@ -71,9 +71,9 @@ void GPIO::PWM(int _value)
   analogWrite(pin, _value);
 }
 
-int GPIO::Read()
+bool GPIO::read()
 {
-  return digitalRead(pin);
+  return digitalRead(pin) == activeState;
 }
 
 int GPIO::analogRead()

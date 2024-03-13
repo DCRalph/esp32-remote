@@ -4,6 +4,13 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
+enum UpdateProgressState
+{
+  GETTING_READY,
+  UPDATING,
+  SHOWING_MESSAGE
+};
+
 class UpdateProgressScreen : public Screen
 {
 public:
@@ -12,7 +19,7 @@ public:
   void draw() override;
 
   u8 progress;
-  u8 state;
+  UpdateProgressState state;
 
   String msg;
 
@@ -23,27 +30,29 @@ public:
 UpdateProgressScreen::UpdateProgressScreen(String _name) : Screen(_name)
 {
   progress = 0;
-  state = 0;
+  state = UpdateProgressState::GETTING_READY;
 }
 
 void UpdateProgressScreen::draw()
 {
   display.u8g2.setFont(u8g2_font_logisoso24_tr);
+  display.u8g2.setDrawColor(1);
+
   display.drawCenteredText(24, "Updating");
 
   switch (state)
   {
-  case 0: // Getting ready
+  case UpdateProgressState::GETTING_READY: // Getting ready
     display.u8g2.setFont(u8g2_font_logisoso16_tr);
     display.drawCenteredText(64, "Getting ready...");
     break;
 
-  case 1: // Updating
+  case UpdateProgressState::UPDATING: // Updating
     display.u8g2.drawFrame(5, 32, 123, 16);
     display.u8g2.drawBox(7, 34, map(progress, 0, 100, 0, 119), 12);
     break;
 
-  case 2: // Showing message
+  case UpdateProgressState::SHOWING_MESSAGE: // Showing message
     display.u8g2.setFont(u8g2_font_logisoso16_tr);
     display.drawCenteredText(50, msg);
     break;
@@ -55,12 +64,12 @@ void UpdateProgressScreen::draw()
 
 void UpdateProgressScreen::setProgress(u8 _progress)
 {
-  state = 1;
+  state = UpdateProgressState::UPDATING;
   progress = _progress;
 }
 
 void UpdateProgressScreen::setMessage(String _msg)
 {
-  state = 2;
+  state = UpdateProgressState::SHOWING_MESSAGE;
   msg = _msg;
 }

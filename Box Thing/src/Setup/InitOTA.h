@@ -30,8 +30,6 @@ void InitOta()
               ((UpdateProgressScreen *)screenManager.getCurrentScreen())->setMessage("Rebooting...");
               display.display();
 
-              delay(1000);
-
               ESP.restart(); });
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)

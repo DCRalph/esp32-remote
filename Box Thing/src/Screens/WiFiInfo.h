@@ -38,12 +38,25 @@ void WiFiInfoScreen::draw()
     sprintf(buffer, "%s", WiFi.macAddress().c_str());
     display.u8g2.drawStr(0, 50, buffer);
   }
+  else if (wm.getConfigPortalActive() || wm.getWebPortalActive())
+  {
+
+    display.u8g2.setFont(u8g2_font_logisoso16_tf);
+
+    display.drawCenteredText(30, "Config Portal");
+    display.drawCenteredText(48, "Active");
+
+    display.u8g2.setFont(u8g2_font_profont12_tf);
+
+    sprintf(buffer, "SSID: %s", wm.getConfigPortalSSID().c_str());
+    display.u8g2.drawStr(0, 64, buffer);
+  }
   else
   {
     display.u8g2.setFont(u8g2_font_logisoso16_tf);
 
-    display.drawCenteredText(36, "Not");
-    display.drawCenteredText(54, "Connected");
+    display.drawCenteredText(30, "Not");
+    display.drawCenteredText(48, "Connected");
   }
 }
 

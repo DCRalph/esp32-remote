@@ -1,5 +1,10 @@
 #include "ScreenManager.h"
 
+ScreenManager::ScreenManager()
+{
+  currentScreen = -1;
+}
+
 void ScreenManager::init()
 {
   Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
@@ -39,7 +44,7 @@ void ScreenManager::setScreen(int screen)
 
 void ScreenManager::setScreen(String screenName)
 {
-  for (int i = 0; i < screens.size(); i++)
+  for (std::vector<Screen*>::size_type i = 0; i < screens.size(); i++)
   {
     if (screens[i]->name == screenName)
     {
@@ -65,7 +70,7 @@ void ScreenManager::removeScreen(int screen)
 
 void ScreenManager::removeScreen(String screenName)
 {
-  for (int i = 0; i < screens.size(); i++)
+  for (std::vector<Screen*>::size_type i = 0; i < screens.size(); i++)
   {
     if (screens[i]->name == screenName)
     {

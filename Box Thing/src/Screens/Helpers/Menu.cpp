@@ -2,7 +2,7 @@
 
 // ###### MenuItem ######
 
-MenuItem::MenuItem(String _name,  std::function<void()> _func)
+MenuItem::MenuItem(String _name, std::function<void()> _func)
 {
   name = _name;
   func = _func;
@@ -18,9 +18,19 @@ String MenuItem::getName()
   return name;
 }
 
-void MenuItem::setFunction( std::function<void()> _func)
+void MenuItem::setFunction(std::function<void()> _func)
 {
   func = _func;
+}
+
+void MenuItem::setClicksToRun(s8 _clicksToRun)
+{
+  clicksToRun = _clicksToRun;
+}
+
+s8 MenuItem::getClicksToRun()
+{
+  return clicksToRun;
 }
 
 void MenuItem::run()
@@ -30,9 +40,9 @@ void MenuItem::run()
 
 // ###### Menu ######
 
-Menu::Menu(String _name)
+Menu::Menu()
 {
-  name = _name;
+  // name = _name;
   active = 0;
 }
 
@@ -70,9 +80,9 @@ void Menu::draw()
 
   for (u8 i = 0; i < numItems; i++)
   {
-    u8 topItem = active - 1 < 0 ? 0 : active - 1 >= static_cast<u8>(items.size() - 2) ? static_cast<u8>(items.size() - 3)
+    u8 topItem = active - 1 < 0 ? 0 : active - 1 >= static_cast<u8>(items.size() - 2) ? numItems < 3 ? 0 : static_cast<u8>(items.size() - 3)
                                                                                       : active - 1;
-    MenuItem* item = items[i + topItem];
+    MenuItem *item = items[i + topItem];
 
     if (active == i + topItem)
     {
@@ -101,7 +111,7 @@ void Menu::draw()
 
 void Menu::update()
 {
-  if (ClickButtonEnc.clicks == 1)
+  if (ClickButtonEnc.clicks == items[active]->getClicksToRun())
   {
     items[active]->run();
   }

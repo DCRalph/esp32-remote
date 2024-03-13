@@ -48,7 +48,7 @@ public:
   void Write(int _value);
   void PWM(int _value);
 
-  int Read();
+  bool read();
   int analogRead();
 
   void Toggle();

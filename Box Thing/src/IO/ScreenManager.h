@@ -9,13 +9,15 @@ class Screen;
 class ScreenManager
 {
 private:
-  int currentScreen = 0;
+  int currentScreen;
   std::vector<Screen *> screens;
   std::vector<int> screenHistory;
 
   void updateHistory(void);
 
 public:
+  ScreenManager();
+
   void init();
 
   void update(void);
