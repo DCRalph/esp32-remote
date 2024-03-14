@@ -4,24 +4,28 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-class templateScreen : public Screen
+class MQTTSwitchScreen : public Screen
 {
 public:
-  templateScreen(String _name) : Screen(_name){};
+  MQTTSwitchScreen(String _name);
 
   void draw() override;
   void update() override;
 };
 
-void templateScreen::draw()
+MQTTSwitchScreen::MQTTSwitchScreen(String _name) : Screen(_name)
+{
+}
+
+void MQTTSwitchScreen::draw()
 {
   display.u8g2.setFont(u8g2_font_profont12_tf);
   display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(0, 8, "Template");
+  display.u8g2.drawStr(0, 8, "MQTT Switch");
   display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);
 }
 
-void templateScreen::update()
+void MQTTSwitchScreen::update()
 {
   if (ClickButtonEnc.clicks == 1)
   {

@@ -8,6 +8,7 @@
 #include "config.h"
 #include "Setup/InitOTA.h"
 
+#include "IO/MQTT.h"
 #include "IO/GPIO.h"
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
@@ -16,22 +17,38 @@
 #include "Screens/UpdateProgress.h"
 
 #include "Screens/Home.h"
+#include "Screens/SwitchMenu.h"
 #include "Screens/Settings.h"
 
-#include "Screens/WiFiSettings.h"
-#include "Screens/IOTest.h"
+#include "Screens/Switch/MQTTSwitch.h"
 
-#include "Screens/WiFiInfo.h"
+#include "Screens/Settings/GeneralSettings.h"
+#include "Screens/Settings/DisplaySettings.h"
+#include "Screens/Settings/WiFiSettings.h"
+#include "Screens/Settings/MQTTInfo.h"
+#include "Screens/Settings/IOTest.h"
+
+#include "Screens/Settings/WiFi/WiFiInfo.h"
 
 StartUpScreen startUp("Start Up");
 UpdateProgressScreen updateProgress("Update Progress");
 
+// #### /
 HomeScreen homeScreen("Home");
+SwitchMenuScreen switchMenu("Switch Menu");
 SettingsScreen settings("Settings");
 
+// #### /Switch
+MQTTSwitchScreen mqttSwitch("MQTT Switch");
+
+// #### /Settings
+GeneralSettingsScreen generalSettings("General Settings");
+DisplaySettingsScreen displaySettings("Display Settings");
 WiFiSettingsScreen wifiSettings("WiFi Settings");
+MQTTInfoScreen mqttInfo("MQTT Info");
 IOTestScreen ioTest("IO Test");
 
+// #### /Settings/WiFi
 WiFiInfoScreen wifiInfo("WiFi Info");
 
 unsigned long ms = 0;
@@ -52,12 +69,22 @@ void setup()
   screenManager.addScreen(&startUp);
   screenManager.addScreen(&updateProgress);
 
+  // #### /
   screenManager.addScreen(&homeScreen);
+  screenManager.addScreen(&switchMenu);
   screenManager.addScreen(&settings);
 
+  // #### /Switch
+  screenManager.addScreen(&mqttSwitch);
+
+  // #### /Settings
+  screenManager.addScreen(&generalSettings);
+  screenManager.addScreen(&displaySettings);
   screenManager.addScreen(&wifiSettings);
+  screenManager.addScreen(&mqttInfo);
   screenManager.addScreen(&ioTest);
 
+  // #### /Settings/WiFi
   screenManager.addScreen(&wifiInfo);
 
   screenManager.setScreen("Start Up");
@@ -81,6 +108,8 @@ void setup()
     display.display();
   }
 
+  mqtt.init();
+
   Serial.println("[INFO] [SETUP] OTA...");
   InitOta();
 
@@ -95,6 +124,7 @@ void loop()
 {
   wm.process();
   ArduinoOTA.handle();
+  mqtt.loop();
   ClickButtonEnc.Update();
 
   if (ClickButtonEnc.clicks == -3)

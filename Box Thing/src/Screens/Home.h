@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-#include "Helpers/Menu.h"
+#include "Screens/Helpers/Menu.h"
 
 class HomeScreen : public Screen
 {
@@ -12,6 +12,9 @@ public:
   HomeScreen(String _name);
 
   Menu menu = Menu();
+
+  MenuItem switchMenuItem = MenuItem("Switch", []()
+                                     { screenManager.setScreen("Switch Menu"); });
 
   MenuItem settingsItem = MenuItem("Settings", []()
                                    { screenManager.setScreen("Settings"); });
@@ -29,6 +32,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
 {
   active = 1;
 
+  menu.addMenuItem(&switchMenuItem);
   menu.addMenuItem(&settingsItem);
   menu.addMenuItem(&powerOffItem);
 

@@ -28,6 +28,8 @@ public:
   void setClicksToRun(s8 _clicksToRun);
   s8 getClicksToRun();
 
+  void draw(u8 _x, u8 _y, bool _active);
+
   void run();
 };
 
@@ -39,7 +41,10 @@ private:
   u8 active;
   std::vector<MenuItem *> items;
 
-  u8 itemsPerPage = 3;
+  u8 maxItemsPerPage = 3;
+
+  u8 numItems;
+  u8 numItemsPerPage;
 
 public:
   Menu();

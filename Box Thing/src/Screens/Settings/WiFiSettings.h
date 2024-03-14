@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-#include "Helpers/Menu.h"
+#include "Screens/Helpers/Menu.h"
 
 class WiFiSettingsScreen : public Screen
 {

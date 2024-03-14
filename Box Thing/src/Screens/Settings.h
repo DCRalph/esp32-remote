@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-#include "Helpers/Menu.h"
+#include "Screens/Helpers/Menu.h"
 
 class SettingsScreen : public Screen
 {
@@ -16,9 +16,17 @@ public:
   MenuItem backItem = MenuItem("Back", []()
                                { screenManager.back(); });
 
+  MenuItem generalSettingsItem = MenuItem("General", []()
+                                          { screenManager.setScreen("General Settings"); });
+
+  MenuItem displaySettingsItem = MenuItem("Display", []()
+                                          { screenManager.setScreen("Display Settings"); });
+
   MenuItem wifiItem = MenuItem("WiFi", []()
                                { screenManager.setScreen("WiFi Settings"); });
 
+  MenuItem mqttItem = MenuItem("MQTT", []()
+                               { screenManager.setScreen("MQTT Info"); });
 
   MenuItem ioTestItem = MenuItem("IO Test", [&]()
                                  { screenManager.setScreen("IO Test"); });
@@ -34,7 +42,10 @@ SettingsScreen::SettingsScreen(String _name) : Screen(_name)
   active = 1;
 
   menu.addMenuItem(&backItem);
+  menu.addMenuItem(&generalSettingsItem);
+  menu.addMenuItem(&displaySettingsItem);
   menu.addMenuItem(&wifiItem);
+  menu.addMenuItem(&mqttItem);
   menu.addMenuItem(&ioTestItem);
 }
 
