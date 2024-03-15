@@ -163,7 +163,7 @@ void MenuItemToggle::draw(u8 _x, u8 _y, bool _active)
 
 // ###### MenuItemNumber ######
 
-MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : MenuItem(_name)
+MenuItemNumber::MenuItemNumber(String _name, long *_value, s16 _min, s16 _max) : MenuItem(_name)
 {
   type = MenuItemType::Number;
 
@@ -171,8 +171,21 @@ MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : 
   min = _min;
   max = _max;
 
+  isMutable = true;
+
   addFunc(1, [this]()
           { selected = !selected; });
+}
+
+MenuItemNumber::MenuItemNumber(String _name, long *_value) : MenuItem(_name)
+{
+  type = MenuItemType::Number;
+
+  value = _value;
+  min = 0;
+  max = 0;
+
+  isMutable = false;
 }
 
 bool MenuItemNumber::isSelected()
@@ -182,14 +195,16 @@ bool MenuItemNumber::isSelected()
 
 void MenuItemNumber::increase()
 {
-  if (*value < max)
-    *value += 1;
+  if (isMutable && selected)
+    if (*value < max)
+      *value += 1;
 }
 
 void MenuItemNumber::decrease()
 {
-  if (*value > min)
-    *value -= 1;
+  if (isMutable && selected)
+    if (*value > min)
+      *value -= 1;
 }
 
 void MenuItemNumber::draw(u8 _x, u8 _y, bool _active)

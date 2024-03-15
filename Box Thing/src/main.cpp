@@ -61,7 +61,7 @@ char buffer[100];
 
 void setup()
 {
-  Serial.begin(BAUD_RATE);
+  initConfig();
   Serial.println("[INFO] [SETUP] Starting...");
   Serial.println("[INFO] [SETUP] IOInit...");
   GPIO::initIO();

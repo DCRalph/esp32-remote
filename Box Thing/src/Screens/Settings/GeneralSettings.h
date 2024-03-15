@@ -12,7 +12,7 @@ public:
   GeneralSettingsScreen(String _name);
 
   bool toggle = false;
-  int number = 0;
+  long number = 0;
 
   Menu menu = Menu();
 
@@ -24,6 +24,8 @@ public:
 
   void draw() override;
   void update() override;
+  void onEnter() override;
+  void onExit() override;
 };
 
 GeneralSettingsScreen::GeneralSettingsScreen(String _name) : Screen(_name)
@@ -46,4 +48,16 @@ void GeneralSettingsScreen::draw()
 void GeneralSettingsScreen::update()
 {
   menu.update();
+}
+
+void GeneralSettingsScreen::onEnter()
+{
+  toggle = preferences.getBool("toggle", false);
+  number = preferences.getLong("number", 0);
+}
+
+void GeneralSettingsScreen::onExit()
+{
+  preferences.putBool("toggle", toggle);
+  preferences.putLong("number", number);
 }

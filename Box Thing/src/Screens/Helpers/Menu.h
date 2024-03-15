@@ -172,9 +172,11 @@ public:
 class MenuItemNumber : public MenuItem
 {
 private:
-  int *value; ///< Pointer to the value being controlled by this menu item.
-  s16 min;    ///< The minimum value allowed.
-  s16 max;    ///< The maximum value allowed.
+  long *value; ///< Pointer to the value being controlled by this menu item.
+  s16 min;     ///< The minimum value allowed.
+  s16 max;     ///< The maximum value allowed.
+
+  bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
 
   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
 
@@ -187,7 +189,15 @@ public:
    * @param _min The minimum value allowed.
    * @param _max The maximum value allowed.
    */
-  MenuItemNumber(String _name, int *_value, s16 _min, s16 _max);
+  MenuItemNumber(String _name, long *_value, s16 _min, s16 _max);
+
+  /**
+   * @brief Constructs a new MenuItemNumber object.
+   *
+   * @param _name The name of the menu item.
+   * @param _value Pointer to the value being controlled by this menu item.
+   */
+  MenuItemNumber(String _name, long *_value);
 
   /**
    * @brief Checks if this menu item is currently selected.

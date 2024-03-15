@@ -4,7 +4,9 @@
 #include "secrets.h"
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
+#include <Preferences.h>
 
+extern Preferences preferences;
 extern WiFiManager wm;
 
 #define BAUD_RATE 74880
@@ -32,3 +34,6 @@ extern WiFiManager wm;
 #define ENCODER_PIN_B 13
 
 #define BATTERY_PIN A0
+
+
+void initConfig();

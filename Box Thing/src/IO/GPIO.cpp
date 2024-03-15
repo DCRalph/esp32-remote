@@ -131,7 +131,6 @@ void GPIO::initIO()
   ClickButtonEnc.longClickTime = 500;
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_BUTTON), encoderButtonISR, FALLING);
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();
