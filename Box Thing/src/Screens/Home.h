@@ -13,14 +13,12 @@ public:
 
   Menu menu = Menu();
 
-  MenuItem switchMenuItem = MenuItem("Switch", []()
-                                     { screenManager.setScreen("Switch Menu"); });
+  MenuItemNavigate switchMenuItem = MenuItemNavigate("Switch", "Switch Menu");
 
-  MenuItem settingsItem = MenuItem("Settings", []()
-                                   { screenManager.setScreen("Settings"); });
+  MenuItemNavigate settingsItem = MenuItemNavigate("Settings", "Settings");
 
-  MenuItem powerOffItem = MenuItem("Power Off", []()
-                                   { latch.Off(); });
+  MenuItemAction powerOffItem = MenuItemAction("Power Off", []()
+                                               { latch.Off(); });
 
   void draw() override;
   void update() override;

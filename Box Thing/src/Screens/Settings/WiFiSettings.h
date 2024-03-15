@@ -13,13 +13,11 @@ public:
 
   Menu menu = Menu();
 
-  MenuItem backItem = MenuItem("Back", []()
-                               { screenManager.back(); });
+  MenuItemBack backItem;
 
-  MenuItem wifiInfoItem = MenuItem("WiFi Info", []()
-                                   { screenManager.setScreen("WiFi Info"); });
+  MenuItemNavigate wifiInfoItem = MenuItemNavigate("WiFi Info", "WiFi Info");
 
-  MenuItem configPortalItem = MenuItem("Start Conf", [&]()
+  MenuItemAction configPortalItem = MenuItemAction("Start Conf", [&]()
                                        {
                                          if (wm.getConfigPortalActive() || wm.getWebPortalActive())
                                          {
@@ -38,7 +36,7 @@ public:
                                             configPortalItem.setName("Stop Conf");
                                          } });
 
-  MenuItem wifiForgetItem = MenuItem("Reset WiFi", []()
+  MenuItemAction wifiForgetItem = MenuItemAction("Reset WiFi", []()
                                      { wm.resetSettings(); });
 
   void draw() override;

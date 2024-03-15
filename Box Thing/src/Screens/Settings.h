@@ -13,23 +13,23 @@ public:
 
   Menu menu = Menu();
 
-  MenuItem backItem = MenuItem("Back", []()
-                               { screenManager.back(); });
+  MenuItemAction backItem = MenuItemAction("Back", []()
+                                           { screenManager.back(); });
 
-  MenuItem generalSettingsItem = MenuItem("General", []()
-                                          { screenManager.setScreen("General Settings"); });
+  MenuItemAction generalSettingsItem = MenuItemAction("General", []()
+                                                      { screenManager.setScreen("General Settings"); });
 
-  MenuItem displaySettingsItem = MenuItem("Display", []()
-                                          { screenManager.setScreen("Display Settings"); });
+  MenuItemAction displaySettingsItem = MenuItemAction("Display", []()
+                                                      { screenManager.setScreen("Display Settings"); });
 
-  MenuItem wifiItem = MenuItem("WiFi", []()
-                               { screenManager.setScreen("WiFi Settings"); });
+  MenuItemAction wifiItem = MenuItemAction("WiFi", []()
+                                           { screenManager.setScreen("WiFi Settings"); });
 
-  MenuItem mqttItem = MenuItem("MQTT", []()
-                               { screenManager.setScreen("MQTT Info"); });
+  MenuItemAction mqttItem = MenuItemAction("MQTT", []()
+                                           { screenManager.setScreen("MQTT Info"); });
 
-  MenuItem ioTestItem = MenuItem("IO Test", [&]()
-                                 { screenManager.setScreen("IO Test"); });
+  MenuItemAction ioTestItem = MenuItemAction("IO Test", [&]()
+                                             { screenManager.setScreen("IO Test"); });
 
   void draw() override;
   void update() override;

@@ -2,10 +2,10 @@
 
 // ###### MenuItem ######
 
-MenuItem::MenuItem(String _name, std::function<void()> _func)
+MenuItem::MenuItem(String _name)
 {
   name = _name;
-  func = _func;
+  type = MenuItemType::None;
 }
 
 void MenuItem::setName(String _name)
@@ -18,11 +18,6 @@ String MenuItem::getName()
   return name;
 }
 
-void MenuItem::setFunction(std::function<void()> _func)
-{
-  func = _func;
-}
-
 void MenuItem::setClicksToRun(s8 _clicksToRun)
 {
   clicksToRun = _clicksToRun;
@@ -33,7 +28,33 @@ s8 MenuItem::getClicksToRun()
   return clicksToRun;
 }
 
+MenuItemType MenuItem::getType()
+{
+  return type;
+}
+
 void MenuItem::draw(u8 _x, u8 _y, bool _active)
+{
+}
+
+void MenuItem::run()
+{
+}
+
+// ###### MenuItemAction ######
+
+MenuItemAction::MenuItemAction(String _name, std::function<void()> _func) : MenuItem(_name)
+{
+  func = _func;
+  type = MenuItemType::Action;
+}
+
+void MenuItemAction::setFunc(std::function<void()> _func)
+{
+  func = _func;
+}
+
+void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
 {
   display.u8g2.setFont(u8g2_font_profont22_tf);
 
@@ -45,12 +66,165 @@ void MenuItem::draw(u8 _x, u8 _y, bool _active)
   }
   else
     display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, name.c_str());
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
-void MenuItem::run()
+void MenuItemAction::run()
 {
   func();
+}
+
+// ###### MenuItemNavigate ######
+
+MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_name)
+{
+  target = _target;
+  type = MenuItemType::Navigate;
+}
+
+void MenuItemNavigate::draw(u8 _x, u8 _y, bool _active)
+{
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+  }
+  else
+    display.u8g2.setDrawColor(1);
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+}
+
+void MenuItemNavigate::run()
+{
+  screenManager.setScreen(target);
+}
+
+// ###### MenuItemBack ######
+
+MenuItemBack::MenuItemBack() : MenuItem("Back")
+{
+  type = MenuItemType::Back;
+}
+
+void MenuItemBack::draw(u8 _x, u8 _y, bool _active)
+{
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+  }
+  else
+    display.u8g2.setDrawColor(1);
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+}
+
+void MenuItemBack::run()
+{
+  screenManager.back();
+}
+
+// ###### MenuItemToggle ######
+
+MenuItemToggle::MenuItemToggle(String _name, bool *_value) : MenuItem(_name)
+{
+  value = _value;
+  type = MenuItemType::Toggle;
+}
+
+void MenuItemToggle::draw(u8 _x, u8 _y, bool _active)
+{
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+  }
+  else
+    display.u8g2.setDrawColor(1);
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+
+  String valueStr = *value ? "ON" : "OFF";
+  display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+}
+
+void MenuItemToggle::run()
+{
+  *value = !*value;
+}
+
+// ###### MenuItemNumber ######
+
+MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : MenuItem(_name)
+{
+  value = _value;
+  min = _min;
+  max = _max;
+
+  type = MenuItemType::Number;
+}
+
+bool MenuItemNumber::isSelected()
+{
+  return selected;
+}
+
+void MenuItemNumber::increase()
+{
+  if (*value < max)
+    *value += 1;
+}
+
+void MenuItemNumber::decrease()
+{
+  if (*value > min)
+    *value -= 1;
+}
+
+void MenuItemNumber::draw(u8 _x, u8 _y, bool _active)
+{
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (!_active && selected)
+  {
+    selected = false;
+  }
+
+  String valueStr = String(*value);
+
+  if (_active && selected)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+  }
+  else if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+  }
+  else
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+  }
+}
+
+void MenuItemNumber::run()
+{
+  selected = !selected;
 }
 
 // ###### Menu ######
@@ -81,6 +255,18 @@ u8 Menu::getActive()
   return active;
 }
 
+void Menu::nextItem()
+{
+  if (active < numItems - 1)
+    active++;
+}
+
+void Menu::prevItem()
+{
+  if (active > 0)
+    active--;
+}
+
 void Menu::addMenuItem(MenuItem *_item)
 {
   items.push_back(_item);
@@ -98,16 +284,6 @@ void Menu::draw()
     u8 topItem = active - 1 < 0 ? 0 : active - 1 >= static_cast<u8>(numItems - 2) ? numItems < 3 ? 0 : static_cast<u8>(numItems - 3)
                                                                                   : active - 1;
     MenuItem *item = items[i + topItem];
-
-    // if (active == i + topItem)
-    // {
-    //   display.u8g2.setDrawColor(1);
-    //   display.u8g2.drawBox(0, 12 + (i * 18), DISPLAY_WIDTH - 4, 16);
-    //   display.u8g2.setDrawColor(0);
-    // }
-    // else
-    //   display.u8g2.setDrawColor(1);
-    // display.u8g2.drawStr(1, 27 + (i * 18), item->getName().c_str());
 
     item->draw(0, 12 + (i * 18), active == i + topItem);
   }
@@ -138,14 +314,18 @@ void Menu::update()
 
   if (encoder.encoder.getPosition() > 0)
   {
-    if (active < numItems - 1)
-      active++;
+    if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
+      ((MenuItemNumber *)items[active])->increase();
+    else
+      nextItem();
     encoder.encoder.setPosition(0);
   }
   else if (encoder.encoder.getPosition() < 0)
   {
-    if (active > 0)
-      active--;
+    if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
+      ((MenuItemNumber *)items[active])->decrease();
+    else
+      prevItem();
     encoder.encoder.setPosition(0);
   }
 }

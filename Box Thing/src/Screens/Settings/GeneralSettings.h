@@ -11,10 +11,16 @@ class GeneralSettingsScreen : public Screen
 public:
   GeneralSettingsScreen(String _name);
 
+  bool toggle = false;
+  int number = 0;
+
   Menu menu = Menu();
 
-  MenuItem backItem = MenuItem("Back", []()
-                               { screenManager.back(); });
+  MenuItemBack backItem;
+
+  MenuItemToggle toggleItem = MenuItemToggle("Toggle", &toggle);
+
+  MenuItemNumber numberItem = MenuItemNumber("Number", &number, 0, 10);
 
   void draw() override;
   void update() override;
@@ -23,6 +29,8 @@ public:
 GeneralSettingsScreen::GeneralSettingsScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
+  menu.addMenuItem(&toggleItem);
+  menu.addMenuItem(&numberItem);
 }
 
 void GeneralSettingsScreen::draw()

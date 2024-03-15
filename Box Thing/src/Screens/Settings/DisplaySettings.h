@@ -13,8 +13,7 @@ public:
 
   Menu menu = Menu();
 
-  MenuItem backItem = MenuItem("Back", []()
-                               { screenManager.back(); });
+  MenuItemBack backItem;
 
   void draw() override;
   void update() override;

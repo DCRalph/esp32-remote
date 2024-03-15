@@ -12,11 +12,11 @@ public:
 
   Menu menu = Menu();
 
-  MenuItem backItem = MenuItem("Back", []()
-                               { screenManager.back(); });
+  MenuItemAction backItem = MenuItemAction("Back", []()
+                                           { screenManager.back(); });
 
-  MenuItem mqttSwitchItem = MenuItem("MQTT SW", []()
-                                     { screenManager.setScreen("MQTT Switch"); });
+  MenuItemAction mqttSwitchItem = MenuItemAction("MQTT SW", []()
+                                                 { screenManager.setScreen("MQTT Switch"); });
 
   void draw() override;
   void update() override;

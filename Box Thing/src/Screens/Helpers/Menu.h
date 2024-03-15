@@ -8,33 +8,225 @@
 
 class Menu;
 
-// ###### MenuItem ######
+enum class MenuItemType
+{
+  None,
+  Action,
+  Navigate,
+  Back,
+  Toggle,
+  Number
+};
 
+/**
+ * @class MenuItem
+ * @brief Represents a menu item.
+ */
 class MenuItem
 {
 private:
   String name;
-  std::function<void()> func;
   s8 clicksToRun = 1;
 
-public:
-  MenuItem(String _name, std::function<void()> _func);
+protected:
+  MenuItemType type;
 
+public:
+  /**
+   * @brief Constructs a MenuItem object with the specified name.
+   * @param _name The name of the menu item.
+   */
+  MenuItem(String _name);
+
+  /**
+   * @brief Sets the name of the menu item.
+   * @param _name The name of the menu item.
+   */
   void setName(String _name);
+
+  /**
+   * @brief Gets the name of the menu item.
+   * @return The name of the menu item.
+   */
   String getName();
 
-  void setFunction(std::function<void()> _func);
-
+  /**
+   * @brief Sets the number of clicks required to run the menu item.
+   * @param _clicksToRun The number of clicks required to run the menu item.
+   */
   void setClicksToRun(s8 _clicksToRun);
+
+  /**
+   * @brief Gets the number of clicks required to run the menu item.
+   * @return The number of clicks required to run the menu item.
+   */
   s8 getClicksToRun();
 
-  void draw(u8 _x, u8 _y, bool _active);
+  /**
+   * @brief Gets the type of the menu item.
+   * @return The type of the menu item.
+   */
+  MenuItemType getType();
 
-  void run();
+  /**
+   * @brief Draws the menu item on the screen.
+   * @param _x The x-coordinate of the menu item.
+   * @param _y The y-coordinate of the menu item.
+   * @param _active Indicates whether the menu item is active or not.
+   */
+  virtual void draw(u8 _x, u8 _y, bool _active);
+
+  /**
+   * @brief Runs the menu item.
+   */
+  virtual void run();
+};
+
+/**
+ * @class MenuItemAction
+ * @brief A class representing a menu item with an associated action.
+ *
+ * This class inherits from the base class MenuItem and adds a function pointer
+ * to store the action to be performed when the menu item is selected.
+ */
+class MenuItemAction : public MenuItem
+{
+private:
+  std::function<void()> func;
+
+public:
+  /**
+   * @brief Constructs a MenuItemAction object with the specified name and action.
+   *
+   * @param _name The name of the menu item.
+   * @param _func The action to be performed when the menu item is selected.
+   */
+  MenuItemAction(String _name, std::function<void()> _func);
+
+  /**
+   * @brief Sets the action to be performed when the menu item is selected.
+   *
+   * @param _func The action to be performed.
+   */
+  void setFunc(std::function<void()> _func);
+
+  void draw(u8 _x, u8 _y, bool _active) override;
+  void run() override;
+};
+class MenuItemNavigate : public MenuItem
+{
+private:
+  String target;
+
+public:
+  /**
+   * @brief Constructs a new MenuItemNavigate object.
+   *
+   * @param _name The name of the menu item.
+   * @param _target The target of the navigation.
+   */
+  MenuItemNavigate(String _name, String _target);
+
+  void draw(u8 _x, u8 _y, bool _active) override;
+  void run() override;
+};
+
+/**
+ * @brief Represents a menu item that allows the user to go back to the previous menu.
+ */
+class MenuItemBack : public MenuItem
+{
+public:
+  /**
+   * @brief Constructs a new MenuItemBack object.
+   */
+  MenuItemBack();
+
+  void draw(u8 _x, u8 _y, bool _active) override;
+  void run() override;
+};
+
+/**
+ * @brief Represents a toggle menu item.
+ * 
+ * This class inherits from the MenuItem class and provides functionality for a toggle menu item.
+ * It allows the user to toggle a boolean value associated with the menu item.
+ */
+class MenuItemToggle : public MenuItem
+{
+private:
+  bool *value;
+
+public:
+  /**
+   * @brief Constructs a new MenuItemToggle object.
+   * 
+   * @param _name The name of the menu item.
+   * @param _value A pointer to the boolean value associated with the menu item.
+   */
+  MenuItemToggle(String _name, bool *_value);
+
+  void draw(u8 _x, u8 _y, bool _active) override;
+  void run() override;
+};
+
+
+/**
+ * @brief Represents a menu item for selecting a number value.
+ */
+class MenuItemNumber : public MenuItem
+{
+private:
+  int *value; ///< Pointer to the value being controlled by this menu item.
+  s16 min; ///< The minimum value allowed.
+  s16 max; ///< The maximum value allowed.
+
+  bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+
+public:
+  /**
+   * @brief Constructs a new MenuItemNumber object.
+   * 
+   * @param _name The name of the menu item.
+   * @param _value Pointer to the value being controlled by this menu item.
+   * @param _min The minimum value allowed.
+   * @param _max The maximum value allowed.
+   */
+  MenuItemNumber(String _name, int *_value, s16 _min, s16 _max);
+
+  /**
+   * @brief Checks if this menu item is currently selected.
+   * 
+   * @return true if this menu item is selected, false otherwise.
+   */
+  bool isSelected();
+
+  /**
+   * @brief Increases the value by one.
+   */
+  void increase();
+
+  /**
+   * @brief Decreases the value by one.
+   */
+  void decrease();
+
+  /**
+   * @brief Draws the menu item on the screen.
+   * 
+   * @param _x The x-coordinate of the top-left corner of the menu item.
+   * @param _y The y-coordinate of the top-left corner of the menu item.
+   * @param _active Flag indicating whether the menu item is currently active.
+   */
+  void draw(u8 _x, u8 _y, bool _active) override;
+
+  /**
+   * @brief Executes the action associated with this menu item.
+   */
+  void run() override;
 };
 
 // ###### Menu ######
-
 class Menu
 {
 private:
@@ -56,6 +248,9 @@ public:
 
   void setActive(u8 _active);
   u8 getActive();
+
+  void nextItem();
+  void prevItem();
 
   void addMenuItem(MenuItem *_item);
   void draw();
