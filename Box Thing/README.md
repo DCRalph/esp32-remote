@@ -13,4 +13,4 @@ I made my first pcb for this project and it was a lot of fun.
 - Big switch
 - 1S Lipo battery
 
-![alt text](https://github.com/DCRalph/esp32-remote/tree/main/Box%20Thing/images/box%20thing.jpg)
+![box](https://github.com/DCRalph/esp32-remote/blob/main/Box%20Thing/images/the%20box.jpg?raw=true)
