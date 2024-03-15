@@ -1,4 +1,4 @@
-# Box Thnig
+# Box Thing
 
 ## Description
 
@@ -12,3 +12,5 @@ I made my first pcb for this project and it was a lot of fun.
 - Rotary encoder
 - Big switch
 - 1S Lipo battery
+
+![alt text](https://github.com/DCRalph/esp32-remote/tree/main/Box%20Thing/images/box%20thing.jpg)
