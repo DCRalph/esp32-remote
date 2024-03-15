@@ -15,8 +15,7 @@ public:
 
   MenuItemNavigate switchMenuItem = MenuItemNavigate("Switch", "Switch Menu");
 
-  MenuItemAction settingsItem = MenuItemAction("Settings", 1, []()
-                                               { screenManager.setScreen("Settings"); });
+  MenuItemNavigate settingsItem = MenuItemNavigate("Settings", "Settings");
 
   MenuItemAction powerOffItem = MenuItemAction(
       "Power Off", -1, []()
@@ -36,8 +35,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&settingsItem);
   menu.addMenuItem(&powerOffItem);
 
-  settingsItem.addFunc(2, []()
-                       { screenManager.setScreen("Debug"); });
+  settingsItem.addRoute(2, "Debug");
 }
 
 void HomeScreen::draw()

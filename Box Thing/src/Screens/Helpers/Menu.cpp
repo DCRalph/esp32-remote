@@ -8,6 +8,18 @@ MenuItem::MenuItem(String _name)
   name = _name;
 }
 
+void MenuItem::addFunc(s8 _clicksToRun, std::function<void()> _func)
+{
+  if (_clicksToRun == 0)
+    return;
+
+  ActionFunction actionFunc;
+  actionFunc.clicksToRun = _clicksToRun;
+  actionFunc.func = _func;
+
+  functions.push_back(actionFunc);
+}
+
 void MenuItem::setName(String _name)
 {
   name = _name;
@@ -29,6 +41,14 @@ void MenuItem::draw(u8 _x, u8 _y, bool _active)
 
 void MenuItem::run()
 {
+  for (u8 i = 0; i < functions.size(); i++)
+  {
+    if (ClickButtonEnc.clicks == functions[i].clicksToRun)
+    {
+      functions[i].func();
+      break;
+    }
+  }
 }
 
 // ###### MenuItemAction ######
@@ -38,18 +58,6 @@ MenuItemAction::MenuItemAction(String _name, s8 _clicksToRun, std::function<void
   type = MenuItemType::Action;
 
   addFunc(_clicksToRun, _func);
-}
-
-void MenuItemAction::addFunc(s8 _clicksToRun, std::function<void()> _func)
-{
-  if (_clicksToRun == 0)
-    return;
-
-  ActionFunction actionFunc;
-  actionFunc.clicksToRun = _clicksToRun;
-  actionFunc.func = _func;
-
-  actionFunctions.push_back(actionFunc);
 }
 
 void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
@@ -67,24 +75,21 @@ void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
-void MenuItemAction::run()
-{
-  for (u8 i = 0; i < actionFunctions.size(); i++)
-  {
-    if (ClickButtonEnc.clicks == actionFunctions[i].clicksToRun)
-    {
-      actionFunctions[i].func();
-      break;
-    }
-  }
-}
-
 // ###### MenuItemNavigate ######
 
 MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_name)
 {
   type = MenuItemType::Navigate;
   target = _target;
+
+  addFunc(1, [this]()
+          { screenManager.setScreen(target); });
+}
+
+void MenuItemNavigate::addRoute(s8 _clicksToRun, String _target)
+{
+  addFunc(_clicksToRun, [this, _target]()
+          { screenManager.setScreen(_target); });
 }
 
 void MenuItemNavigate::draw(u8 _x, u8 _y, bool _active)
@@ -102,16 +107,14 @@ void MenuItemNavigate::draw(u8 _x, u8 _y, bool _active)
   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
-void MenuItemNavigate::run()
-{
-  screenManager.setScreen(target);
-}
-
 // ###### MenuItemBack ######
 
 MenuItemBack::MenuItemBack() : MenuItem("Back")
 {
   type = MenuItemType::Back;
+
+  addFunc(1, []()
+          { screenManager.back(); });
 }
 
 void MenuItemBack::draw(u8 _x, u8 _y, bool _active)
@@ -129,17 +132,15 @@ void MenuItemBack::draw(u8 _x, u8 _y, bool _active)
   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
-void MenuItemBack::run()
-{
-  screenManager.back();
-}
-
 // ###### MenuItemToggle ######
 
 MenuItemToggle::MenuItemToggle(String _name, bool *_value) : MenuItem(_name)
 {
   type = MenuItemType::Toggle;
   value = _value;
+
+  addFunc(1, [this]()
+          { *value = !*value; });
 }
 
 void MenuItemToggle::draw(u8 _x, u8 _y, bool _active)
@@ -160,11 +161,6 @@ void MenuItemToggle::draw(u8 _x, u8 _y, bool _active)
   display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
 }
 
-void MenuItemToggle::run()
-{
-  *value = !*value;
-}
-
 // ###### MenuItemNumber ######
 
 MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : MenuItem(_name)
@@ -174,6 +170,9 @@ MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : 
   value = _value;
   min = _min;
   max = _max;
+
+  addFunc(1, [this]()
+          { selected = !selected; });
 }
 
 bool MenuItemNumber::isSelected()
@@ -225,11 +224,6 @@ void MenuItemNumber::draw(u8 _x, u8 _y, bool _active)
     display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
     display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
   }
-}
-
-void MenuItemNumber::run()
-{
-  selected = !selected;
 }
 
 // ###### Menu ######
@@ -312,9 +306,7 @@ void Menu::update()
     return;
   }
 
-  if (items[active]->getType() == MenuItemType::Action && ClickButtonEnc.clicks != 0)
-    items[active]->run();
-  else if (ClickButtonEnc.clicks == 1)
+  if (ClickButtonEnc.clicks != 0)
     items[active]->run();
 
   if (encoder.encoder.getPosition() > 0)

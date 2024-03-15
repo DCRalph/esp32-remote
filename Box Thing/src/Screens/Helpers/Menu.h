@@ -32,6 +32,7 @@ class MenuItem
 {
 private:
   String name;
+  std::vector<ActionFunction> functions;
 
 protected:
   MenuItemType type;
@@ -42,6 +43,14 @@ public:
    * @param _name The name of the menu item.
    */
   MenuItem(String _name);
+
+  /**
+   * @brief Sets the action to be performed when the menu item is selected.
+   *
+   * @param _clicksToRun The number of clicks required to run the action.
+   * @param _func The action to be performed.
+   */
+  void addFunc(s8 _clicksToRun, std::function<void()> _func);
 
   /**
    * @brief Sets the name of the menu item.
@@ -84,9 +93,6 @@ public:
  */
 class MenuItemAction : public MenuItem
 {
-private:
-  std::vector<ActionFunction> actionFunctions;
-
 public:
   /**
    * @brief Constructs a MenuItemAction object with the specified name and action.
@@ -97,16 +103,7 @@ public:
    */
   MenuItemAction(String _name, s8 _clicksToRun, std::function<void()> _func);
 
-  /**
-   * @brief Sets the action to be performed when the menu item is selected.
-   *
-   * @param _clicksToRun The number of clicks required to run the action.
-   * @param _func The action to be performed.
-   */
-  void addFunc(s8 _clicksToRun, std::function<void()> _func);
-
   void draw(u8 _x, u8 _y, bool _active) override;
-  void run() override;
 };
 class MenuItemNavigate : public MenuItem
 {
@@ -122,8 +119,14 @@ public:
    */
   MenuItemNavigate(String _name, String _target);
 
+  /**
+   * Adds a new route to the menu.
+   *
+   * @param route The route to be added.
+   */
+  void addRoute(s8 _clicksToRun, String _target);
+
   void draw(u8 _x, u8 _y, bool _active) override;
-  void run() override;
 };
 
 /**
@@ -138,7 +141,6 @@ public:
   MenuItemBack();
 
   void draw(u8 _x, u8 _y, bool _active) override;
-  void run() override;
 };
 
 /**
@@ -162,7 +164,6 @@ public:
   MenuItemToggle(String _name, bool *_value);
 
   void draw(u8 _x, u8 _y, bool _active) override;
-  void run() override;
 };
 
 /**
@@ -205,19 +206,7 @@ public:
    */
   void decrease();
 
-  /**
-   * @brief Draws the menu item on the screen.
-   *
-   * @param _x The x-coordinate of the top-left corner of the menu item.
-   * @param _y The y-coordinate of the top-left corner of the menu item.
-   * @param _active Flag indicating whether the menu item is currently active.
-   */
   void draw(u8 _x, u8 _y, bool _active) override;
-
-  /**
-   * @brief Executes the action associated with this menu item.
-   */
-  void run() override;
 };
 
 // ###### Menu ######
