@@ -127,7 +127,7 @@ void GPIO::initIO()
   encoder.init();
 
   ClickButtonEnc.debounceTime = 20;
-  ClickButtonEnc.multiclickTime = 100;
+  ClickButtonEnc.multiclickTime = 200;
   ClickButtonEnc.longClickTime = 500;
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);

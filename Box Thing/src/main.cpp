@@ -16,6 +16,9 @@
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
 
+#include "Screens/Debug/Debug.h"
+#include "Screens/Debug/IOTest.h"
+
 #include "Screens/Home.h"
 #include "Screens/SwitchMenu.h"
 #include "Screens/Settings.h"
@@ -26,12 +29,15 @@
 #include "Screens/Settings/DisplaySettings.h"
 #include "Screens/Settings/WiFiSettings.h"
 #include "Screens/Settings/MQTTInfo.h"
-#include "Screens/Settings/IOTest.h"
 
 #include "Screens/Settings/WiFi/WiFiInfo.h"
 
 StartUpScreen startUp("Start Up");
 UpdateProgressScreen updateProgress("Update Progress");
+
+// #### /Debug
+DebugScreen debug("Debug");
+IOTestScreen ioTest("IO Test");
 
 // #### /
 HomeScreen homeScreen("Home");
@@ -46,7 +52,6 @@ GeneralSettingsScreen generalSettings("General Settings");
 DisplaySettingsScreen displaySettings("Display Settings");
 WiFiSettingsScreen wifiSettings("WiFi Settings");
 MQTTInfoScreen mqttInfo("MQTT Info");
-IOTestScreen ioTest("IO Test");
 
 // #### /Settings/WiFi
 WiFiInfoScreen wifiInfo("WiFi Info");
@@ -69,6 +74,10 @@ void setup()
   screenManager.addScreen(&startUp);
   screenManager.addScreen(&updateProgress);
 
+  // #### /Debug
+  screenManager.addScreen(&debug);
+  screenManager.addScreen(&ioTest);
+
   // #### /
   screenManager.addScreen(&homeScreen);
   screenManager.addScreen(&switchMenu);
@@ -82,7 +91,6 @@ void setup()
   screenManager.addScreen(&displaySettings);
   screenManager.addScreen(&wifiSettings);
   screenManager.addScreen(&mqttInfo);
-  screenManager.addScreen(&ioTest);
 
   // #### /Settings/WiFi
   screenManager.addScreen(&wifiInfo);

@@ -18,6 +18,12 @@ enum class MenuItemType
   Number
 };
 
+struct ActionFunction
+{
+  std::function<void()> func;
+  s8 clicksToRun;
+};
+
 /**
  * @class MenuItem
  * @brief Represents a menu item.
@@ -26,7 +32,6 @@ class MenuItem
 {
 private:
   String name;
-  s8 clicksToRun = 1;
 
 protected:
   MenuItemType type;
@@ -49,18 +54,6 @@ public:
    * @return The name of the menu item.
    */
   String getName();
-
-  /**
-   * @brief Sets the number of clicks required to run the menu item.
-   * @param _clicksToRun The number of clicks required to run the menu item.
-   */
-  void setClicksToRun(s8 _clicksToRun);
-
-  /**
-   * @brief Gets the number of clicks required to run the menu item.
-   * @return The number of clicks required to run the menu item.
-   */
-  s8 getClicksToRun();
 
   /**
    * @brief Gets the type of the menu item.
@@ -92,23 +85,25 @@ public:
 class MenuItemAction : public MenuItem
 {
 private:
-  std::function<void()> func;
+  std::vector<ActionFunction> actionFunctions;
 
 public:
   /**
    * @brief Constructs a MenuItemAction object with the specified name and action.
    *
    * @param _name The name of the menu item.
+   * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed when the menu item is selected.
    */
-  MenuItemAction(String _name, std::function<void()> _func);
+  MenuItemAction(String _name, s8 _clicksToRun, std::function<void()> _func);
 
   /**
    * @brief Sets the action to be performed when the menu item is selected.
    *
+   * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed.
    */
-  void setFunc(std::function<void()> _func);
+  void addFunc(s8 _clicksToRun, std::function<void()> _func);
 
   void draw(u8 _x, u8 _y, bool _active) override;
   void run() override;
@@ -148,7 +143,7 @@ public:
 
 /**
  * @brief Represents a toggle menu item.
- * 
+ *
  * This class inherits from the MenuItem class and provides functionality for a toggle menu item.
  * It allows the user to toggle a boolean value associated with the menu item.
  */
@@ -160,7 +155,7 @@ private:
 public:
   /**
    * @brief Constructs a new MenuItemToggle object.
-   * 
+   *
    * @param _name The name of the menu item.
    * @param _value A pointer to the boolean value associated with the menu item.
    */
@@ -170,7 +165,6 @@ public:
   void run() override;
 };
 
-
 /**
  * @brief Represents a menu item for selecting a number value.
  */
@@ -178,15 +172,15 @@ class MenuItemNumber : public MenuItem
 {
 private:
   int *value; ///< Pointer to the value being controlled by this menu item.
-  s16 min; ///< The minimum value allowed.
-  s16 max; ///< The maximum value allowed.
+  s16 min;    ///< The minimum value allowed.
+  s16 max;    ///< The maximum value allowed.
 
   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
 
 public:
   /**
    * @brief Constructs a new MenuItemNumber object.
-   * 
+   *
    * @param _name The name of the menu item.
    * @param _value Pointer to the value being controlled by this menu item.
    * @param _min The minimum value allowed.
@@ -196,7 +190,7 @@ public:
 
   /**
    * @brief Checks if this menu item is currently selected.
-   * 
+   *
    * @return true if this menu item is selected, false otherwise.
    */
   bool isSelected();
@@ -213,7 +207,7 @@ public:
 
   /**
    * @brief Draws the menu item on the screen.
-   * 
+   *
    * @param _x The x-coordinate of the top-left corner of the menu item.
    * @param _y The y-coordinate of the top-left corner of the menu item.
    * @param _active Flag indicating whether the menu item is currently active.

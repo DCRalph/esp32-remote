@@ -4,8 +4,8 @@
 
 MenuItem::MenuItem(String _name)
 {
-  name = _name;
   type = MenuItemType::None;
+  name = _name;
 }
 
 void MenuItem::setName(String _name)
@@ -16,16 +16,6 @@ void MenuItem::setName(String _name)
 String MenuItem::getName()
 {
   return name;
-}
-
-void MenuItem::setClicksToRun(s8 _clicksToRun)
-{
-  clicksToRun = _clicksToRun;
-}
-
-s8 MenuItem::getClicksToRun()
-{
-  return clicksToRun;
 }
 
 MenuItemType MenuItem::getType()
@@ -43,15 +33,23 @@ void MenuItem::run()
 
 // ###### MenuItemAction ######
 
-MenuItemAction::MenuItemAction(String _name, std::function<void()> _func) : MenuItem(_name)
+MenuItemAction::MenuItemAction(String _name, s8 _clicksToRun, std::function<void()> _func) : MenuItem(_name)
 {
-  func = _func;
   type = MenuItemType::Action;
+
+  addFunc(_clicksToRun, _func);
 }
 
-void MenuItemAction::setFunc(std::function<void()> _func)
+void MenuItemAction::addFunc(s8 _clicksToRun, std::function<void()> _func)
 {
-  func = _func;
+  if (_clicksToRun == 0)
+    return;
+
+  ActionFunction actionFunc;
+  actionFunc.clicksToRun = _clicksToRun;
+  actionFunc.func = _func;
+
+  actionFunctions.push_back(actionFunc);
 }
 
 void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
@@ -71,15 +69,22 @@ void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
 
 void MenuItemAction::run()
 {
-  func();
+  for (u8 i = 0; i < actionFunctions.size(); i++)
+  {
+    if (ClickButtonEnc.clicks == actionFunctions[i].clicksToRun)
+    {
+      actionFunctions[i].func();
+      break;
+    }
+  }
 }
 
 // ###### MenuItemNavigate ######
 
 MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_name)
 {
-  target = _target;
   type = MenuItemType::Navigate;
+  target = _target;
 }
 
 void MenuItemNavigate::draw(u8 _x, u8 _y, bool _active)
@@ -133,8 +138,8 @@ void MenuItemBack::run()
 
 MenuItemToggle::MenuItemToggle(String _name, bool *_value) : MenuItem(_name)
 {
-  value = _value;
   type = MenuItemType::Toggle;
+  value = _value;
 }
 
 void MenuItemToggle::draw(u8 _x, u8 _y, bool _active)
@@ -164,11 +169,11 @@ void MenuItemToggle::run()
 
 MenuItemNumber::MenuItemNumber(String _name, int *_value, s16 _min, s16 _max) : MenuItem(_name)
 {
+  type = MenuItemType::Number;
+
   value = _value;
   min = _min;
   max = _max;
-
-  type = MenuItemType::Number;
 }
 
 bool MenuItemNumber::isSelected()
@@ -307,10 +312,10 @@ void Menu::update()
     return;
   }
 
-  if (ClickButtonEnc.clicks == items[active]->getClicksToRun())
-  {
+  if (items[active]->getType() == MenuItemType::Action && ClickButtonEnc.clicks != 0)
     items[active]->run();
-  }
+  else if (ClickButtonEnc.clicks == 1)
+    items[active]->run();
 
   if (encoder.encoder.getPosition() > 0)
   {

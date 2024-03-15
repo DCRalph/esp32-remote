@@ -17,8 +17,8 @@ public:
 
   MenuItemNavigate wifiInfoItem = MenuItemNavigate("WiFi Info", "WiFi Info");
 
-  MenuItemAction configPortalItem = MenuItemAction("Start Conf", [&]()
-                                       {
+  MenuItemAction configPortalItem = MenuItemAction("Start Conf", 1, [&]()
+                                                   {
                                          if (wm.getConfigPortalActive() || wm.getWebPortalActive())
                                          {
                                             wm.stopConfigPortal();
@@ -36,8 +36,8 @@ public:
                                             configPortalItem.setName("Stop Conf");
                                          } });
 
-  MenuItemAction wifiForgetItem = MenuItemAction("Reset WiFi", []()
-                                     { wm.resetSettings(); });
+  MenuItemAction wifiForgetItem = MenuItemAction("Reset WiFi", 1, []()
+                                                 { wm.resetSettings(); });
 
   void draw() override;
   void update() override;

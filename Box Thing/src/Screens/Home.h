@@ -15,10 +15,12 @@ public:
 
   MenuItemNavigate switchMenuItem = MenuItemNavigate("Switch", "Switch Menu");
 
-  MenuItemNavigate settingsItem = MenuItemNavigate("Settings", "Settings");
+  MenuItemAction settingsItem = MenuItemAction("Settings", 1, []()
+                                               { screenManager.setScreen("Settings"); });
 
-  MenuItemAction powerOffItem = MenuItemAction("Power Off", []()
-                                               { latch.Off(); });
+  MenuItemAction powerOffItem = MenuItemAction(
+      "Power Off", -1, []()
+      { latch.Off(); });
 
   void draw() override;
   void update() override;
@@ -34,7 +36,8 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&settingsItem);
   menu.addMenuItem(&powerOffItem);
 
-  powerOffItem.setClicksToRun(-1);
+  settingsItem.addFunc(2, []()
+                       { screenManager.setScreen("Debug"); });
 }
 
 void HomeScreen::draw()

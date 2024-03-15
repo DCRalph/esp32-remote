@@ -13,23 +13,15 @@ public:
 
   Menu menu = Menu();
 
-  MenuItemAction backItem = MenuItemAction("Back", []()
-                                           { screenManager.back(); });
+  MenuItemBack backItem;
 
-  MenuItemAction generalSettingsItem = MenuItemAction("General", []()
-                                                      { screenManager.setScreen("General Settings"); });
+  MenuItemNavigate generalSettingsItem = MenuItemNavigate("General", "General Settings");
 
-  MenuItemAction displaySettingsItem = MenuItemAction("Display", []()
-                                                      { screenManager.setScreen("Display Settings"); });
+  MenuItemNavigate displaySettingsItem = MenuItemNavigate("Display", "Display Settings");
 
-  MenuItemAction wifiItem = MenuItemAction("WiFi", []()
-                                           { screenManager.setScreen("WiFi Settings"); });
+  MenuItemNavigate wifiItem = MenuItemNavigate("WiFi", "WiFi Settings");
 
-  MenuItemAction mqttItem = MenuItemAction("MQTT", []()
-                                           { screenManager.setScreen("MQTT Info"); });
-
-  MenuItemAction ioTestItem = MenuItemAction("IO Test", [&]()
-                                             { screenManager.setScreen("IO Test"); });
+  MenuItemNavigate mqttItem = MenuItemNavigate("MQTT", "MQTT Info");
 
   void draw() override;
   void update() override;
@@ -46,7 +38,6 @@ SettingsScreen::SettingsScreen(String _name) : Screen(_name)
   menu.addMenuItem(&displaySettingsItem);
   menu.addMenuItem(&wifiItem);
   menu.addMenuItem(&mqttItem);
-  menu.addMenuItem(&ioTestItem);
 }
 
 void SettingsScreen::draw()
