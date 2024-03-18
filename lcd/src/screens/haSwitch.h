@@ -9,7 +9,7 @@
 class HASwitch : public Screen
 {
 public:
-  HASwitch(String _id, String _entity_id) : Screen("", _id)
+  HASwitch(String _name, String _entity_id) : Screen(_name)
   {
     entity_id = _entity_id;
   };
@@ -64,7 +64,7 @@ void HASwitch::draw(void)
 void HASwitch::update(void)
 {
   if (ClickButtonDOWN.clicks == -1)
-    screenManager.setScreen("menu");
+    screenManager.back();
 
   if (ClickButtonDOWN.clicks == 1)
   {

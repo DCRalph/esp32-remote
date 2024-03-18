@@ -12,6 +12,7 @@
 #include "IO/GPIO.h"
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
+#include "IO/myespnow.h"
 
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
@@ -24,6 +25,7 @@
 #include "Screens/Settings.h"
 
 #include "Screens/Switch/MQTTSwitch.h"
+#include "Screens/Switch/EspnowSwitch.h"
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/DisplaySettings.h"
@@ -46,6 +48,7 @@ SettingsScreen settings("Settings");
 
 // #### /Switch
 MQTTSwitchScreen mqttSwitch("MQTT Switch");
+EspnowSwitchScreen espnowSwitch("Espnow Switch");
 
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
@@ -85,6 +88,7 @@ void setup()
 
   // #### /Switch
   screenManager.addScreen(&mqttSwitch);
+  screenManager.addScreen(&espnowSwitch);
 
   // #### /Settings
   screenManager.addScreen(&generalSettings);
@@ -117,6 +121,7 @@ void setup()
   }
 
   mqtt.init();
+  myEspnow.init();
 
   Serial.println("[INFO] [SETUP] OTA...");
   InitOta();

@@ -8,7 +8,7 @@
 class Settings : public Screen
 {
 public:
-  Settings(String _name, String _id) : Screen(_name, _id){};
+  Settings(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -44,19 +44,19 @@ void Settings::update()
   {
   case 0:
     if (ClickButtonDOWN.clicks == 2)
-      screenManager.setScreen("menu");
+      screenManager.setScreen("Menu");
     break;
   case 1:
     if (ClickButtonDOWN.clicks == 2)
-      screenManager.setScreen("battery");
+      screenManager.setScreen("Battery");
     break;
   case 2:
     if (ClickButtonDOWN.clicks == 2)
-      screenManager.setScreen("wifi");
+      screenManager.setScreen("Wi-Fi");
     break;
   case 3:
     if (ClickButtonDOWN.clicks == 2)
-      screenManager.setScreen("rssi");
+      screenManager.setScreen("RSSI");
     break;
   }
 

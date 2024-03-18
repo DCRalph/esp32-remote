@@ -23,7 +23,7 @@ void Display::drawTopBar()
   sprite.setTextColor(TFT_BLACK);
   sprite.setTextDatum(ML_DATUM);
 
-  String name = screenManager.getCurrentScreenName();
+  String name = screenManager.getCurrentScreen()->name;
   // if (name.length() > 8)
   //   name = name.substring(0, 5) + "...";
 
@@ -69,27 +69,24 @@ void Display::display(void)
 
 //****************************************************
 
-Screen::Screen(String _name, String _id)
+Screen::Screen(String _name)
 {
   name = _name;
-  id = _id;
 }
 
 void Screen::draw()
 {
-  display.sprite.setTextSize(3);
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.setTextDatum(MC_DATUM);
-
-  display.sprite.drawString("SCREEN!!!", LCD_WIDTH / 2, LCD_HEIGHT / 2);
-
-  char buf[50];
-  sprintf(buf, "Sec: %i", millis() / 1000);
-
-  display.sprite.drawString(buf, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
 }
 
 void Screen::update()
+{
+}
+
+void Screen::onEnter()
+{
+}
+
+void Screen::onExit()
 {
 }
 

@@ -8,7 +8,7 @@
 class WifiScreen : public Screen
 {
 public:
-  WifiScreen(String _name, String _id) : Screen(_name, _id){};
+  WifiScreen(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -56,5 +56,5 @@ void WifiScreen::draw()
 void WifiScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("settings");
+    screenManager.back();
 }

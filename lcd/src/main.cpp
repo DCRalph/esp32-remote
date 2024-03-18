@@ -1,3 +1,5 @@
+// lcd mac 74:4d:bd:7b:93:6c
+
 #include <Arduino.h>
 #include "secrets.h"
 
@@ -7,6 +9,7 @@
 
 #include "Battery.h"
 #include "Buttons.h"
+#include "myespnow.h"
 
 #include "driver/Display.h"
 #include "screens/Error.h"
@@ -15,6 +18,7 @@
 #include "screens/SettingsScreen.h"
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/wifiScreen.h"
+#include "screens/EspnowScreen.h"
 
 #include "screens/desk_lamp.h"
 #include "screens/haLight.h"
@@ -25,12 +29,13 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-ErrorScreen errorScreen("Error", "error");
-MenuScreen menuScreen("Menu", "menu");
-RSSIMeter rssiMeter("RSSI", "rssi");
-Settings settings("Settings", "settings");
-BatteryScreen batteryScreen("Battery", "battery");
-WifiScreen wifiScreen("Wi-Fi", "wifi");
+ErrorScreen errorScreen("Error");
+MenuScreen menuScreen("Menu");
+RSSIMeter rssiMeter("RSSI");
+Settings settings("Settings");
+BatteryScreen batteryScreen("Battery");
+WifiScreen wifiScreen("Wi-Fi");
+EspnowScreen espnowScreen("Espnow");
 
 // HALight deskLamp("deskLamp", "light.midesklamp1s_9479");
 // HALight leds("leds", "light.william_strip");
@@ -59,7 +64,7 @@ void mqttConnect()
 
 void setup()
 {
-  // Serial.begin(115200);
+  Serial.begin(115200);
   // pinMode(LED_PIN, OUTPUT);
 
   pinMode(15, OUTPUT);
@@ -80,8 +85,9 @@ void setup()
   screenManager.addScreen(&settings);
   screenManager.addScreen(&batteryScreen);
   screenManager.addScreen(&wifiScreen);
+  screenManager.addScreen(&espnowScreen);
 
-  screenManager.setScreen("menu");
+  screenManager.setScreen("Menu");
 
   //********************************************
   // {
@@ -93,6 +99,8 @@ void setup()
   //     delay(500);
   //   }
   WiFi.setAutoReconnect(true);
+
+  myEspnow.init();
 
   //   client.setServer(MQTT_SERVER, MQTT_PORT);
   //   client.setBufferSize(1024);
@@ -168,6 +176,8 @@ void loop()
   {
     prevMillis1 = millis();
     battery.update();
+
+    // Serial.println(battery.getVoltage());
   }
 
   // if (millis() - prevMillis2 > interval2)

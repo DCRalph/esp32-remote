@@ -38,12 +38,33 @@ class Screen
 {
 public:
   String name;
-  String id;
 
-  Screen(String _name, String _id);
+  /**
+   * @brief Constructs a new Screen object with the specified name.
+   *
+   * @param _name The name of the screen.
+   */
+  Screen(String _name);
 
+  /**
+   * @brief Draws the screen.
+   */
   virtual void draw();
+
+  /**
+   * @brief Updates the screen.
+   */
   virtual void update();
+
+  /**
+   * @brief Called when the screen is entered.
+   */
+  virtual void onEnter();
+
+  /**
+   * @brief Called when the screen is exited.
+   */
+  virtual void onExit();
 };
 
 extern Display display;

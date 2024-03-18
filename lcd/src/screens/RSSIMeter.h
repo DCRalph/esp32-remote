@@ -9,7 +9,7 @@
 class RSSIMeter : public Screen
 {
 public:
-  RSSIMeter(String _name, String _id) : Screen(_name, _id){};
+  RSSIMeter(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -35,5 +35,5 @@ void RSSIMeter::draw()
 void RSSIMeter::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("settings");
+    screenManager.back();
 }

@@ -1,5 +1,15 @@
 #include "driver/ScreenManager.h"
 
+ScreenManager::ScreenManager()
+{
+  currentScreen = -1;
+}
+
+void ScreenManager::init()
+{
+  Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
+}
+
 void ScreenManager::update(void)
 {
   screens[currentScreen]->update();
@@ -10,76 +20,122 @@ void ScreenManager::draw(void)
   screens[currentScreen]->draw();
 }
 
-String ScreenManager::getCurrentScreenName(void)
+void ScreenManager::setScreen(int screen)
 {
-  return screens[currentScreen]->name;
-}
-
-String ScreenManager::getNameFromId(String id)
-{
-  for (int i = 0; i < screens.size(); i++)
+  if (screen == currentScreen)
   {
-    if (screens[i]->id == id)
-      return screens[i]->name;
+    Serial.println("[WARN] [SCREEN MANAGER] Screen already set");
+    return;
   }
 
-  return "???";
+  if (currentScreen != -1)
+  {
+    screens[currentScreen]->onExit();
+  }
+
+  currentScreen = screen;
+
+  Serial.println("[INFO] [SCREEN MANAGER] >> " + screens[screen]->name);
+
+  updateHistory();
+
+  screens[screen]->onEnter();
+}
+
+void ScreenManager::setScreen(String screenName)
+{
+  for (std::vector<Screen *>::size_type i = 0; i < screens.size(); i++)
+  {
+    if (screens[i]->name == screenName)
+    {
+      setScreen(i);
+      return;
+    }
+  }
+  Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
 }
 
 void ScreenManager::addScreen(Screen *screen)
 {
   screens.push_back(screen);
 
-  String msg = "\tScreen " + screen->name + " added";
+  String msg = "\t[INFO] [SCREEN MANAGER] " + screen->name + " added";
+  Serial.println(msg);
 }
 
-void ScreenManager::setScreen(int screenIdx)
+void ScreenManager::removeScreen(int screen)
 {
-
-  if (screenIdx < 0 || screenIdx >= screens.size())
-  {
-    currentScreen = 0;
-    return;
-  }
-
-  if (screens[screenIdx]->id == "")
-  {
-    currentScreen = 0;
-    return;
-  }
-
-  currentScreen = screenIdx;
+  screens.erase(screens.begin() + screen);
 }
 
-void ScreenManager::setScreen(String screenId)
+void ScreenManager::removeScreen(String screenName)
 {
-  for (int i = 0; i < screens.size(); i++)
+  for (std::vector<Screen *>::size_type i = 0; i < screens.size(); i++)
   {
-    if (screens[i]->id == screenId)
-    {
-      currentScreen = i;
-      return;
-    }
-  }
-
-  currentScreen = 0;
-}
-
-void ScreenManager::removeScreen(int screenIdx)
-{
-  screens.erase(screens.begin() + screenIdx);
-}
-
-void ScreenManager::removeScreen(String screenId)
-{
-  for (int i = 0; i < screens.size(); i++)
-  {
-    if (screens[i]->id == screenId)
+    if (screens[i]->name == screenName)
     {
       screens.erase(screens.begin() + i);
       return;
     }
   }
+  Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+}
+
+Screen *ScreenManager::getCurrentScreen(void)
+{
+  return screens[currentScreen];
+}
+
+void ScreenManager::back(void)
+{
+  if (screenHistory.size() > 1)
+  {
+    screenHistory.pop_back();
+
+    screens[currentScreen]->onExit();
+
+    currentScreen = screenHistory.back();
+
+    Serial.println("[INFO] [SCREEN MANAGER] << " + screens[currentScreen]->name);
+
+    screens[currentScreen]->onEnter();
+  }
+}
+
+void ScreenManager::clearHistory(void)
+{
+  screenHistory.clear();
+}
+
+void ScreenManager::updateHistory(void)
+{
+  screenHistory.push_back(currentScreen);
+
+  if (screenHistory.size() > 10)
+  {
+    screenHistory.erase(screenHistory.begin());
+  }
+
+  // for (int i = 0; i < screenHistory.size(); i++)
+  // {
+  //   Serial.print(screenHistory[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.print(" ");
+
+  // for (int i = 0; i < screenHistory.size(); i++)
+  // {
+  //   if (screenHistory[i] == currentScreen)
+  //   {
+  //     screenHistory.erase(screenHistory.begin() + i);
+  //   }
+  // }
+
+  // for (int i = 0; i < screenHistory.size(); i++)
+  // {
+  //   Serial.print(screenHistory[i]);
+  //   Serial.print(" ");
+  // }
 }
 
 ScreenManager screenManager;

@@ -8,7 +8,7 @@
 class BatteryScreen : public Screen
 {
 public:
-  BatteryScreen(String _name, String _id) : Screen(_name, _id){};
+  BatteryScreen(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -52,5 +52,5 @@ void BatteryScreen::draw()
 void BatteryScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("settings");
+    screenManager.back();
 }
