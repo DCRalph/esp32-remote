@@ -9,7 +9,7 @@
 class HALight : public Screen
 {
 public:
-  HALight(String _id, String _entity_id) : Screen("", _id)
+  HALight(String _name, String _entity_id) : Screen(_name)
   {
     entity_id = _entity_id;
   };
@@ -66,7 +66,7 @@ void HALight::draw(void)
 void HALight::update(void)
 {
   if (ClickButtonDOWN.clicks == -1)
-    screenManager.setScreen("menu");
+    screenManager.back();
 
   if (ClickButtonDOWN.clicks == 1)
     updateState(ha.callService("light", "toggle", entity_id), 0);

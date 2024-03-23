@@ -4,31 +4,37 @@
 #include "driver/Display.h"
 #include <vector>
 
-class Display;
 class Screen;
 
 class ScreenManager
 {
-public:
-  // Display *display;
-  int currentScreen = 0;
+private:
+  int currentScreen;
   std::vector<Screen *> screens;
+  std::vector<int> screenHistory;
 
-  // void init(Display *_display);
+  void updateHistory(void);
+
+public:
+  ScreenManager();
+
+  void init();
 
   void update(void);
   void draw(void);
 
-  String getCurrentScreenName(void);
-  String getNameFromId(String id);
+  void setScreen(int screen);
+  void setScreen(String screenName);
 
   void addScreen(Screen *screen);
 
-  void setScreen(int screenIdx);
-  void setScreen(String screenId);
+  void removeScreen(int screen);
+  void removeScreen(String screenName);
 
-  void removeScreen(int screenIdx);
-  void removeScreen(String screenId);
+  Screen *getCurrentScreen(void);
+
+  void back(void);
+  void clearHistory(void);
 };
 
 extern ScreenManager screenManager;

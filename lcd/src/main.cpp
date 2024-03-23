@@ -1,3 +1,5 @@
+// lcd mac 74:4d:bd:7b:93:6c
+
 #include <Arduino.h>
 #include "secrets.h"
 
@@ -7,15 +9,16 @@
 
 #include "Battery.h"
 #include "Buttons.h"
-
-// #include "fonts/NotoSansBold36.h"
+#include "myespnow.h"
 
 #include "driver/Display.h"
 #include "screens/Error.h"
 #include "screens/Menu.h"
 #include "screens/RSSIMeter.h"
-#include "screens/Settings.h"
-
+#include "screens/SettingsScreen.h"
+#include "screens/Settings/batteryScreen.h"
+#include "screens/Settings/wifiScreen.h"
+#include "screens/EspnowScreen.h"
 
 #include "screens/desk_lamp.h"
 #include "screens/haLight.h"
@@ -26,32 +29,20 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-ErrorScreen errorScreen("Error", "error");
-MenuScreen menuScreen("Menu", "menu");
-RSSIMeter rssiMeter("RSSI", "rssi");
-Settings settings("Settings", "settings");
-
-
-
-// DeskLamp deskLamp(":)", "desk_lamp");
+ErrorScreen errorScreen("Error");
+MenuScreen menuScreen("Menu");
+RSSIMeter rssiMeter("RSSI");
+Settings settings("Settings");
+BatteryScreen batteryScreen("Battery");
+WifiScreen wifiScreen("Wi-Fi");
+EspnowScreen espnowScreen("Espnow");
 
 // HALight deskLamp("deskLamp", "light.midesklamp1s_9479");
 // HALight leds("leds", "light.william_strip");
 // HALight matrix("matrix", "light.matrix_lamp");
-// HALight michaelLeds("michaelLeds", "light.micheals_leds");
-
-// HALight livingRoom("livingRoom", "light.living_room");
-
-// // HASwitch bedLight("bedLight", "switch.sonoffbasic_1");
-// HASwitch bedLight("bedLight", "switch.sonoffmini_1");
-// // HASwitch michaelFan("michaelFan", "switch.michael_plug_2");
-// HASwitch michaelFan("michaelFan", "switch.sonoffmini_2");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
-
-unsigned long long prevMillis2;
-int interval2 = 10000;
 
 bool sleepCountdown = false;
 unsigned long long sleepCountdownMillis = 0;
@@ -67,21 +58,15 @@ void mqttConnect()
       client.publish("esp-remote/init", "Hello from ESP32");
     }
     else
-    {
-      // Serial.print("failed, rc=");
-      // Serial.print(client.state());
-      // Serial.println(" try again in 5 seconds");
       delay(5000);
-    }
   }
 }
 
 void setup()
 {
-  // Serial.begin(115200);
+  Serial.begin(115200);
   // pinMode(LED_PIN, OUTPUT);
 
-  // setup lcd
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
 
@@ -98,19 +83,24 @@ void setup()
   screenManager.addScreen(&menuScreen);
   screenManager.addScreen(&rssiMeter);
   screenManager.addScreen(&settings);
+  screenManager.addScreen(&batteryScreen);
+  screenManager.addScreen(&wifiScreen);
+  screenManager.addScreen(&espnowScreen);
 
-  screenManager.setScreen("menu");
+  screenManager.setScreen("Menu");
 
   //********************************************
   // {
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
   //   while (WiFi.status() != WL_CONNECTED)
   //   {
   //     delay(500);
   //   }
-    WiFi.setAutoReconnect(true);
+  WiFi.setAutoReconnect(true);
+
+  myEspnow.init();
 
   //   client.setServer(MQTT_SERVER, MQTT_PORT);
   //   client.setBufferSize(1024);
@@ -143,7 +133,6 @@ bool sleepLoop()
     display.sprite.setTextColor(TFT_WHITE);
     display.sprite.drawString("Sleeping...", LCD_WIDTH / 2, 60);
     display.sprite.drawString("Release to cancel", LCD_WIDTH / 2, 110);
-    // display.sprite.drawString("cancel", LCD_WIDTH / 2, 130);
 
     char buf[20];
     long msToGo = sleepCountdownTime - (millis() - sleepCountdownMillis);
@@ -187,6 +176,8 @@ void loop()
   {
     prevMillis1 = millis();
     battery.update();
+
+    // Serial.println(battery.getVoltage());
   }
 
   // if (millis() - prevMillis2 > interval2)

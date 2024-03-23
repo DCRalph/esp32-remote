@@ -9,7 +9,7 @@
 class DeskLamp : public Screen
 {
 public:
-  DeskLamp(String _name, String _id) : Screen(_name, _id){};
+  DeskLamp(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -53,7 +53,7 @@ void DeskLamp::draw()
 void DeskLamp::update()
 {
   if (ClickButtonDOWN.clicks == -1)
-    screenManager.setScreen("menu");
+    screenManager.back();
 
   if (ClickButtonDOWN.clicks == 1)
     updateState(ha.callService("light", "toggle", "light.midesklamp1s_9479"), 0);

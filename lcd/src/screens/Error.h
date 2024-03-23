@@ -8,7 +8,7 @@
 class ErrorScreen : public Screen
 {
 public:
-  ErrorScreen(String _name, String _id) : Screen(_name, _id){};
+  ErrorScreen(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
@@ -32,5 +32,5 @@ void ErrorScreen::draw()
 void ErrorScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("menu");
+    screenManager.setScreen("Menu");
 }
