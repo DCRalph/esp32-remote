@@ -1,10 +1,10 @@
 #pragma once
 
 #include "config.h"
-#include <vector>
+#include "Display.h"
+#include "Buttons.h"
 
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include <vector>
 
 class Menu;
 
@@ -21,7 +21,8 @@ enum class MenuItemType
 struct ActionFunction
 {
   std::function<void()> func;
-  s8 clicksToRun;
+  s8_t clicksToRunUp;
+  s8_t clicksToRunDown;
 };
 
 /**
@@ -50,7 +51,16 @@ public:
    * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed.
    */
-  void addFunc(s8 _clicksToRun, std::function<void()> _func);
+  void addFunc(s8_t _clicksToRun, std::function<void()> _func);
+
+  /**
+   * @brief Sets the action to be performed when the menu item is selected.
+   *
+   * @param _clicksToRunUp The number of clicks required to run the action when the UP button is pressed.
+   * @param _clicksToRunDown The number of clicks required to run the action when the DOWN button is pressed.
+   * @param _func The action to be performed.
+   */
+  void addFunc(s8_t _clicksToRunUp, s8_t _clicksToRunDown, std::function<void()> _func);
 
   /**
    * @brief Sets the name of the menu item.
@@ -76,7 +86,7 @@ public:
    * @param _y The y-coordinate of the menu item.
    * @param _active Indicates whether the menu item is active or not.
    */
-  virtual void draw(u8 _x, u8 _y, bool _active);
+  virtual void draw(u8_t _x, u8_t _y, bool _active);
 
   /**
    * @brief Runs the menu item.
@@ -101,9 +111,9 @@ public:
    * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed when the menu item is selected.
    */
-  MenuItemAction(String _name, s8 _clicksToRun, std::function<void()> _func);
+  MenuItemAction(String _name, s8_t _clicksToRun, std::function<void()> _func);
 
-  // void draw(u8 _x, u8 _y, bool _active) override;
+  // void draw(u8_t _x, u8_t _y, bool _active) override;
 };
 class MenuItemNavigate : public MenuItem
 {
@@ -124,9 +134,9 @@ public:
    *
    * @param route The route to be added.
    */
-  void addRoute(s8 _clicksToRun, String _target);
+  void addRoute(s8_t _clicksToRun, String _target);
 
-  // void draw(u8 _x, u8 _y, bool _active) override;
+  // void draw(u8_t _x, u8_t _y, bool _active) override;
 };
 
 /**
@@ -140,7 +150,7 @@ public:
    */
   MenuItemBack();
 
-  // void draw(u8 _x, u8 _y, bool _active) override;
+  // void draw(u8_t _x, u8_t _y, bool _active) override;
 };
 
 /**
@@ -163,7 +173,7 @@ public:
    */
   MenuItemToggle(String _name, bool *_value);
 
-  void draw(u8 _x, u8 _y, bool _active) override;
+  void draw(u8_t _x, u8_t _y, bool _active) override;
 };
 
 /**
@@ -173,8 +183,8 @@ class MenuItemNumber : public MenuItem
 {
 private:
   long *value; ///< Pointer to the value being controlled by this menu item.
-  s16 min;     ///< The minimum value allowed.
-  s16 max;     ///< The maximum value allowed.
+  s16_t min;   ///< The minimum value allowed.
+  s16_t max;   ///< The maximum value allowed.
 
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
 
@@ -189,7 +199,7 @@ public:
    * @param _min The minimum value allowed.
    * @param _max The maximum value allowed.
    */
-  MenuItemNumber(String _name, long *_value, s16 _min, s16 _max);
+  MenuItemNumber(String _name, long *_value, s16_t _min, s16_t _max);
 
   /**
    * @brief Constructs a new MenuItemNumber object.
@@ -216,31 +226,32 @@ public:
    */
   void decrease();
 
-  void draw(u8 _x, u8 _y, bool _active) override;
+  void draw(u8_t _x, u8_t _y, bool _active) override;
 };
 
 // ###### Menu ######
 class Menu
 {
 private:
-  u8 active;
+  u8_t active;
   std::vector<MenuItem *> items;
 
-  u8 maxItemsPerPage = 3;
+  u8_t maxItemsPerPage = 7;
 
-  u8 numItems;
-  u8 numItemsPerPage;
+  u8_t offsetFromTop;
+  u8_t numItems;
+  u8_t numItemsPerPage;
 
 public:
   Menu();
 
   // String name;
 
-  void setItemsPerPage(u8 _itemsPerPage);
-  u8 getItemsPerPage();
+  void setItemsPerPage(u8_t _itemsPerPage);
+  u8_t getItemsPerPage();
 
-  void setActive(u8 _active);
-  u8 getActive();
+  void setActive(u8_t _active);
+  u8_t getActive();
 
   void nextItem();
   void prevItem();

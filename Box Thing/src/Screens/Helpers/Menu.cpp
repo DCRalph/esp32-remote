@@ -37,6 +37,17 @@ MenuItemType MenuItem::getType()
 
 void MenuItem::draw(u8 _x, u8 _y, bool _active)
 {
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+  }
+  else
+    display.u8g2.setDrawColor(1);
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
 void MenuItem::run()
@@ -60,21 +71,6 @@ MenuItemAction::MenuItemAction(String _name, s8 _clicksToRun, std::function<void
   addFunc(_clicksToRun, _func);
 }
 
-void MenuItemAction::draw(u8 _x, u8 _y, bool _active)
-{
-  display.u8g2.setFont(u8g2_font_profont22_tf);
-
-  if (_active)
-  {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
-  }
-  else
-    display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-}
-
 // ###### MenuItemNavigate ######
 
 MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_name)
@@ -92,21 +88,6 @@ void MenuItemNavigate::addRoute(s8 _clicksToRun, String _target)
           { screenManager.setScreen(_target); });
 }
 
-void MenuItemNavigate::draw(u8 _x, u8 _y, bool _active)
-{
-  display.u8g2.setFont(u8g2_font_profont22_tf);
-
-  if (_active)
-  {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
-  }
-  else
-    display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-}
-
 // ###### MenuItemBack ######
 
 MenuItemBack::MenuItemBack() : MenuItem("Back")
@@ -115,21 +96,6 @@ MenuItemBack::MenuItemBack() : MenuItem("Back")
 
   addFunc(1, []()
           { screenManager.back(); });
-}
-
-void MenuItemBack::draw(u8 _x, u8 _y, bool _active)
-{
-  display.u8g2.setFont(u8g2_font_profont22_tf);
-
-  if (_active)
-  {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
-  }
-  else
-    display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
 }
 
 // ###### MenuItemToggle ######
@@ -295,8 +261,18 @@ void Menu::draw()
 
   for (u8 i = 0; i < numItemsPerPage; i++)
   {
-    u8 topItem = active - 1 < 0 ? 0 : active - 1 >= static_cast<u8>(numItems - 2) ? numItems < 3 ? 0 : static_cast<u8>(numItems - 3)
-                                                                                  : active - 1;
+    u8_t topItem;
+
+    if (active - 1 < 0)
+      topItem = 0;
+    else if (active - 1 >= static_cast<u8_t>(numItems - 2))
+      if (numItems < 3)
+        topItem = 0;
+      else
+        topItem = static_cast<u8_t>(numItems - 3);
+    else
+      topItem = active - 1;
+
     MenuItem *item = items[i + topItem];
 
     item->draw(0, 12 + (i * 18), active == i + topItem);
