@@ -3,18 +3,17 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
-#include <WiFi.h>
 
-class WifiScreen : public Screen
+class WiFiInfoScreen : public Screen
 {
 public:
-  WifiScreen(String _name) : Screen(_name){};
+  WiFiInfoScreen(String _name) : Screen(_name){};
 
   void draw() override;
   void update() override;
 };
 
-void WifiScreen::draw()
+void WiFiInfoScreen::draw()
 {
   display.sprite.setTextDatum(TL_DATUM);
 
@@ -36,11 +35,11 @@ void WifiScreen::draw()
     display.sprite.drawString(rssi, 105, 33);
 
     display.sprite.setTextColor(TFT_BLUE);
-    display.sprite.drawString(ssid, 160, 33);
+    display.sprite.drawString(ssid, 10, 60);
 
     display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString(ip, 10, 60);
-    display.sprite.drawString(mac, 10, 80);
+    display.sprite.drawString(ip, 10, 80);
+    display.sprite.drawString(mac, 10, 100);
   }
   else
   {
@@ -53,7 +52,7 @@ void WifiScreen::draw()
   char buf[20];
 }
 
-void WifiScreen::update()
+void WiFiInfoScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
     screenManager.back();

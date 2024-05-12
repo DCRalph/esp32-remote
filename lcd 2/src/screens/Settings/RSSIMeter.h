@@ -3,7 +3,6 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
-#include <WiFi.h>
 
 class RSSIMeter : public Screen
 {

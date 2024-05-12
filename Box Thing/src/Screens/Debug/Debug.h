@@ -31,8 +31,6 @@ DebugScreen::DebugScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&ioTestItem);
   menu.addMenuItem(&bootCountItem);
-
-  bootCount = preferences.getLong("bootCount", 0);
 }
 
 void DebugScreen::draw()

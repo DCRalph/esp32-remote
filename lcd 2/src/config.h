@@ -3,7 +3,18 @@
 #include <Arduino.h>
 #include "secrets.h"
 
+#include <Preferences.h>
+
+#include <esp_now.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
+
+extern Preferences preferences;
+
+#define BAUD_RATE 115200
+
 #define DEBUG true
+#define DEBUG_ESP_NOW false
 
 #define BTN_UP_PIN 14
 #define BTN_DOWN_PIN 0
@@ -31,3 +42,11 @@
 // #define TFT_HEIGHT            240
 
 // #define SEND_BUF_SIZE         (0x4000) //(LCD_WIDTH * LCD_HEIGHT + 8) / 10
+
+// ################ ESP NOW ################
+
+static u8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
+
+
+// #########################################
+void initConfig();

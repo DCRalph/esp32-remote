@@ -31,5 +31,5 @@ void ErrorScreen::draw()
 void ErrorScreen::update()
 {
   if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
-    screenManager.setScreen("Menu");
+    screenManager.setScreen("Home");
 }

@@ -15,7 +15,8 @@ void Display::init(void)
 void Display::drawTopBar()
 {
 
-  bool wifiConnected = WiFi.status() == WL_CONNECTED;
+  // bool wifiConnected = WiFi.status() == WL_CONNECTED;
+  bool wifiConnected = false;
 
   sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
 
@@ -31,8 +32,10 @@ void Display::drawTopBar()
   char buf[20];
   // sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
   // sprintf(buf, "%i %.2f%%", wifiConnected, battery.getPercentageF());
-  sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentageI());
+  // sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentageI());
   // sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentage10());
+  sprintf(buf, "%i%%", battery.getPercentageI());
+
   sprite.setTextDatum(MR_DATUM);
   sprite.drawString(buf, LCD_WIDTH - 10, 10);
 }

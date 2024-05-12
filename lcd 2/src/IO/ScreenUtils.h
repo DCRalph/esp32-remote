@@ -38,6 +38,10 @@ private:
 protected:
   MenuItemType type;
 
+  u16_t textColor;
+  u16_t activeTextColor;
+  u16_t bgColor;
+
 public:
   /**
    * @brief Constructs a MenuItem object with the specified name.
@@ -79,6 +83,24 @@ public:
    * @return The type of the menu item.
    */
   MenuItemType getType();
+
+  /**
+   * @brief Sets the text color of the menu item.
+   * @param _color The text color.
+   */
+  void setTextColor(u16_t _color);
+
+  /**
+   * @brief Sets the active text color of the menu item.
+   * @param _color The active text color.
+   */
+  void setActiveTextColor(u16_t _color);
+
+  /**
+   * @brief Sets the background color of the menu item.
+   * @param _color The background color.
+   */
+  void setBgColor(u16_t _color);
 
   /**
    * @brief Draws the menu item on the screen.

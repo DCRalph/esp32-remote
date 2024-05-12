@@ -6,6 +6,10 @@ MenuItem::MenuItem(String _name)
 {
   type = MenuItemType::None;
   name = _name;
+
+  textColor = TFT_WHITE;
+  activeTextColor = TFT_BLACK;
+  bgColor = TFT_WHITE;
 }
 
 void MenuItem::addFunc(s8_t _clicksToRun, std::function<void()> _func)
@@ -49,17 +53,32 @@ MenuItemType MenuItem::getType()
   return type;
 }
 
+void MenuItem::setTextColor(u16_t _color)
+{
+  textColor = _color;
+}
+
+void MenuItem::setActiveTextColor(u16_t _color)
+{
+  activeTextColor = _color;
+}
+
+void MenuItem::setBgColor(u16_t _color)
+{
+  bgColor = _color;
+}
+
 void MenuItem::draw(u8_t _x, u8_t _y, bool _active)
 {
   display.sprite.setTextSize(2);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, TFT_WHITE);
-    display.sprite.setTextColor(TFT_BLACK);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
+    display.sprite.setTextColor(activeTextColor);
   }
   else
-    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.setTextColor(textColor);
 
   display.sprite.setTextDatum(TL_DATUM);
   display.sprite.drawString(getName(), _x + 4, _y + 3);
@@ -130,11 +149,11 @@ void MenuItemToggle::draw(u8_t _x, u8_t _y, bool _active)
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, TFT_WHITE);
-    display.sprite.setTextColor(TFT_BLACK);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
+    display.sprite.setTextColor(activeTextColor);
   }
   else
-    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.setTextColor(textColor);
 
   display.sprite.setTextDatum(TL_DATUM);
   display.sprite.drawString(getName(), _x + 4, _y + 3);
@@ -192,36 +211,6 @@ void MenuItemNumber::decrease()
 
 void MenuItemNumber::draw(u8_t _x, u8_t _y, bool _active)
 {
-  // display.u8g2.setFont(u8g2_font_profont22_tf);
-
-  // if (!_active && selected)
-  // {
-  //   selected = false;
-  // }
-
-  // String valueStr = String(*value);
-
-  // if (_active && selected)
-  // {
-  //   display.u8g2.setDrawColor(1);
-  //   display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
-  //   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-  //   display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
-  // }
-  // else if (_active)
-  // {
-  //   display.u8g2.setDrawColor(1);
-  //   display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-  //   display.u8g2.setDrawColor(0);
-  //   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-  //   display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
-  // }
-  // else
-  // {
-  //   display.u8g2.setDrawColor(1);
-  //   display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-  //   display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
-  // }
 
   display.sprite.setTextSize(2);
 
@@ -234,27 +223,27 @@ void MenuItemNumber::draw(u8_t _x, u8_t _y, bool _active)
 
   if (_active && selected)
   {
-    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, TFT_WHITE);
-    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
+    display.sprite.setTextColor(textColor);
     display.sprite.setTextDatum(TL_DATUM);
     display.sprite.drawString(getName(), _x + 4, _y + 2);
     display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 2);
+    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
   }
   else if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, TFT_WHITE);
-    display.sprite.setTextColor(TFT_BLACK);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
+    display.sprite.setTextColor(activeTextColor);
     display.sprite.drawString(getName(), _x + 4, _y + 2);
     display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 2);
+    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
   }
   else
   {
-    display.sprite.setTextColor(TFT_WHITE);
+    display.sprite.setTextColor(textColor);
     display.sprite.drawString(getName(), _x + 4, _y + 2);
     display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 2);
+    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
   }
 }
 

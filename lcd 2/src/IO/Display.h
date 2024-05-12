@@ -5,8 +5,6 @@
 #include "ScreenManager.h"
 #include "ScreenUtils.h"
 
-#include <WiFi.h>
-
 #include "battery.h"
 
 class Screen;
