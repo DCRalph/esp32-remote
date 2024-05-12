@@ -3,6 +3,7 @@
 ScreenManager::ScreenManager()
 {
   currentScreen = -1;
+  popupActive = false;
 }
 
 void ScreenManager::init()
@@ -10,14 +11,20 @@ void ScreenManager::init()
   Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
 }
 
-void ScreenManager::update(void)
-{
-  screens[currentScreen]->update();
-}
-
 void ScreenManager::draw(void)
 {
   screens[currentScreen]->draw();
+
+  if (popupActive)
+    popup->draw();
+}
+
+void ScreenManager::update(void)
+{
+  if (popupActive)
+    popup->update();
+  else
+    screens[currentScreen]->update();
 }
 
 void ScreenManager::setScreen(int screen)
@@ -136,6 +143,17 @@ void ScreenManager::updateHistory(void)
   //   Serial.print(screenHistory[i]);
   //   Serial.print(" ");
   // }
+}
+
+void ScreenManager::showPopup(Popup *popup)
+{
+  this->popup = popup;
+  popupActive = true;
+}
+
+void ScreenManager::closePopup(void)
+{
+  popupActive = false;
 }
 
 ScreenManager screenManager;

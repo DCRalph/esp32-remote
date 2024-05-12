@@ -3,8 +3,10 @@
 #include "config.h"
 #include "Display.h"
 #include <vector>
+#include "Popup.h"
 
 class Screen;
+class Popup;
 
 class ScreenManager
 {
@@ -13,6 +15,9 @@ private:
   std::vector<Screen *> screens;
   std::vector<int> screenHistory;
 
+  Popup *popup;
+  bool popupActive;
+
   void updateHistory(void);
 
 public:
@@ -20,8 +25,8 @@ public:
 
   void init();
 
-  void update(void);
   void draw(void);
+  void update(void);
 
   void setScreen(int screen);
   void setScreen(String screenName);
@@ -35,6 +40,9 @@ public:
 
   void back(void);
   void clearHistory(void);
+
+  void showPopup(Popup *popup);
+  void closePopup(void);
 };
 
 extern ScreenManager screenManager;

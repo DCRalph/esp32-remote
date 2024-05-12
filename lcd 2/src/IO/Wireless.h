@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "ScreenManager.h"
 
 #define ESP_NOW_CHANNEL 1
 

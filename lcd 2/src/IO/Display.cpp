@@ -45,6 +45,58 @@ void Display::clearScreen(u16_t color)
   sprite.fillRect(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
 
+void Display::wrapTextInBounds(String text, int x, int y, int width, int height, int textSize, int gap, u16_t color, int textAlignment)
+{
+  sprite.setTextSize(textSize);
+  sprite.setTextColor(color);
+  sprite.setTextDatum(textAlignment);
+
+  String wrappedText = "";
+  String word = "";
+  int lines = 1;
+
+  // sprite.drawRect(x, y, width, height, TFT_RED);
+
+  for (int i = 0; i < text.length(); i++)
+  {
+    char c = text.charAt(i);
+
+    if (c == ' ')
+    {
+      String currentLine = wrappedText.substring(wrappedText.lastIndexOf('\n') + 1);
+      int currentLineWidth = sprite.textWidth(currentLine) + sprite.textWidth(word);
+      if (currentLineWidth > width)
+      {
+        wrappedText += "\n";
+        lines++;
+      }
+
+      wrappedText += word + " ";
+      word = "";
+    }
+    else
+      word += c;
+  }
+
+  String currentLine = wrappedText.substring(wrappedText.lastIndexOf('\n') + 1);
+  int currentLineWidth = sprite.textWidth(currentLine) + sprite.textWidth(word);
+  if (currentLineWidth > width)
+  {
+    wrappedText += "\n" + word;
+    lines++;
+  }
+  else
+    wrappedText += word;
+
+  for (int i = 0; i < lines; i++)
+  {
+    String line = wrappedText.substring(0, wrappedText.indexOf('\n'));
+    wrappedText = wrappedText.substring(wrappedText.indexOf('\n') + 1);
+
+    sprite.drawString(line, x, y + i * (sprite.fontHeight() + gap));
+  }
+}
+
 void Display::noTopBar(void)
 {
   showMenuBar = false;

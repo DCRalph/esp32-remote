@@ -50,6 +50,15 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
 
   Serial.print("Last Packet Send Status: ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+
+  if (status == ESP_NOW_SEND_SUCCESS)
+  {
+    screenManager.showPopup(new Popup("Success", "Packet sent successfully"));
+  }
+  else
+  {
+    screenManager.showPopup(new Popup("Error", "Failed to send packet"));
+  }
 }
 
 int Wireless::send(packet *p, u8_t *peer_addr)

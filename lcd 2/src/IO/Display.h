@@ -23,6 +23,8 @@ public:
   void drawTopBar(void);
   void clearScreen(u16_t color = TFT_BLACK);
 
+  void wrapTextInBounds(String text, int x, int y, int width, int height, int textSize, int gap, u16_t color, int textAlignment = TC_DATUM);
+
   void noTopBar(void);
 
   void push(void);

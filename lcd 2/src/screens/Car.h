@@ -4,6 +4,7 @@
 #include "IO/Display.h"
 #include "IO/Buttons.h"
 #include "IO/Wireless.h"
+#include "IO/Popup.h"
 
 class CarScreen : public Screen
 {
@@ -23,7 +24,7 @@ public:
                                              p.len = 1;
                                              p.data[0] = 0;
 
-                                             wireless.send(&p, car_addr);
+                                             int res = wireless.send(&p, car_addr);
                                              //
                                            });
 
@@ -35,6 +36,8 @@ public:
                                                p.data[0] = 1;
 
                                                wireless.send(&p, car_addr);
+
+                                               int res = wireless.send(&p, car_addr);
                                                //
                                              });
 
