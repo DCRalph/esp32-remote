@@ -53,10 +53,13 @@ void WiFiInfoScreen::draw()
   }
   else
   {
-    display.u8g2.setFont(u8g2_font_logisoso16_tf);
+    display.u8g2.setFont(u8g2_font_profont12_tf);
 
-    display.drawCenteredText(30, "Not");
-    display.drawCenteredText(48, "Connected");
+    display.drawCenteredText(20, "Not");
+    display.drawCenteredText(30, "Connected");
+
+    sprintf(buffer, "ch: %d", WiFi.channel());
+    display.u8g2.drawStr(0, 40, buffer);
   }
 }
 

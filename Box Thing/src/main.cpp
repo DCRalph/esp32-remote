@@ -12,7 +12,8 @@
 #include "IO/GPIO.h"
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
-#include "IO/myespnow.h"
+// #include "IO/myespnow.h"
+#include "IO/Wireless.h"
 
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
@@ -121,7 +122,8 @@ void setup()
   }
 
   mqtt.init();
-  myEspnow.init();
+  // myEspnow.init();
+  // wireless.setup();
 
   Serial.println("[INFO] [SETUP] OTA...");
   InitOta();
@@ -135,7 +137,9 @@ void setup()
 
 void loop()
 {
-  wm.process();
+  if (!wireless.isSetupDone())
+    wm.process();
+
   ArduinoOTA.handle();
   mqtt.loop();
   ClickButtonEnc.Update();

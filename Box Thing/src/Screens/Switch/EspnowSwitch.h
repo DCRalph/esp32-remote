@@ -3,7 +3,8 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
-#include "IO/myespnow.h"
+// #include "IO/myespnow.h"
+#include "IO/Wireless.h"
 
 class EspnowSwitchScreen : public Screen
 {
@@ -16,6 +17,8 @@ public:
 
   bool lastState = false;
   int lastSendResult = -1;
+
+  u8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
 };
 
 EspnowSwitchScreen::EspnowSwitchScreen(String _name) : Screen(_name)
@@ -37,14 +40,19 @@ void EspnowSwitchScreen::draw()
   sprintf(buffer, "Res: %s", lastSendResult == 0 ? "OK" : String(lastSendResult).c_str());
   display.u8g2.drawStr(0, 45, buffer);
 
-  sprintf(buffer, "lastS: %d", myEspnow.lastStatus);
+  sprintf(buffer, "lastS: %d", wireless.lastStatus);
   display.u8g2.drawStr(0, 60, buffer);
 
   if (lastState != switchPin.read())
   {
     lastState = switchPin.read();
 
-    lastSendResult = myEspnow.send(lastState ? "ON" : "OFF");
+    // lastSendResult = myEspnow.send(lastState ? "ON" : "OFF");
+    packet p;
+    p.type = 1;
+    p.len = 1;
+    p.data[0] = lastState ? 1 : 0;
+    lastSendResult = wireless.send(&p, car_addr);
   }
 }
 
