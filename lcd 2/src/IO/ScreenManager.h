@@ -43,6 +43,7 @@ public:
 
   void showPopup(Popup *popup);
   void closePopup(void);
+  void drawPopup(void);
 };
 
 extern ScreenManager screenManager;

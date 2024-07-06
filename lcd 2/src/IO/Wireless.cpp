@@ -53,11 +53,11 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
 
   if (status == ESP_NOW_SEND_SUCCESS)
   {
-    screenManager.showPopup(new Popup("Success", "Packet sent successfully"));
+    screenManager.showPopup(new AutoClosePopup("Success", "Packet sent successfully", 1000));
   }
   else
   {
-    screenManager.showPopup(new Popup("Error", "Failed to send packet"));
+    screenManager.showPopup(new AutoClosePopup("Error", "Failed to send packet", 1000));
   }
 }
 

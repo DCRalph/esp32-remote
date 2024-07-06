@@ -119,6 +119,8 @@ void Display::display(void)
     drawTopBar();
   showMenuBar = true;
 
+  screenManager.drawPopup();
+
   push();
 }
 

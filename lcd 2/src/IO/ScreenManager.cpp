@@ -14,16 +14,11 @@ void ScreenManager::init()
 void ScreenManager::draw(void)
 {
   screens[currentScreen]->draw();
-
-  if (popupActive)
-    popup->draw();
 }
 
 void ScreenManager::update(void)
 {
-  if (popupActive)
-    popup->update();
-  else
+  if (!popupActive)
     screens[currentScreen]->update();
 }
 
@@ -154,6 +149,13 @@ void ScreenManager::showPopup(Popup *popup)
 void ScreenManager::closePopup(void)
 {
   popupActive = false;
+}
+
+void ScreenManager::drawPopup(void){
+  if(popupActive){
+    this->popup->draw();
+    this->popup->update();
+  }
 }
 
 ScreenManager screenManager;

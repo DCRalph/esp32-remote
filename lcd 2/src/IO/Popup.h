@@ -9,9 +9,23 @@ class Popup
 {
 public:
   Popup(String _title, String _message);
-  void draw();
-  void update();
+  virtual void draw();
+  virtual void update();
 
   String title;
   String message;
+};
+
+class AutoClosePopup : public Popup
+{
+private:
+  unsigned long startTime;
+  unsigned long duration;
+
+  int progressBarWidth = 0;
+
+public:
+  AutoClosePopup(String _title, String _message, unsigned long _duration);
+  void draw() override;
+  void update() override;
 };

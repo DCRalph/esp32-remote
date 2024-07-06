@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "secrets.h"
+// #include "secrets.h"
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include <Preferences.h>
@@ -15,8 +15,8 @@ extern WiFiManager wm;
 #define HOSTNAME "esp-box-thing"
 #define AP_SSID "ESP-Box-Thing"
 
-#define WIFI_SSID SECRET_SSID
-#define WIFI_PASS SECRET_PASS
+// #define WIFI_SSID SECRET_SSID
+// #define WIFI_PASS SECRET_PASS
 
 // Display
 #define DISPLAY_WIDTH 128
