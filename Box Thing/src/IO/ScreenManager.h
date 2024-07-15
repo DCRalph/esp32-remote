@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "IO/GPIO.h"
 #include "IO/Display.h"
 #include <vector>
 

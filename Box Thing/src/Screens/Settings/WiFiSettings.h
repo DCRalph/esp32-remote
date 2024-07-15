@@ -20,21 +20,22 @@ public:
 
   MenuItemAction configPortalItem = MenuItemAction("Config ...", 1, [&]()
                                                    {
-                                                     if (wm.getConfigPortalActive() || wm.getWebPortalActive())
+                                                     if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // config portal is on
                                                      {
                                                        wm.stopConfigPortal();
                                                        wm.stopWebPortal();
 
                                                        wm.autoConnect(AP_SSID);
-
-                                                       configPortalItem.setName("Config ON");
                                                      }
-                                                     else
+                                                     else // config portal is off
                                                      {
+                                                       if (wireless.isSetupDone()) // espnow is on
+                                                       {
+                                                         wireless.unSetup();
+                                                       }
+
                                                        wm.disconnect();
                                                        wm.startConfigPortal(AP_SSID);
-
-                                                       configPortalItem.setName("Config OFF");
                                                      }
                                                      updateButtons();
                                                      //
@@ -42,17 +43,21 @@ public:
 
   MenuItemAction toggleESPNOWItem = MenuItemAction("ESPNOW ...", 1, [&]()
                                                    {
-                                                     if (wireless.isSetupDone())
+                                                     if (wireless.isSetupDone()) // espnow is on
                                                      {
                                                        wireless.unSetup();
                                                        wm.autoConnect(AP_SSID);
-                                                       toggleESPNOWItem.setName("ESPNOW ON");
                                                      }
-                                                     else
-                                                     {
+                                                     else // espnow is off
+                                                     { 
+                                                       if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // if config portal is on
+                                                       {
+                                                         wm.stopConfigPortal();
+                                                         wm.stopWebPortal();
+                                                       }
+
                                                        wm.disconnect();
                                                        wireless.setup();
-                                                       toggleESPNOWItem.setName("ESPNOW OFF");
                                                      }
                                                      updateButtons();
                                                      //
@@ -103,7 +108,7 @@ void WiFiSettingsScreen::update()
 
 void WiFiSettingsScreen::onEnter()
 {
-  encoder.encoder.setPosition(0);
+  updateButtons();
 }
 
 void WiFiSettingsScreen::updateButtons()

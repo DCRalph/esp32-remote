@@ -33,13 +33,14 @@ void Display::display(void)
   //   } while (u8g2.nextPage());
   //   refreshScreen = false;
   // }
-  screenManager.update();
 
   u8g2.firstPage();
   do
   {
     screenManager.draw();
   } while (u8g2.nextPage());
+
+  screenManager.update();
 }
 
 Screen::Screen(String _name)

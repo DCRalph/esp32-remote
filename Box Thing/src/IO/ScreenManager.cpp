@@ -33,6 +33,8 @@ void ScreenManager::setScreen(int screen)
     screens[currentScreen]->onExit();
   }
 
+  encoder.encoder.setPosition(0);
+
   currentScreen = screen;
 
   Serial.println("[INFO] [SCREEN MANAGER] >> " + screens[screen]->name);
@@ -44,7 +46,7 @@ void ScreenManager::setScreen(int screen)
 
 void ScreenManager::setScreen(String screenName)
 {
-  for (std::vector<Screen*>::size_type i = 0; i < screens.size(); i++)
+  for (std::vector<Screen *>::size_type i = 0; i < screens.size(); i++)
   {
     if (screens[i]->name == screenName)
     {
@@ -70,7 +72,7 @@ void ScreenManager::removeScreen(int screen)
 
 void ScreenManager::removeScreen(String screenName)
 {
-  for (std::vector<Screen*>::size_type i = 0; i < screens.size(); i++)
+  for (std::vector<Screen *>::size_type i = 0; i < screens.size(); i++)
   {
     if (screens[i]->name == screenName)
     {

@@ -18,7 +18,8 @@ public:
   bool lastState = false;
   int lastSendResult = -1;
 
-  u8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
+  // 74:4d:bd:7b:93:6c
+  u8_t car_addr[6] = {0x74, 0x4d, 0xbd, 0x7b, 0x93, 0x6c};
 };
 
 EspnowSwitchScreen::EspnowSwitchScreen(String _name) : Screen(_name)
