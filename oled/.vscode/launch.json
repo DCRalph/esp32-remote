@@ -12,9 +12,9 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/Box Thing/.pio/build/esp12e/firmware.elf",
-            "projectEnvName": "esp12e",
-            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/oled/.pio/build/T-Display-AMOLED/firmware.elf",
+            "projectEnvName": "T-Display-AMOLED",
+            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa-esp32s3/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -25,18 +25,18 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/Box Thing/.pio/build/esp12e/firmware.elf",
-            "projectEnvName": "esp12e",
-            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/oled/.pio/build/T-Display-AMOLED/firmware.elf",
+            "projectEnvName": "T-Display-AMOLED",
+            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa-esp32s3/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/Box Thing/.pio/build/esp12e/firmware.elf",
-            "projectEnvName": "esp12e",
-            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa/bin",
+            "executable": "C:/Users/Willi/Documents/GitHub/esp32-remote/oled/.pio/build/T-Display-AMOLED/firmware.elf",
+            "projectEnvName": "T-Display-AMOLED",
+            "toolchainBinDir": "C:/Users/Willi/.platformio/packages/toolchain-xtensa-esp32s3/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"
         }

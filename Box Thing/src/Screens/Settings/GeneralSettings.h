@@ -3,6 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
+#include <ESP8266WiFi.h>
 
 #include "Screens/Helpers/Menu.h"
 
@@ -11,16 +12,14 @@ class GeneralSettingsScreen : public Screen
 public:
   GeneralSettingsScreen(String _name);
 
-  bool toggle = false;
-  long number = 0;
+  unsigned long lastUpdate = 0;
+  long ramPercentage = 0;
 
   Menu menu = Menu();
 
   MenuItemBack backItem;
 
-  MenuItemToggle toggleItem = MenuItemToggle("Toggle", &toggle);
-
-  MenuItemNumber numberItem = MenuItemNumber("Number", &number, 0, 10);
+  MenuItemNumber ramUsageItem = MenuItemNumber("Ram", &ramPercentage);
 
   void draw() override;
   void update() override;
@@ -31,8 +30,7 @@ public:
 GeneralSettingsScreen::GeneralSettingsScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
-  menu.addMenuItem(&toggleItem);
-  menu.addMenuItem(&numberItem);
+  menu.addMenuItem(&ramUsageItem);
 }
 
 void GeneralSettingsScreen::draw()
@@ -47,17 +45,19 @@ void GeneralSettingsScreen::draw()
 
 void GeneralSettingsScreen::update()
 {
+  if (millis() - lastUpdate > 1000)
+  {
+    lastUpdate = millis();
+    ramPercentage = (int)(ESP.getFreeHeap() * 100 / 81920);
+  }
+
   menu.update();
 }
 
 void GeneralSettingsScreen::onEnter()
 {
-  toggle = preferences.getBool("toggle", false);
-  number = preferences.getLong("number", 0);
 }
 
 void GeneralSettingsScreen::onExit()
 {
-  preferences.putBool("toggle", toggle);
-  preferences.putLong("number", number);
 }

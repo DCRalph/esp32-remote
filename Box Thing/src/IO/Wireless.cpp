@@ -6,7 +6,7 @@ Wireless::Wireless()
 
 void Wireless::setup()
 {
-  WiFi.disconnect();
+  // WiFi.disconnect();
   WiFi.mode(WIFI_AP_STA);
 
   WiFi.softAP(AP_SSID, "*#&@^&*#&@", ESP_NOW_CHANNEL, true);
@@ -24,7 +24,7 @@ void Wireless::setup()
   setupDone = true;
 }
 
-void Wireless::unsetup()
+void Wireless::unSetup()
 {
   setupDone = false;
   esp_now_deinit();

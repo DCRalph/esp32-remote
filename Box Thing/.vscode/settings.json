@@ -6,5 +6,6 @@
     "ranges": "cpp",
     "utility": "cpp",
     "*.tpp": "cpp"
-  }
+  },
+  "cSpell.ignoreWords": ["logisoso", "profont"]
 }
