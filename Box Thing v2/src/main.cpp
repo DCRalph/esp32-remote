@@ -27,7 +27,6 @@
 #include "Screens/SwitchMenu.h"
 #include "Screens/Settings.h"
 
-#include "Screens/Switch/MQTTSwitch.h"
 #include "Screens/Switch/EspnowSwitch.h"
 
 #include "Screens/Settings/GeneralSettings.h"
@@ -52,7 +51,6 @@ SwitchMenuScreen switchMenu("Switch Menu");
 SettingsScreen settings("Settings");
 
 // #### /Switch
-MQTTSwitchScreen mqttSwitch("MQTT Switch");
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
 
 // #### /Settings
@@ -97,13 +95,15 @@ void setup()
   screenManager.addScreen(&settings);
 
   // #### /Switch
-  screenManager.addScreen(&mqttSwitch);
   screenManager.addScreen(&espnowSwitch);
 
   // #### /Settings
   screenManager.addScreen(&generalSettings);
+  generalSettings.setTopBarText("General");
   screenManager.addScreen(&displaySettings);
+  displaySettings.setTopBarText("Display");
   screenManager.addScreen(&wifiSettings);
+  wifiSettings.setTopBarText("Wi-Fi");
   screenManager.addScreen(&mqttInfo);
 
   // #### /Settings/WiFi
@@ -153,7 +153,7 @@ void loop()
   mqtt.loop();
   ClickButtonEnc.Update();
 
-  if (millis() - batteryLoopMs > 1000)
+  if (millis() - batteryLoopMs > 500)
   {
     batteryLoopMs = millis();
     batteryUpdate();
@@ -162,10 +162,6 @@ void loop()
   if (ClickButtonEnc.clicks == -3)
     screenManager.setScreen("Shutdown");
 
-  if (ClickButtonEnc.clicks == -2)
-  {
-    Serial.println("Battery voltage: " + String(batteryGetVoltage()) + "V");
-  }
 
   display.display();
 }

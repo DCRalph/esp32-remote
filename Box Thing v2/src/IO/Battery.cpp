@@ -1,28 +1,31 @@
 #include "Battery.h"
 
-static float batteryVoltage = 0.0f;
+#define minVoltage 3.2f
+#define maxVoltage 4.2f
+
+static float batteryVoltage = 1.0f;
+static float batteryVoltageSmooth = 1.0f;
 
 float batteryGetVoltage()
 {
   return batteryVoltage;
 }
 
+float batteryGetVoltageSmooth()
+{
+  return batteryVoltageSmooth;
+}
+
 int batteryGetPercentage()
 {
-  const float minVoltage = 3.2f;
-  const float maxVoltage = 4.2f;
+  float percentage = ((constrain(batteryVoltage, minVoltage, maxVoltage) - minVoltage) / (maxVoltage - minVoltage)) * 100.0f;
 
-  // Clamp the voltage to be within the min and max range
-  if (batteryVoltage < minVoltage)
-  {
-    return 0;
-  }
-  else if (batteryVoltage > maxVoltage)
-  {
-    return 100;
-  }
+  return static_cast<int>(percentage);
+}
 
-  float percentage = ((batteryVoltage - minVoltage) / (maxVoltage - minVoltage)) * 100.0f;
+int batteryGetPercentageSmooth()
+{
+  float percentage = ((constrain(batteryVoltageSmooth, minVoltage, maxVoltage) - minVoltage) / (maxVoltage - minVoltage)) * 100.0f;
 
   return static_cast<int>(percentage);
 }
@@ -33,4 +36,13 @@ void batteryUpdate()
   float adcVoltage = (adcValue / 4095.0) * BATTERY_SENSE_VCC;
 
   batteryVoltage = (adcVoltage * (BATTERY_SENSE_R1 + BATTERY_SENSE_R2) / BATTERY_SENSE_R2) + BATTERY_SENSE_OFFSET;
+
+  if (batteryVoltageSmooth == 1.0f)
+  {
+    batteryVoltageSmooth = batteryVoltage;
+  }
+  else
+  {
+    batteryVoltageSmooth = batteryVoltageSmooth * 0.95 + batteryVoltage * 0.05;
+  }
 }

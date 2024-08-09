@@ -8,5 +8,5 @@
     "*.tpp": "cpp"
   },
   "cSpell.ignoreWords": ["logisoso", "profont"],
-  "cSpell.words": ["GPIO", "IRAM", "mqtt", "multiclick"]
+  "cSpell.words": ["GPIO", "IRAM", "koleeko", "mqtt", "multiclick"]
 }

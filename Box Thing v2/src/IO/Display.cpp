@@ -17,14 +17,31 @@ void Display::drawCenteredText(uint8_t y, String text)
   u8g2.drawStr((DISPLAY_WIDTH - u8g2.getStrWidth(text.c_str())) / 2, y, text.c_str());
 }
 
-void Display::drawTopBar()
+void Display::drawTopBar(void)
 {
-  u8g2.drawStr(0, 9, "Top Bar");
+  u8g2.setFont(u8g2_font_koleeko_tf);
+  u8g2.setDrawColor(1);
+  u8g2.drawStr(0, 9, screenManager.getCurrentScreen()->topBarText.c_str());
+  u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);
+
+  char buffer[32];
+
+  sprintf(buffer, "%d%%%", batteryGetPercentageSmooth());
+
+  u8g2.setFont(u8g2_font_koleeko_tf);
+  int battW = u8g2.getStrWidth(buffer);
+  u8g2.drawStr(DISPLAY_WIDTH - battW, 9, buffer);
+
+  u8g2.setFont(u8g2_font_open_iconic_www_1x_t);
+  if (WiFi.status() == WL_CONNECTED)
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0048);
+  else
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x004a);
 }
 
-void Display::refresh(void)
+void Display::noTopBar()
 {
-  refreshScreen = true;
+  _noTopBar = true;
 }
 
 void Display::display(void)
@@ -34,14 +51,29 @@ void Display::display(void)
   do
   {
     screenManager.draw();
+    if (!_noTopBar)
+      drawTopBar();
   } while (u8g2.nextPage());
 
   screenManager.update();
+  _noTopBar = false;
 }
 
 Screen::Screen(String _name)
 {
   name = _name;
+  topBarText = _name;
+}
+
+Screen::Screen(String _name, String _topBarText)
+{
+  name = _name;
+  topBarText = _topBarText;
+}
+
+void Screen::setTopBarText(String _text)
+{
+  topBarText = _text;
 }
 
 void Screen::draw()

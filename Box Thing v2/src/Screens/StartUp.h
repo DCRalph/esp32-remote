@@ -43,6 +43,7 @@ StartUpState StartUpScreen::getState()
 
 void StartUpScreen::draw()
 {
+  display.noTopBar();
 
   switch (state)
   {

@@ -35,6 +35,8 @@ UpdateProgressScreen::UpdateProgressScreen(String _name) : Screen(_name)
 
 void UpdateProgressScreen::draw()
 {
+  display.noTopBar();
+
   display.u8g2.setFont(u8g2_font_logisoso24_tr);
   display.u8g2.setDrawColor(1);
 
@@ -48,7 +50,7 @@ void UpdateProgressScreen::draw()
     break;
 
   case UpdateProgressState::UPDATING: // Updating
-    display.u8g2.setFont(u8g2_font_profont12_tf);
+    display.u8g2.setFont(u8g2_font_koleeko_tf);
     display.drawCenteredText(44, String(progress) + "%");
 
     display.u8g2.drawFrame(0, 48, 127, 16);

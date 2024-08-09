@@ -20,10 +20,6 @@ BatteryScreen::BatteryScreen(String _name) : Screen(_name)
 
 void BatteryScreen::draw()
 {
-  display.u8g2.setFont(u8g2_font_profont12_tf);
-  display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(0, 8, "Battery");
-  display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);
 
   display.u8g2.setFont(u8g2_font_logisoso16_tf);
   display.u8g2.setDrawColor(1);
@@ -32,6 +28,8 @@ void BatteryScreen::draw()
   sprintf(buffer, "%.2fV. %d%", batteryGetVoltage(), batteryGetPercentage());
   display.u8g2.drawStr(0, 28, buffer);
 
+  sprintf(buffer, "%.2fV. %d%", batteryGetVoltageSmooth(), batteryGetPercentageSmooth());
+  display.u8g2.drawStr(0, 46, buffer);
 }
 
 void BatteryScreen::update()

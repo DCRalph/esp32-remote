@@ -16,7 +16,7 @@ class ShutdownScreen : public Screen
 private:
   ShutdownState state;
   unsigned long startTime = 0;
-  long countdown = 3000;
+  long countdown = 1500;
   uint8_t progress;
 
 public:
@@ -53,6 +53,7 @@ ShutdownState ShutdownScreen::getState()
 
 void ShutdownScreen::draw()
 {
+  display.noTopBar();
 
   switch (state)
   {
@@ -61,10 +62,10 @@ void ShutdownScreen::draw()
     display.u8g2.setFont(u8g2_font_logisoso16_tr);
     display.drawCenteredText(20, "Shutting down");
 
-    display.u8g2.setFont(u8g2_font_profont12_tf);
+    display.u8g2.setFont(u8g2_font_koleeko_tf);
     display.drawCenteredText(44, "Press to cancel");
 
-    progress = map(millis() - startTime, 0, countdown, 0, 100);
+    progress = map(millis() - startTime, 0, countdown, 100, 0);
     progress = constrain(progress, 0, 100);
 
     display.u8g2.drawFrame(0, 48, 127, 16);
