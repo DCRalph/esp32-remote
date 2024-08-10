@@ -41,7 +41,7 @@ int interval1 = 200;
 
 bool sleepCountdown = false;
 unsigned long long sleepCountdownMillis = 0;
-long sleepCountdownTime = 3000;
+long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
 // esp_now_peer_info_t peerInfo = esp_now_peer_info_t();

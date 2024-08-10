@@ -23,10 +23,13 @@ void Wireless::setup()
   esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status)
                            { wireless.sendCallback(mac_addr, status); });
 
+  esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len)
+                           { wireless.recvCallback(mac_addr, data, len); });
+
   setupDone = true;
 }
 
-void Wireless::unsetup()
+void Wireless::unSetup()
 {
   setupDone = false;
   esp_now_deinit();
@@ -59,6 +62,30 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
   {
     screenManager.showPopup(new AutoClosePopup("Error", "Failed to send packet", 1000));
   }
+}
+
+void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len)
+{
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  Serial.print("Last Packet Recv from: ");
+  Serial.println(macStr);
+
+  packet *p = (packet *)data;
+
+  Serial.print("Type: ");
+  Serial.println(p->type);
+
+  Serial.print("Len: ");
+  Serial.println(p->len);
+
+  Serial.print("Data: ");
+  for (int i = 0; i < p->len; i++)
+  {
+    Serial.print(p->data[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
 }
 
 int Wireless::send(packet *p, u8_t *peer_addr)

@@ -20,10 +20,11 @@ private:
 public:
   Wireless();
   void setup();
-  void unsetup();
+  void unSetup();
   void loop();
 
   void sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status);
+  void recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len);
 
   // void enable();
   // void disable();

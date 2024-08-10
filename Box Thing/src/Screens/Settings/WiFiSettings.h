@@ -18,23 +18,46 @@ public:
 
   MenuItemNavigate wifiInfoItem = MenuItemNavigate("WiFi Info", "WiFi Info");
 
-  MenuItemAction configPortalItem = MenuItemAction("Start Conf", 1, [&]()
+  MenuItemAction configPortalItem = MenuItemAction("Config ...", 1, [&]()
                                                    {
-                                                     if (wm.getConfigPortalActive() || wm.getWebPortalActive())
+                                                     if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // config portal is on
                                                      {
                                                        wm.stopConfigPortal();
                                                        wm.stopWebPortal();
 
                                                        wm.autoConnect(AP_SSID);
-
-                                                       configPortalItem.setName("Start Conf");
                                                      }
-                                                     else
+                                                     else // config portal is off
                                                      {
+                                                       if (wireless.isSetupDone()) // espnow is on
+                                                       {
+                                                         wireless.unSetup();
+                                                       }
+
                                                        wm.disconnect();
                                                        wm.startConfigPortal(AP_SSID);
+                                                     }
+                                                     updateButtons();
+                                                     //
+                                                   });
 
-                                                       configPortalItem.setName("Stop Conf");
+  MenuItemAction toggleESPNOWItem = MenuItemAction("ESPNOW ...", 1, [&]()
+                                                   {
+                                                     if (wireless.isSetupDone()) // espnow is on
+                                                     {
+                                                       wireless.unSetup();
+                                                       wm.autoConnect(AP_SSID);
+                                                     }
+                                                     else // espnow is off
+                                                     { 
+                                                       if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // if config portal is on
+                                                       {
+                                                         wm.stopConfigPortal();
+                                                         wm.stopWebPortal();
+                                                       }
+
+                                                       wm.disconnect();
+                                                       wireless.setup();
                                                      }
                                                      updateButtons();
                                                      //
@@ -46,24 +69,6 @@ public:
                                                    updateButtons();
                                                    //
                                                  });
-
-  MenuItemAction toggleESPNOWItem = MenuItemAction("ESPNOW ON", 1, [&]()
-                                                   {
-                                                     if (wireless.isSetupDone())
-                                                     {
-                                                       wireless.unsetup();
-                                                       wm.autoConnect(AP_SSID);
-                                                       toggleESPNOWItem.setName("ESPNOW OFF");
-                                                     }
-                                                     else
-                                                     {
-                                                       wm.disconnect();
-                                                       wireless.setup();
-                                                       toggleESPNOWItem.setName("ESPNOW ON");
-                                                     }
-                                                     updateButtons();
-                                                     //
-                                                   });
 
   void draw() override;
   void update() override;
@@ -80,8 +85,8 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&wifiInfoItem);
   menu.addMenuItem(&configPortalItem);
-  menu.addMenuItem(&wifiForgetItem);
   menu.addMenuItem(&toggleESPNOWItem);
+  menu.addMenuItem(&wifiForgetItem);
 
   updateButtons();
 }
@@ -103,18 +108,18 @@ void WiFiSettingsScreen::update()
 
 void WiFiSettingsScreen::onEnter()
 {
-  encoder.encoder.setPosition(0);
+  updateButtons();
 }
 
 void WiFiSettingsScreen::updateButtons()
 {
   if (wm.getConfigPortalActive() || wm.getWebPortalActive())
-    configPortalItem.setName("Stop Conf");
+    configPortalItem.setName("Config ON");
   else
-    configPortalItem.setName("Start Conf");
+    configPortalItem.setName("Config OFF");
 
   if (wireless.isSetupDone())
-    toggleESPNOWItem.setName("ESPNOW OFF");
-  else
     toggleESPNOWItem.setName("ESPNOW ON");
+  else
+    toggleESPNOWItem.setName("ESPNOW OFF");
 }

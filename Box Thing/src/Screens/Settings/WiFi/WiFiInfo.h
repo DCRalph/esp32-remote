@@ -51,15 +51,27 @@ void WiFiInfoScreen::draw()
     sprintf(buffer, "SSID: %s", wm.getConfigPortalSSID().c_str());
     display.u8g2.drawStr(0, 64, buffer);
   }
-  else
+  else if (wireless.isSetupDone())
   {
+    display.u8g2.setFont(u8g2_font_logisoso16_tf);
+
+    display.drawCenteredText(30, "ESP-NOW");
+    display.drawCenteredText(48, "Active");
+
     display.u8g2.setFont(u8g2_font_profont12_tf);
 
-    display.drawCenteredText(20, "Not");
-    display.drawCenteredText(30, "Connected");
+    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, wireless.lastStatus);
+    display.u8g2.drawStr(0, 64, buffer);
+  }
+  else
+  {
+    display.u8g2.setFont(u8g2_font_logisoso16_tf);
 
-    sprintf(buffer, "ch: %d", WiFi.channel());
-    display.u8g2.drawStr(0, 40, buffer);
+    display.drawCenteredText(20, "Not");
+    display.drawCenteredText(48, "Connected");
+
+    sprintf(buffer, "ch: %d", ESP_NOW_CHANNEL);
+    display.u8g2.drawStr(0, 64, buffer);
   }
 }
 

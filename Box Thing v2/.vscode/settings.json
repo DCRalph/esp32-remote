@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "array": "cpp",
+    "string_view": "cpp",
+    "initializer_list": "cpp",
+    "ranges": "cpp",
+    "utility": "cpp",
+    "*.tpp": "cpp"
+  },
+  "cSpell.ignoreWords": ["logisoso", "profont"],
+  "cSpell.words": ["GPIO", "IRAM", "koleeko", "mqtt", "multiclick"]
+}

@@ -21,14 +21,13 @@ private:
 public:
   Wireless();
   void setup();
-  void unsetup();
+  void unSetup();
   void loop();
 
   bool isSetupDone();
 
   void sendCallback(uint8_t *mac_addr, uint8_t status);
   uint8_t lastStatus;
-
 
   int send(packet *p, u8_t *peer_addr);
   int send(u8_t *data, size_t len, u8_t *peer_addr);
