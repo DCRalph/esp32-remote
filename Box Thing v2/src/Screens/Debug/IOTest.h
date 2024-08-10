@@ -30,8 +30,14 @@ void IOTestScreen::draw()
   display.u8g2.setFont(u8g2_font_logisoso16_tf);
   display.u8g2.setDrawColor(1);
 
+  Serial.println(encoder.getCount());
+  Serial.println(encoderGetCount());
+
+  int count1 = encoder.getCount();
+  int count2 = encoderGetCount();
+
   char buffer[64];
-  sprintf(buffer, "Enc: %i:%i", encoderGetCount(), encoder.getCount());
+  sprintf(buffer, "Enc: %i:%i", count1, count2);
   display.u8g2.drawStr(0, 28, buffer);
 
   sprintf(buffer, "Btn: %d : %d", ClickButtonEnc.depressed, lastEncoderClicks);
@@ -48,7 +54,7 @@ void IOTestScreen::update()
     screenManager.back();
   }
 
-    if (ClickButtonEnc.clicks == 3)
+  if (ClickButtonEnc.clicks == 3)
   {
     encoder.clearCount();
   }

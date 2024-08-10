@@ -4,11 +4,15 @@ GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
 GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
 GpIO batterySense(BATTERY_SENSE_PIN, Input);
+GpIO MCPPowerGood(MCP_POWER_GOOD_PIN, Input, LOW);
+GpIO MCPState1(MCP_STATE_1_PIN, Input, LOW);
+GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 
 ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
 
 // RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
 ESP32Encoder encoder;
+static uint64_t lastEncoderValue = 0;
 
 // void IRAM_ATTR encoderISR()
 // {
@@ -125,6 +129,10 @@ void GpIO::initIO()
   led.init();
   latch.init();
   encoderButton.init();
+  batterySense.init();
+  MCPPowerGood.init();
+  MCPState1.init();
+  MCPState2.init();
 
   // led.On();
   latch.On();
@@ -150,7 +158,15 @@ void GpIO::initIO()
 
 int64_t encoderGetCount()
 {
-  return (encoder.getCount() / 4);
+  uint64_t value = encoder.getCount()/4;
+
+  if (value != lastEncoderValue)
+  {
+    lastEncoderValue = value;
+    lastInteract = millis();
+  }
+
+  return value;
 }
 
 void encoderSetCount(int64_t _count)

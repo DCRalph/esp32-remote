@@ -12,6 +12,9 @@ extern GpIO led;
 extern GpIO latch;
 extern GpIO encoderButton;
 extern GpIO batterySense;
+extern GpIO MCPPowerGood;
+extern GpIO MCPState1;
+extern GpIO MCPState2;
 
 // extern RotaryEncoder encoder;
 extern ESP32Encoder encoder;

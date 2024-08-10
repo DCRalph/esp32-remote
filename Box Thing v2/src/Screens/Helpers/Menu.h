@@ -173,16 +173,19 @@ public:
 /**
  * @brief Represents a menu item for selecting a number value.
  */
+template <typename T>
 class MenuItemNumber : public MenuItem
 {
 private:
-  long *value; ///< Pointer to the value being controlled by this menu item.
-  int min;     ///< The minimum value allowed.
-  int max;     ///< The maximum value allowed.
+  T *value; ///< Pointer to the value being controlled by this menu item.
+  int min;  ///< The minimum value allowed.
+  int max;  ///< The maximum value allowed.
 
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
 
   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+
+  std::function<void()> onChange;
 
 public:
   /**
@@ -193,7 +196,10 @@ public:
    * @param _min The minimum value allowed.
    * @param _max The maximum value allowed.
    */
-  MenuItemNumber(String _name, long *_value, int _min, int _max);
+  MenuItemNumber(String _name, T *_value, int _min, int _max);
+
+  void setOnChange(std::function<void()> _onChange);
+  void removeOnChange();
 
   /**
    * @brief Constructs a new MenuItemNumber object.
@@ -201,7 +207,7 @@ public:
    * @param _name The name of the menu item.
    * @param _value Pointer to the value being controlled by this menu item.
    */
-  MenuItemNumber(String _name, long *_value);
+  MenuItemNumber(String _name, T *_value);
 
   /**
    * @brief Checks if this menu item is currently selected.
@@ -222,6 +228,9 @@ public:
 
   void draw(uint8_t _x, uint8_t _y, bool _active) override;
 };
+
+template class MenuItemNumber<int>;
+template class MenuItemNumber<long>;
 
 // ###### Menu ######
 class Menu

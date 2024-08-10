@@ -30,7 +30,6 @@
 #include "Screens/Control/EspnowSwitch.h"
 
 #include "Screens/Settings/GeneralSettings.h"
-#include "Screens/Settings/DisplaySettings.h"
 #include "Screens/Settings/WiFiSettings.h"
 #include "Screens/Settings/MQTTInfo.h"
 
@@ -55,7 +54,6 @@ EspnowSwitchScreen espnowSwitch("Espnow Switch");
 
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
-DisplaySettingsScreen displaySettings("Display Settings");
 WiFiSettingsScreen wifiSettings("WiFi Settings");
 MQTTInfoScreen mqttInfo("MQTT Info");
 
@@ -102,8 +100,6 @@ void setup()
   // #### /Settings
   screenManager.addScreen(&generalSettings);
   generalSettings.setTopBarText("General");
-  screenManager.addScreen(&displaySettings);
-  displaySettings.setTopBarText("Display");
   screenManager.addScreen(&wifiSettings);
   wifiSettings.setTopBarText("Wi-Fi");
   screenManager.addScreen(&mqttInfo);
@@ -161,9 +157,17 @@ void loop()
     batteryUpdate();
   }
 
-  if (ClickButtonEnc.clicks == -3)
+  if (autoOffMin != 0 &&
+      millis() - lastInteract > autoOffMin * 60000 && screenManager.getCurrentScreen()->name != "Shutdown" &&
+      screenManager.getCurrentScreen()->name != "Start Up" &&
+      screenManager.getCurrentScreen()->name != "Update Progress")
     screenManager.setScreen("Shutdown");
 
+  if (ClickButtonEnc.clicks != 0)
+    lastInteract = millis();
+
+  if (ClickButtonEnc.clicks == -3)
+    screenManager.setScreen("Shutdown");
 
   display.display();
 }

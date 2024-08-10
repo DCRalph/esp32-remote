@@ -17,8 +17,6 @@ public:
 
   MenuItemNavigate generalSettingsItem = MenuItemNavigate("General", "General Settings");
 
-  MenuItemNavigate displaySettingsItem = MenuItemNavigate("Display", "Display Settings");
-
   MenuItemNavigate wifiItem = MenuItemNavigate("WiFi", "WiFi Settings");
 
   MenuItemNavigate mqttItem = MenuItemNavigate("MQTT", "MQTT Info");
@@ -35,7 +33,6 @@ SettingsScreen::SettingsScreen(String _name) : Screen(_name)
 
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&generalSettingsItem);
-  menu.addMenuItem(&displaySettingsItem);
   menu.addMenuItem(&wifiItem);
   menu.addMenuItem(&mqttItem);
 }

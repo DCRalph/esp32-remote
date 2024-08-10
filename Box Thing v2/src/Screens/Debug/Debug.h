@@ -22,7 +22,7 @@ public:
 
   MenuItemNavigate batteryItem = MenuItemNavigate("Battery", "Battery");
 
-  MenuItemNumber bootCountItem = MenuItemNumber("Boot", &bootCount);
+  MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot", &bootCount);
 
   MenuItemToggle ledItem = MenuItemToggle("LED", &ledState);
 

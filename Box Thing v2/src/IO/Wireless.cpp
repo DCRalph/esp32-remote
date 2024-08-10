@@ -59,6 +59,8 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
   Serial.print("Last Packet Send Status: ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 
+  lastStatus = status;
+
   // if (status == ESP_NOW_SEND_SUCCESS)
   // {
   //   screenManager.showPopup(new AutoClosePopup("Success", "Packet sent successfully", 1000));
