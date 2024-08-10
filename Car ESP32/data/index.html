@@ -1,0 +1,82 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>UG MOBILE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    html,body {min-height: 100%;}
+    body {display: flex; flex-direction: column; margin: 0; padding: 0; justify-content: center; align-items: center; font-family: Arial, sans-serif; background-color: #2d2d2d;}
+    .topnav { display: flex; justify-content: center; align-items: center; width: 100%; background-color: #1a1a1a; color: white; font-size: 2rem; }
+    
+    .content { padding: 20px; display: flex;  gap: 1rem; }
+
+    .notification { display: flex; flex-direction: column; gap: 2rem; position: absolute; top: 0; left: 0; font-size: 1.5rem; }
+    .notification p { padding: 1rem; margin: 0; color: white; }
+    .success { background-color: #0f0; }
+    .error { background-color: #f00; }
+    .info { background-color: #00f; }
+    
+    .btns { display: flex; padding: .5rem 1rem; border-radius: 1rem; font-size: 2rem; background-color: #1a1a1a; color: white; border: none; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,.5); }
+  </style>
+</head>
+<body>
+  <div class="topnav">
+    <h3>UG MOBILE</h3>
+  </div>
+  <div class="notification">
+  </div>
+
+  <main class="content">
+
+    <button id="btn-lock" class="btns">Lock</button>
+    <button id="btn-unlock" class="btns">Unlock</button>
+    
+  </main>
+<script>
+
+  const btnLock = document.querySelector('#btn-lock');
+  const btnUnlock = document.querySelector('#btn-unlock');
+
+  const notification = document.querySelector('.notification');
+
+  function showNotification(type, message) {
+    const pMsg = document.createElement('p');
+    pMsg.textContent = message;
+    pMsg.classList.add(type);
+    notification.appendChild(pMsg);
+    setTimeout(() => {
+      notification.removeChild(pMsg);
+    }, 5000);
+  }
+
+ async function unlockDoor() {
+    try {
+      const response = await fetch('/unlock', { method: 'POST' });
+      const data = await response.json();
+      showNotification(data.type, data.message);
+    } catch (error) {
+      showNotification('error', 'An error occurred');
+    }
+  }
+
+  async function lockDoor() {
+    try {
+      const response = await fetch('/lock', { method: 'POST' });
+      const data = await response.json();
+      showNotification(data.type, data.message);
+    } catch (error) {
+      showNotification('error', 'An error occurred');
+    }
+  }
+
+  btnLock.addEventListener('click', (e) => {
+    lockDoor();
+  });
+
+  btnUnlock.addEventListener('click', (e) => {
+    unlockDoor();
+  });
+
+</script>
+</body>
+</html>
