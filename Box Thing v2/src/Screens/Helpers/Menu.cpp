@@ -315,20 +315,20 @@ void Menu::update()
   if (ClickButtonEnc.clicks != 0)
     items[active]->run();
 
-  if (encoder.getPosition() > 0)
+  if (encoderGetCount() > 0)
   {
     if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
       ((MenuItemNumber *)items[active])->increase();
     else
       nextItem();
-    encoder.setPosition(0);
+    encoderClearCount();
   }
-  else if (encoder.getPosition() < 0)
+  else if (encoderGetCount() < 0)
   {
     if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
       ((MenuItemNumber *)items[active])->decrease();
     else
       prevItem();
-    encoder.setPosition(0);
+    encoderClearCount();
   }
 }

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include <esp_now.h>
-#include <WiFi.h>
+#include "ScreenManager.h"
 
 #define ESP_NOW_CHANNEL 1
 
@@ -19,6 +18,8 @@ private:
   bool setupDone = false;
 
 public:
+  esp_now_send_status_t lastStatus = ESP_NOW_SEND_FAIL;
+
   Wireless();
   void setup();
   void unSetup();
@@ -26,11 +27,14 @@ public:
 
   bool isSetupDone();
 
-  void sendCallback(uint8_t *mac_addr, uint8_t status);
-  uint8_t lastStatus;
+  void sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status);
+  void recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len);
 
-  int send(packet *p, uint8_t *peer_addr);
-  int send(uint8_t *data, size_t len, uint8_t *peer_addr);
+  // void enable();
+  // void disable();
+
+  int send(packet *p, u8_t *peer_addr);
+  int send(u8_t *data, size_t len, u8_t *peer_addr);
 };
 
 extern Wireless wireless;

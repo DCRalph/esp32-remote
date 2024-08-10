@@ -30,21 +30,26 @@ void IOTestScreen::draw()
   display.u8g2.setFont(u8g2_font_logisoso16_tf);
   display.u8g2.setDrawColor(1);
 
-  char buffer[32];
-  sprintf(buffer, "Encoder: %i", encoder.getPosition());
+  char buffer[64];
+  sprintf(buffer, "Enc: %i:%i", encoderGetCount(), encoder.getCount());
   display.u8g2.drawStr(0, 28, buffer);
 
   sprintf(buffer, "Btn: %d : %d", ClickButtonEnc.depressed, lastEncoderClicks);
   display.u8g2.drawStr(0, 46, buffer);
 
-  sprintf(buffer, "Switch: %s", switchPin.read() ? "ON" : "OFF");
-  display.u8g2.drawStr(0, 64, buffer);
+  // sprintf(buffer, "Switch: %s", switchPin.read() ? "ON" : "OFF");
+  // display.u8g2.drawStr(0, 64, buffer);
 }
 
 void IOTestScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1 && switchPin.read() == 0)
+  if (ClickButtonEnc.clicks == 1)
   {
     screenManager.back();
+  }
+
+    if (ClickButtonEnc.clicks == 3)
+  {
+    encoder.clearCount();
   }
 }

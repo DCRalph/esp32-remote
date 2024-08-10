@@ -27,7 +27,7 @@
 #include "Screens/SwitchMenu.h"
 #include "Screens/Settings.h"
 
-#include "Screens/Switch/EspnowSwitch.h"
+#include "Screens/Control/EspnowSwitch.h"
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/DisplaySettings.h"
@@ -50,7 +50,7 @@ HomeScreen homeScreen("Home");
 SwitchMenuScreen switchMenu("Switch Menu");
 SettingsScreen settings("Settings");
 
-// #### /Switch
+// #### /Control
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
 
 // #### /Settings
@@ -92,10 +92,12 @@ void setup()
   // #### /
   screenManager.addScreen(&homeScreen);
   screenManager.addScreen(&switchMenu);
+  switchMenu.setTopBarText("Control");
   screenManager.addScreen(&settings);
 
-  // #### /Switch
+  // #### /Control
   screenManager.addScreen(&espnowSwitch);
+  espnowSwitch.setTopBarText("ESPNOW");
 
   // #### /Settings
   screenManager.addScreen(&generalSettings);

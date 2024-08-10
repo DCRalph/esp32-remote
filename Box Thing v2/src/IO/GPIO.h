@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <RotaryEncoder.h>
+#include <ESP32Encoder.h>
 #include <ClickButton.h>
 #include <FunctionalInterrupt.h>
 
@@ -9,15 +10,15 @@ class GpIO;
 
 extern GpIO led;
 extern GpIO latch;
-extern GpIO switchPin;
 extern GpIO encoderButton;
 extern GpIO batterySense;
 
-extern RotaryEncoder encoder;
+// extern RotaryEncoder encoder;
+extern ESP32Encoder encoder;
 
 extern ClickButton ClickButtonEnc;
 
-void IRAM_ATTR encoderISR();
+// void IRAM_ATTR encoderISR();
 
 enum PinMode
 {
@@ -59,3 +60,7 @@ public:
 
   static void initIO();
 };
+
+extern int64_t encoderGetCount();
+extern void encoderSetCount(int64_t _count);
+extern void encoderClearCount();

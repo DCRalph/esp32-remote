@@ -2,18 +2,18 @@
 
 GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
-GpIO switchPin(SWITCH_PIN, InputPullup, LOW);
 GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
 GpIO batterySense(BATTERY_SENSE_PIN, Input);
 
 ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
 
-RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
+// RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
+ESP32Encoder encoder;
 
-void IRAM_ATTR encoderISR()
-{
-  encoder.readAB();
-}
+// void IRAM_ATTR encoderISR()
+// {
+//   encoder.readAB();
+// }
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -124,7 +124,6 @@ void GpIO::initIO()
 
   led.init();
   latch.init();
-  switchPin.init();
   encoderButton.init();
 
   // led.On();
@@ -135,12 +134,31 @@ void GpIO::initIO()
   ClickButtonEnc.longClickTime = 500;
 
   // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-  attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
+  // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();
 
   Serial.println("\t[Encoder] Initializing...");
-  encoder.begin();
+  // encoder.begin();
+
+  encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
+  encoder.clearCount();
+
   Serial.println("\t[Encoder] Initialized");
+}
+
+int64_t encoderGetCount()
+{
+  return (encoder.getCount() / 4);
+}
+
+void encoderSetCount(int64_t _count)
+{
+  encoder.setCount(_count * 4);
+}
+
+void encoderClearCount()
+{
+  encoder.clearCount();
 }

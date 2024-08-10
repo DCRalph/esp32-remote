@@ -13,7 +13,7 @@ public:
 
   Menu menu = Menu();
 
-  MenuItemNavigate switchMenuItem = MenuItemNavigate("Switch", "Switch Menu");
+  MenuItemNavigate switchMenuItem = MenuItemNavigate("Control", "Switch Menu");
 
   MenuItemNavigate settingsItem = MenuItemNavigate("Settings", "Settings");
 
@@ -50,5 +50,4 @@ void HomeScreen::update()
 
 void HomeScreen::onEnter()
 {
-  encoder.setPosition(0);
 }

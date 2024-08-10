@@ -6,20 +6,25 @@ Wireless::Wireless()
 
 void Wireless::setup()
 {
-  // WiFi.disconnect();
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
 
-  WiFi.softAP(AP_SSID, "*#&@^&*#&@", ESP_NOW_CHANNEL, true);
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
 
   delay(100);
-  if (esp_now_init() != 0)
+  if (esp_now_init() != ESP_OK)
   {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
 
-  // esp_now_register_send_cb([](uint8_t *mac_addr, uint8_t status)
-  //                          { wireless.sendCallback(mac_addr, status); });
+  esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status)
+                           { wireless.sendCallback(mac_addr, status); });
+
+  esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len)
+                           { wireless.recvCallback(mac_addr, data, len); });
 
   setupDone = true;
 }
@@ -27,10 +32,10 @@ void Wireless::setup()
 void Wireless::unSetup()
 {
   setupDone = false;
-  // esp_now_deinit();
+  esp_now_deinit();
 
-  // esp_now_unregister_recv_cb();
-  // esp_now_unregister_send_cb();
+  esp_now_unregister_recv_cb();
+  esp_now_unregister_send_cb();
 }
 
 void Wireless::loop()
@@ -44,7 +49,7 @@ bool Wireless::isSetupDone()
   return setupDone;
 }
 
-void Wireless::sendCallback(uint8_t *mac_addr, uint8_t status)
+void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
@@ -52,16 +57,48 @@ void Wireless::sendCallback(uint8_t *mac_addr, uint8_t status)
   Serial.println(macStr);
 
   Serial.print("Last Packet Send Status: ");
-  Serial.println(status == 0 ? "Delivery Success" : "Delivery Fail");
-  lastStatus = status;
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+
+  // if (status == ESP_NOW_SEND_SUCCESS)
+  // {
+  //   screenManager.showPopup(new AutoClosePopup("Success", "Packet sent successfully", 1000));
+  // }
+  // else
+  // {
+  //   screenManager.showPopup(new AutoClosePopup("Error", "Failed to send packet", 1000));
+  // }
 }
 
-int Wireless::send(packet *p, uint8_t *peer_addr)
+void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len)
 {
-  return send((uint8_t *)p, sizeof(packet), peer_addr);
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  Serial.print("Last Packet Recv from: ");
+  Serial.println(macStr);
+
+  packet *p = (packet *)data;
+
+  Serial.print("Type: ");
+  Serial.println(p->type);
+
+  Serial.print("Len: ");
+  Serial.println(p->len);
+
+  Serial.print("Data: ");
+  for (int i = 0; i < p->len; i++)
+  {
+    Serial.print(p->data[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
 }
 
-int Wireless::send(uint8_t *data, size_t len, uint8_t *peer_addr)
+int Wireless::send(packet *p, u8_t *peer_addr)
+{
+  return send((u8_t *)p, sizeof(packet), peer_addr);
+}
+
+int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
 {
   if (!setupDone)
   {
@@ -69,23 +106,38 @@ int Wireless::send(uint8_t *data, size_t len, uint8_t *peer_addr)
     return -1;
   }
 
-  // if (esp_now_add_peer(peer_addr, ESP_NOW_ROLE_SLAVE, ESP_NOW_CHANNEL, NULL, 0) != 0)
-  // {
-  //   Serial.println("Failed to add peer");
-  //   return -1;
-  // }
+  esp_now_peer_info_t peerInfo = esp_now_peer_info_t();
 
-  // if (esp_now_send(peer_addr, data, len) != 0)
-  // {
-  //   Serial.println("Failed to send data");
-  //   return -1;
-  // }
+  memcpy(peerInfo.peer_addr, peer_addr, 6);
+  peerInfo.channel = ESP_NOW_CHANNEL;
+  peerInfo.encrypt = false;
 
-  // if (esp_now_del_peer(peer_addr) != 0)
-  // {
-  //   Serial.println("Failed to delete peer");
-  //   return -1;
-  // }
+  if (esp_now_add_peer(&peerInfo) != ESP_OK)
+  {
+    Serial.println("Failed to add peer");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Peer added");
+#endif
+
+  if (esp_now_send(peerInfo.peer_addr, data, len) != ESP_OK)
+  {
+    Serial.println("Failed to send data");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Data sent");
+#endif
+
+  if (esp_now_del_peer(peer_addr) != ESP_OK)
+  {
+    Serial.println("Failed to delete peer");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Peer deleted");
+#endif
 
   return 0;
 }

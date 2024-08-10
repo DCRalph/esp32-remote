@@ -2,7 +2,10 @@
 
 #include <Arduino.h>
 // #include "secrets.h"
+#include <esp_now.h>
 #include <WiFi.h>
+#include <esp_wifi.h>
+
 #include <WiFiManager.h>
 #include <Preferences.h>
 
@@ -27,8 +30,6 @@ extern WiFiManager wm;
 
 #define LATCH_PIN 2
 
-#define SWITCH_PIN 0
-
 #define ENCODER_PIN_BUTTON 1
 #define ENCODER_PIN_A 17
 #define ENCODER_PIN_B 18
@@ -38,5 +39,7 @@ extern WiFiManager wm;
 #define BATTERY_SENSE_R2 997 // 1k
 #define BATTERY_SENSE_VCC 3.3
 #define BATTERY_SENSE_OFFSET 0.33
+
+static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
 
 void initConfig();

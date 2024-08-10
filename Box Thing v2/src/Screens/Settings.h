@@ -52,5 +52,4 @@ void SettingsScreen::update()
 
 void SettingsScreen::onEnter()
 {
-  encoder.setPosition(0);
 }

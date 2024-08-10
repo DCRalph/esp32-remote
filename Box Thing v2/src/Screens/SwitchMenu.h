@@ -14,7 +14,6 @@ public:
 
   MenuItemBack backItem;
 
-  MenuItemNavigate mqttSwitchItem = MenuItemNavigate("MQTT SW", "MQTT Switch");
   MenuItemNavigate espnowSwitchItem = MenuItemNavigate("ESP SW", "Espnow Switch");
 
   void draw() override;
@@ -24,7 +23,6 @@ public:
 SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
-  menu.addMenuItem(&mqttSwitchItem);
   menu.addMenuItem(&espnowSwitchItem);
 }
 
