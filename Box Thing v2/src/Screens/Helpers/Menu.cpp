@@ -110,14 +110,16 @@ MenuItemBack::MenuItemBack() : MenuItem("Back")
 
 // ###### MenuItemToggle ######
 
-MenuItemToggle::MenuItemToggle(String _name, bool *_value) : MenuItem(_name)
+MenuItemToggle::MenuItemToggle(String _name, bool *_value, bool _isMutable) : MenuItem(_name)
 {
   type = MenuItemType::Toggle;
   value = _value;
+  isMutable = _isMutable;
 
   addFunc(1, [this]()
           {
-            *value = !*value;
+            if (isMutable)
+              *value = !*value;
             if (onChange != nullptr)
               onChange();
             //
@@ -136,7 +138,8 @@ void MenuItemToggle::removeOnChange()
 
 void MenuItemToggle::set(bool _value)
 {
-  *value = _value;
+  if (isMutable)
+    *value = _value;
 }
 
 bool MenuItemToggle::get()

@@ -6,6 +6,13 @@ WiFiManager wm;
 uint64_t lastInteract;
 int autoOffMin;
 
+bool globalRelay1 = false;
+bool globalRelay2 = false;
+bool globalRelay3 = false;
+bool globalRelay4 = false;
+bool globalRelay5 = false;
+bool globalRelay6 = false;
+
 void initConfig()
 {
   Serial.begin(BAUD_RATE);

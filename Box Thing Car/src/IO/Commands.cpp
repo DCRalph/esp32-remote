@@ -6,19 +6,19 @@ static int parseForRelay(fullPacket *fp, GpIO *relay, uint8_t get, uint8_t set)
   {
     if (fp->p.data[0] == 0x01)
     {
-      Serial.println("Relay ON Pin" + String(relay->getPin()));
+      Serial.println("Relay ON Pin " + String(relay->getPin()));
       relay->On();
     }
     else
     {
-      Serial.println("Relay OFF Pin" + String(relay->getPin()));
+      Serial.println("Relay OFF Pin " + String(relay->getPin()));
       relay->Off();
     }
 
     fullPacket resp;
     memcpy(resp.mac, fp->mac, 6);
     resp.direction = PacketDirection::SEND;
-    resp.p.type = set;
+    resp.p.type = get;
     resp.p.len = 1;
     resp.p.data[0] = relay->read();
 
@@ -27,7 +27,7 @@ static int parseForRelay(fullPacket *fp, GpIO *relay, uint8_t get, uint8_t set)
   }
   else if (fp->p.type == get)
   {
-    Serial.println("Relay GET Pin" + String(relay->getPin()));
+    Serial.println("Relay GET Pin " + String(relay->getPin()));
     fullPacket resp;
     memcpy(resp.mac, fp->mac, 6);
     resp.direction = PacketDirection::SEND;
@@ -81,6 +81,27 @@ int parseCommand(fullPacket *fp)
     parseForRelay(fp, &relay6, CMD_RELAY_6_GET, CMD_RELAY_6_SET);
     if (ret != -1)
       return ret;
+  }
+
+  // ################### GET ALL RELAYS ###################
+  else if (fp->p.type == CMD_RELAY_ALL)
+  {
+    Serial.println("Get All Relays");
+
+    fullPacket resp;
+    memcpy(resp.mac, fp->mac, 6);
+    resp.direction = PacketDirection::SEND;
+    resp.p.type = CMD_RELAY_ALL;
+    resp.p.len = 6;
+    resp.p.data[0] = relay1.read();
+    resp.p.data[1] = relay2.read();
+    resp.p.data[2] = relay3.read();
+    resp.p.data[3] = relay4.read();
+    resp.p.data[4] = relay5.read();
+    resp.p.data[5] = relay6.read();
+
+    wireless.send(&resp);
+    return 3;
   }
 
   // ################### UNKNOW COMMAND ###################

@@ -45,6 +45,9 @@ void GpIO::init()
   Serial.println("\t[GPIO] " + String(pin) + " as " + PinModeString(mode) + " Initializing...");
   pinMode(pin, mode);
 
+  if (mode == Output)
+    digitalWrite(pin, !activeState);
+
   // Serial.println("\t[GPIO] Initialized");
 }
 

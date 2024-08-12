@@ -29,6 +29,8 @@
 // COMMANDS
 #define CMD_DOOR_LOCK 0x10
 
+#define CMD_RELAY_ALL 0x20
+
 #define CMD_RELAY_1_SET 0x21
 #define CMD_RELAY_1_GET 0x22
 

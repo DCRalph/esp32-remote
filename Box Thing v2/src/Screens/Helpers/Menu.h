@@ -166,6 +166,7 @@ class MenuItemToggle : public MenuItem
 {
 private:
   bool *value; ///< Pointer to the boolean value associated with the menu item.
+  bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
   std::function<void()> onChange;
 
 public:
@@ -175,7 +176,7 @@ public:
    * @param _name The name of the menu item.
    * @param _value A pointer to the boolean value associated with the menu item.
    */
-  MenuItemToggle(String _name, bool *_value);
+  MenuItemToggle(String _name, bool *_value, bool _isMutable = true);
 
   void setOnChange(std::function<void()> _onChange);
   void removeOnChange();

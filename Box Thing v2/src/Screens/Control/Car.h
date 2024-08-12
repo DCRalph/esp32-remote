@@ -6,10 +6,56 @@
 // #include "IO/myespnow.h"
 #include "IO/Wireless.h"
 
+static void relayChangeCb(uint8_t cmd, bool *global)
+{
+  fullPacket fp;
+  memcpy(fp.mac, car_addr, 6);
+  fp.direction = PacketDirection::SEND;
+  fp.p.type = cmd;
+  fp.p.data[0] = !*global;
+
+  wireless.send(&fp);
+}
+
 class CarControlScreen : public Screen
 {
 public:
   CarControlScreen(String _name);
+
+  Menu menu = Menu();
+
+  MenuItemBack backItem;
+
+  MenuItemAction lockDoorItem = MenuItemAction("Lock Door", 1, []()
+                                               {
+                                                 fullPacket fp;
+                                                 memcpy(fp.mac, car_addr, 6);
+                                                 fp.direction == PacketDirection::SEND;
+                                                 fp.p.type = CMD_DOOR_LOCK;
+                                                 fp.p.data[0] = 0;
+
+                                                 wireless.send(&fp);
+                                                 //
+                                               });
+
+  MenuItemAction unlockDoorItem = MenuItemAction("Unlock Door", 1, []()
+                                                 {
+                                                   fullPacket fp;
+                                                   memcpy(fp.mac, car_addr, 6);
+                                                   fp.direction == PacketDirection::SEND;
+                                                   fp.p.type = CMD_DOOR_LOCK;
+                                                   fp.p.data[0] = 1;
+
+                                                   wireless.send(&fp);
+                                                   //
+                                                 });
+
+  MenuItemToggle relay1Item = MenuItemToggle("R 1", &globalRelay1, false);
+  MenuItemToggle relay2Item = MenuItemToggle("R 2", &globalRelay2, false);
+  MenuItemToggle relay3Item = MenuItemToggle("R 3", &globalRelay3, false);
+  MenuItemToggle relay4Item = MenuItemToggle("R 4", &globalRelay4, false);
+  MenuItemToggle relay5Item = MenuItemToggle("R 5", &globalRelay5, false);
+  MenuItemToggle relay6Item = MenuItemToggle("R 6", &globalRelay6, false);
 
   void draw() override;
   void update() override;
@@ -18,75 +64,61 @@ public:
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 {
+  menu.addMenuItem(&backItem);
+  menu.addMenuItem(&lockDoorItem);
+  menu.addMenuItem(&unlockDoorItem);
+  menu.addMenuItem(&relay1Item);
+  menu.addMenuItem(&relay2Item);
+  menu.addMenuItem(&relay3Item);
+  menu.addMenuItem(&relay4Item);
+  menu.addMenuItem(&relay5Item);
+  menu.addMenuItem(&relay6Item);
+
+  relay1Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_1_SET, &globalRelay1); });
+
+  relay2Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_2_SET, &globalRelay2); });
+
+  relay3Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_3_SET, &globalRelay3); });
+
+  relay4Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_4_SET, &globalRelay4); });
+
+  relay5Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_5_SET, &globalRelay5); });
+
+  relay6Item.setOnChange([]()
+                         { relayChangeCb(CMD_RELAY_6_SET, &globalRelay6); });
 }
 
 void CarControlScreen::draw()
 {
 
-  char buffer[100];
+  // char buffer[100];
 
-  display.u8g2.setFont(u8g2_font_koleeko_tf);
+  // display.u8g2.setFont(u8g2_font_koleeko_tf);
 
-  sprintf(buffer, "Res: %s", wireless.lastStatus == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
-  display.u8g2.drawStr(0, 24, buffer);
+  // sprintf(buffer, "Res: %s", wireless.lastStatus == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
+  // display.u8g2.drawStr(0, 24, buffer);
+
+  menu.draw();
 }
 
 void CarControlScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1)
-  {
-    screenManager.back();
-  }
-
-  if (ClickButtonEnc.clicks == 2)
-  {
-    fullPacket p;
-    p.direction = PacketDirection::SEND;
-    memcpy(p.mac, car_addr, 6);
-    p.p.type = CMD_DOOR_LOCK;
-    p.p.len = 1;
-    p.p.data[0] = 0x00;
-
-    wireless.send(&p.p, p.mac);
-  }
-
-  if (ClickButtonEnc.clicks == 3)
-  {
-    fullPacket p;
-    p.direction = PacketDirection::SEND;
-    memcpy(p.mac, car_addr, 6);
-    p.p.type = CMD_DOOR_LOCK;
-    p.p.len = 1;
-    p.p.data[0] = 0x01;
-
-    wireless.send(&p.p, p.mac);
-  }
-
-  if (ClickButtonEnc.clicks == 4)
-  {
-    fullPacket p;
-    p.direction = PacketDirection::SEND;
-    memcpy(p.mac, car_addr, 6);
-    p.p.type = CMD_RELAY_1_SET;
-    p.p.len = 1;
-    p.p.data[0] = 0x00;
-
-    wireless.send(&p.p, p.mac);
-  }
-
-    if (ClickButtonEnc.clicks == 5)
-  {
-    fullPacket p;
-    p.direction = PacketDirection::SEND;
-    memcpy(p.mac, car_addr, 6);
-    p.p.type = CMD_RELAY_1_SET;
-    p.p.len = 1;
-    p.p.data[0] = 0x01;
-
-    wireless.send(&p.p, p.mac);
-  }
+  menu.update();
 }
 
 void CarControlScreen::onEnter()
 {
+
+  fullPacket fp;
+  memcpy(fp.mac, car_addr, 6);
+  fp.direction = PacketDirection::SEND;
+  fp.p.type = CMD_RELAY_ALL;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
 }
