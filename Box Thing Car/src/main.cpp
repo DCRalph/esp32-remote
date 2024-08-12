@@ -50,9 +50,15 @@ void espNowRecvCb(fullPacket *fp)
 
   parseCommand(fp);
 
-  led.On();
-  delay(500);
-  led.Off();
+  xTaskCreate([](void *pvParameters)
+              {
+                led.On();
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                led.Off();
+
+                vTaskDelete(NULL);
+              },
+              "blink", 1000, NULL, 1, NULL);
   //
 }
 
