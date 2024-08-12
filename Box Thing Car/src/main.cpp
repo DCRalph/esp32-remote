@@ -39,26 +39,22 @@ void unlockDoors()
 
 void espNowRecvCb(fullPacket *fp)
 {
-  fullPacket resp;
-  memcpy(resp.mac, fp->mac, 6);
-  resp.direction = PacketDirection::SEND;
-  resp.p.type = 0x11;
-  resp.p.len = 1;
-  resp.p.data[0] = 0;
+  int ret = parseCommand(fp);
 
-  wireless.send(&resp);
-
-  parseCommand(fp);
+  void *pvParameters = &ret;
 
   xTaskCreate([](void *pvParameters)
               {
-                led.On();
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-                led.Off();
+                int ret = *(int *)pvParameters;
+                int blinks = ret == -1 ? 1 : 2;
+                for (int i = 0; i < blinks * 2; i++)
+                {
+                  led.Toggle();
+                  delay(100);
+                }
 
-                vTaskDelete(NULL);
-              },
-              "blink", 1000, NULL, 1, NULL);
+                vTaskDelete(NULL); },
+              "blink", 1000, pvParameters, 1, NULL);
   //
 }
 

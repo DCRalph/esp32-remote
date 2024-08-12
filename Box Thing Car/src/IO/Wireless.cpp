@@ -133,6 +133,7 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
     return -1;
   }
 #ifdef DEBUG_ESP_NOW
+  Serial.println("######################");
   Serial.println("Peer added");
 #endif
 
@@ -152,6 +153,7 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
   }
 #ifdef DEBUG_ESP_NOW
   Serial.println("Peer deleted");
+  Serial.println("######################");
 #endif
 
   return 0;

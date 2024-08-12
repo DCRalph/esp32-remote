@@ -48,14 +48,25 @@ extern int autoOffMin;
 #define MCP_STATE_2_PIN 48
 
 // COMMANDS
-#define DOOR_LOCK_CMD 0x10
+#define CMD_DOOR_LOCK 0x10
 
-#define RELAY_1_CMD 0x20
-#define RELAY_2_CMD 0x21
-#define RELAY_3_CMD 0x22
-#define RELAY_4_CMD 0x23
-#define RELAY_5_CMD 0x24
-#define RELAY_6_CMD 0x25
+#define CMD_RELAY_1_SET 0x21
+#define CMD_RELAY_1_GET 0x22
+
+#define CMD_RELAY_2_SET 0x23
+#define CMD_RELAY_2_GET 0x24
+
+#define CMD_RELAY_3_SET 0x25
+#define CMD_RELAY_3_GET 0x26
+
+#define CMD_RELAY_4_SET 0x27
+#define CMD_RELAY_4_GET 0x28
+
+#define CMD_RELAY_5_SET 0x29
+#define CMD_RELAY_5_GET 0x2a
+
+#define CMD_RELAY_6_SET 0x2b
+#define CMD_RELAY_6_GET 0x2c
 
 // static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
 static uint8_t car_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};

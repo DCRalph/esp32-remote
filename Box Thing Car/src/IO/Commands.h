@@ -6,4 +6,6 @@
 #include "IO/GPIO.h"
 #include "IO/Wireless.h"
 
-extern void parseCommand(fullPacket *fp);
+
+extern int parseCommand(fullPacket *fp);
+
