@@ -9,6 +9,7 @@ enum StartUpState
   StartUp,
   ConnectingWifi,
   ApStarted,
+  EspNowStarted
 };
 
 class StartUpScreen : public Screen
@@ -74,6 +75,14 @@ void StartUpScreen::draw()
     display.u8g2.setDrawColor(1);
 
     display.drawCenteredText(64, "Press to continue...");
+
+    break;
+
+  case StartUpState::EspNowStarted:
+    display.u8g2.setFont(u8g2_font_logisoso16_tr);
+    display.u8g2.setDrawColor(1);
+
+    display.drawCenteredText(30, "ESP-NOW Started");
 
     break;
 

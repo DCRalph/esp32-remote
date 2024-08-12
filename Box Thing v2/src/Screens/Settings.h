@@ -19,8 +19,6 @@ public:
 
   MenuItemNavigate wifiItem = MenuItemNavigate("WiFi", "WiFi Settings");
 
-  MenuItemNavigate mqttItem = MenuItemNavigate("MQTT", "MQTT Info");
-
   void draw() override;
   void update() override;
   void onEnter() override;
@@ -34,7 +32,6 @@ SettingsScreen::SettingsScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&generalSettingsItem);
   menu.addMenuItem(&wifiItem);
-  menu.addMenuItem(&mqttItem);
 }
 
 void SettingsScreen::draw()

@@ -13,6 +13,7 @@ public:
 
   long bootCount;
   bool ledState = false;
+  bool otaSetupTmp = false;
 
   Menu menu = Menu();
 
@@ -22,9 +23,11 @@ public:
 
   MenuItemNavigate batteryItem = MenuItemNavigate("Battery", "Battery");
 
+  MenuItemToggle ledItem = MenuItemToggle("LED", &ledState);
+
   MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot", &bootCount);
 
-  MenuItemToggle ledItem = MenuItemToggle("LED", &ledState);
+  MenuItemToggle otaItem = MenuItemToggle("OTA", &otaSetupTmp);
 
   void draw() override;
   void update() override;
@@ -38,9 +41,18 @@ DebugScreen::DebugScreen(String _name) : Screen(_name)
   menu.addMenuItem(&batteryItem);
   menu.addMenuItem(&ledItem);
   menu.addMenuItem(&bootCountItem);
+  menu.addMenuItem(&otaItem);
 
   ledItem.setOnChange([&]()
                       { led.Write(ledState); });
+
+  otaItem.setOnChange([&]() {
+    if (!otaSetup){
+      InitOta();
+    }
+    otaSetupTmp = true;
+  });
+
 }
 
 void DebugScreen::draw()
@@ -57,4 +69,6 @@ void DebugScreen::onEnter()
 {
   bootCount = preferences.getLong("bootCount", 0);
   ledState = led.read();
+
+  otaSetupTmp = otaSetup;
 }

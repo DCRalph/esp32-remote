@@ -36,6 +36,7 @@ private:
 
 protected:
   MenuItemType type;
+  bool hidden = false;
 
 public:
   /**
@@ -69,6 +70,18 @@ public:
    * @return The type of the menu item.
    */
   MenuItemType getType();
+
+  /**
+   * @brief Sets the visibility of the menu item.
+   * @param _hidden Indicates whether the menu item is hidden or not.
+   */
+  void setHidden(bool _hidden);
+
+  /**
+   * @brief Checks if the menu item is hidden.
+   * @return true if the menu item is hidden, false otherwise.
+   */
+  bool isHidden();
 
   /**
    * @brief Draws the menu item on the screen.
@@ -166,6 +179,9 @@ public:
 
   void setOnChange(std::function<void()> _onChange);
   void removeOnChange();
+
+  void set(bool _value);
+  bool get();
 
   void draw(uint8_t _x, uint8_t _y, bool _active) override;
 };

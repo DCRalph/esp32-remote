@@ -8,7 +8,6 @@
 #include "config.h"
 #include "Setup/InitOTA.h"
 
-#include "IO/MQTT.h"
 #include "IO/GPIO.h"
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
@@ -31,7 +30,6 @@
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/WiFiSettings.h"
-#include "Screens/Settings/MQTTInfo.h"
 
 #include "Screens/Settings/WiFi/WiFiInfo.h"
 
@@ -55,13 +53,40 @@ EspnowSwitchScreen espnowSwitch("Espnow Switch");
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
 WiFiSettingsScreen wifiSettings("WiFi Settings");
-MQTTInfoScreen mqttInfo("MQTT Info");
 
 // #### /Settings/WiFi
 WiFiInfoScreen wifiInfo("WiFi Info");
 
 unsigned long batteryLoopMs = 0;
 char buffer[100];
+
+void setupWiFi()
+{
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ConnectingWifi);
+  display.display();
+
+  Serial.println("[INFO] [SETUP] WiFi...");
+  WiFi.mode(WIFI_STA);
+
+  wm.setConfigPortalBlocking(false);
+
+  if (wm.autoConnect(AP_SSID))
+  {
+    Serial.println("[INFO] [SETUP] Connected");
+  }
+  else
+  {
+    Serial.println("[INFO] [SETUP] Config portal running");
+    ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ApStarted);
+    display.display();
+  }
+}
+
+void setupESPNOW()
+{
+  wireless.setup();
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::EspNowStarted);
+}
 
 void setup()
 {
@@ -102,7 +127,6 @@ void setup()
   generalSettings.setTopBarText("General");
   screenManager.addScreen(&wifiSettings);
   wifiSettings.setTopBarText("Wi-Fi");
-  screenManager.addScreen(&mqttInfo);
 
   // #### /Settings/WiFi
   screenManager.addScreen(&wifiInfo);
@@ -110,33 +134,23 @@ void setup()
   screenManager.setScreen("Start Up");
   display.display();
 
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ConnectingWifi);
-  display.display();
-
-  Serial.println("[INFO] [SETUP] WiFi...");
-  WiFi.mode(WIFI_STA);
-  // WiFi.begin(WIFI_SSID, WIFI_PASS);
-  wm.setConfigPortalBlocking(false);
-  if (wm.autoConnect(AP_SSID))
+  if (preferences.getBool("espnowOn", false))
   {
-    Serial.println("[INFO] [SETUP] Connected");
+    setupESPNOW();
   }
   else
   {
-    Serial.println("[INFO] [SETUP] Configportal running");
-    ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ApStarted);
-    display.display();
+    setupWiFi();
+    InitOta();
   }
-
-  mqtt.init();
-  // myEspnow.init();
-  // wireless.setup();
-
-  Serial.println("[INFO] [SETUP] OTA...");
-  InitOta();
 
   Serial.println("[INFO] [SETUP] Done");
   Serial.println();
+
+  do
+  {
+    ClickButtonEnc.Update();
+  } while (ClickButtonEnc.depressed);
 
   if (((StartUpScreen *)screenManager.getCurrentScreen())->getState() != StartUpState::ApStarted)
     screenManager.setScreen("Home");
@@ -147,9 +161,12 @@ void loop()
   if (!wireless.isSetupDone())
     wm.process();
 
-  ArduinoOTA.handle();
-  mqtt.loop();
   ClickButtonEnc.Update();
+
+  if (otaSetup)
+    ArduinoOTA.handle();
+  else if (WiFi.status() == WL_CONNECTED && !otaSetup)
+    InitOta();
 
   if (millis() - batteryLoopMs > 500)
   {

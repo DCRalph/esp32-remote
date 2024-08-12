@@ -62,10 +62,12 @@ void WiFiInfoScreen::draw()
   {
     display.u8g2.setFont(u8g2_font_logisoso16_tf);
 
-    display.drawCenteredText(20, "Not");
+    display.drawCenteredText(30, "Not");
     display.drawCenteredText(48, "Connected");
 
-    sprintf(buffer, "ch: %d", ESP_NOW_CHANNEL);
+    display.u8g2.setFont(u8g2_font_profont12_tf);
+
+    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, wireless.lastStatus);
     display.u8g2.drawStr(0, 64, buffer);
   }
 }

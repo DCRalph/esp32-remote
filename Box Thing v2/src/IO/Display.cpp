@@ -1,4 +1,5 @@
 #include "Display.h"
+#include "Wireless.h"
 
 Display::Display()
 {
@@ -32,11 +33,15 @@ void Display::drawTopBar(void)
   int battW = u8g2.getStrWidth(buffer);
   u8g2.drawStr(DISPLAY_WIDTH - battW, 9, buffer);
 
-  u8g2.setFont(u8g2_font_open_iconic_www_1x_t);
+  u8g2.setFont(u8g2_font_open_iconic_all_1x_t);
   if (WiFi.status() == WL_CONNECTED)
-    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0048);
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x00f8);
+  else if (wm.getConfigPortalActive() || wm.getWebPortalActive())
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0081);
+  else if (wireless.isSetupDone())
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x00c6);
   else
-    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x004a);
+    u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0079);
 }
 
 void Display::noTopBar()

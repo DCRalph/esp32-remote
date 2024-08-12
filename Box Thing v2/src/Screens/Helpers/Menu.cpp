@@ -35,6 +35,16 @@ MenuItemType MenuItem::getType()
   return type;
 }
 
+void MenuItem::setHidden(bool _hidden)
+{
+  hidden = _hidden;
+}
+
+bool MenuItem::isHidden()
+{
+  return hidden;
+}
+
 void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   display.u8g2.setFont(u8g2_font_profont22_tf);
@@ -122,6 +132,16 @@ void MenuItemToggle::setOnChange(std::function<void()> _onChange)
 void MenuItemToggle::removeOnChange()
 {
   onChange = nullptr;
+}
+
+void MenuItemToggle::set(bool _value)
+{
+  *value = _value;
+}
+
+bool MenuItemToggle::get()
+{
+  return *value;
 }
 
 void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
@@ -276,13 +296,23 @@ uint8_t Menu::getActive()
 void Menu::nextItem()
 {
   if (active < numItems - 1)
-    active++;
+  {
+    do
+    {
+      active++;
+    } while (items[active]->isHidden());
+  }
 }
 
 void Menu::prevItem()
 {
   if (active > 0)
-    active--;
+  {
+    do
+    {
+      active--;
+    } while (items[active]->isHidden());
+  }
 }
 
 void Menu::addMenuItem(MenuItem *_item)
@@ -297,23 +327,37 @@ void Menu::draw()
 {
   display.u8g2.setFont(u8g2_font_profont22_tf);
 
+  uint8_t itemMap[numItems];
+
+  uint8_t numItemsVisible = 0;
+  for (uint8_t i = 0; i < numItems; i++)
+  {
+    if (!items[i]->isHidden())
+    {
+      itemMap[numItemsVisible] = i;
+      numItemsVisible++;
+    }
+  }
+
   for (uint8_t i = 0; i < numItemsPerPage; i++)
   {
     uint8_t topItem;
 
-    if (active - 1 < 0)
+    if (active <= 0) // if the top item is selected
       topItem = 0;
-    else if (active - 1 >= static_cast<u8_t>(numItems - 2))
-      if (numItems < 3)
+    else if (active >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
+      if (numItemsVisible < 3)                                 // if there are less than 3 items
         topItem = 0;
-      else
-        topItem = static_cast<u8_t>(numItems - 3);
-    else
+      else // if there are more than 3 items
+        topItem = static_cast<u8_t>(numItemsVisible - 3);
+    else // if any other item is selected
       topItem = active - 1;
 
-    MenuItem *item = items[i + topItem];
+    uint8_t itemIdx = i + topItem;
 
-    item->draw(0, 12 + (i * 18), active == i + topItem);
+    MenuItem *item = items[itemMap[itemIdx]];
+
+    item->draw(0, 12 + (i * 18), active == itemMap[itemIdx]);
   }
 
   display.u8g2.setDrawColor(1);
