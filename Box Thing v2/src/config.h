@@ -21,8 +21,8 @@ extern int autoOffMin;
 #define HOSTNAME "esp32-box-thing"
 #define AP_SSID "ESP32-Box-Thing"
 
-// #define WIFI_SSID SECRET_SSID
-// #define WIFI_PASS SECRET_PASS
+#define ESP_NOW_CHANNEL 1
+#define DEBUG_ESP_NOW
 
 // Display
 #define DISPLAY_WIDTH 128
@@ -47,6 +47,17 @@ extern int autoOffMin;
 #define MCP_STATE_1_PIN 47
 #define MCP_STATE_2_PIN 48
 
-static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
+// COMMANDS
+#define DOOR_LOCK_CMD 0x10
+
+#define RELAY_1_CMD 0x20
+#define RELAY_2_CMD 0x21
+#define RELAY_3_CMD 0x22
+#define RELAY_4_CMD 0x23
+#define RELAY_5_CMD 0x24
+#define RELAY_6_CMD 0x25
+
+// static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
+static uint8_t car_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 
 void initConfig();

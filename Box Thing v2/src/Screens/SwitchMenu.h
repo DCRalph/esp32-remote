@@ -16,6 +16,8 @@ public:
 
   MenuItemNavigate espnowSwitchItem = MenuItemNavigate("ESP SW", "Espnow Switch");
 
+  MenuItemNavigate carItem = MenuItemNavigate("Car", "Car Control");
+
   void draw() override;
   void update() override;
 };
@@ -24,6 +26,7 @@ SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&espnowSwitchItem);
+  menu.addMenuItem(&carItem);
 }
 
 void SwitchMenuScreen::draw()

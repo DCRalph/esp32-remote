@@ -33,9 +33,9 @@ void EspnowSwitchScreen::draw()
   sprintf(buffer, "Res: %s", wireless.lastStatus == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
   display.u8g2.drawStr(0, 24, buffer);
 
-  sprintf(buffer, "%s", state == 1 ? "Locking" : state == 2 ? "Unlocking" : "Idle");
+  sprintf(buffer, "%s", state == 1 ? "Locking" : state == 2 ? "Unlocking"
+                                                            : "Idle");
   display.drawCenteredText(48, buffer);
-
 }
 
 void EspnowSwitchScreen::update()
@@ -47,7 +47,7 @@ void EspnowSwitchScreen::update()
 
   if (ClickButtonEnc.clicks == 2)
   {
-    packet p;
+    data_packet p;
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 0; // lock
@@ -58,9 +58,9 @@ void EspnowSwitchScreen::update()
     lastSend = millis();
   }
 
-    if (ClickButtonEnc.clicks == 3)
+  if (ClickButtonEnc.clicks == 3)
   {
-    packet p;
+    data_packet p;
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 1; // unlock
