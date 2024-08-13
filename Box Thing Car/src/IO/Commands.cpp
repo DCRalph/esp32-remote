@@ -1,9 +1,41 @@
 #include "Commands.h"
 
-static int parseForRelay(fullPacket *fp, GpIO *relay, uint8_t get, uint8_t set)
+static void lockDoor()
+{
+  xTaskCreate([](void *pvParameters)
+              {
+                relay7.On();
+                vTaskDelay(500 / portTICK_PERIOD_MS);
+                relay7.Off();
+                vTaskDelete(NULL);
+                //
+              },
+              "lockDoor", 1000, &lockDoorHandle, 1, NULL);
+}
+
+static void unlockDoor()
+{
+  xTaskCreate([](void *pvParameters)
+              {
+                relay8.On();
+                vTaskDelay(500 / portTICK_PERIOD_MS);
+                relay8.Off();
+                vTaskDelete(NULL);
+                //
+              },
+              "unlockDoor", 1000, &unlockDoorHandle, 1, NULL);
+}
+
+static int parseForRelay(fullPacket *fp, GpIO *relay, bool *busy, uint8_t get, uint8_t set)
 {
   if (fp->p.type == set)
   {
+    if (*busy)
+    {
+      Serial.println("Relay Busy Pin " + String(relay->getPin()));
+      return -1;
+    }
+
     if (fp->p.data[0] == 0x01)
     {
       Serial.println("Relay ON Pin " + String(relay->getPin()));
@@ -50,11 +82,13 @@ int parseCommand(fullPacket *fp)
     if (fp->p.data[0] == 0x01)
     {
       Serial.println("Unlocking Doors");
+      unlockDoor();
       return 1;
     }
     else
     {
       Serial.println("Locking Doors");
+      lockDoor();
       return 2;
     }
   }
@@ -63,22 +97,22 @@ int parseCommand(fullPacket *fp)
   else if (fp->p.type >= CMD_RELAY_1_SET && fp->p.type <= CMD_RELAY_6_GET)
   {
     int ret = -1;
-    ret = parseForRelay(fp, &relay1, CMD_RELAY_1_GET, CMD_RELAY_1_SET);
+    ret = parseForRelay(fp, &relay1, &relay1Busy, CMD_RELAY_1_GET, CMD_RELAY_1_SET);
     if (ret != -1)
       return ret;
-    parseForRelay(fp, &relay2, CMD_RELAY_2_GET, CMD_RELAY_2_SET);
+    parseForRelay(fp, &relay2, &relay2Busy, CMD_RELAY_2_GET, CMD_RELAY_2_SET);
     if (ret != -1)
       return ret;
-    parseForRelay(fp, &relay3, CMD_RELAY_3_GET, CMD_RELAY_3_SET);
+    parseForRelay(fp, &relay3, &relay3Busy, CMD_RELAY_3_GET, CMD_RELAY_3_SET);
     if (ret != -1)
       return ret;
-    parseForRelay(fp, &relay4, CMD_RELAY_4_GET, CMD_RELAY_4_SET);
+    parseForRelay(fp, &relay4, &relay4Busy, CMD_RELAY_4_GET, CMD_RELAY_4_SET);
     if (ret != -1)
       return ret;
-    parseForRelay(fp, &relay5, CMD_RELAY_5_GET, CMD_RELAY_5_SET);
+    parseForRelay(fp, &relay5, &relay5Busy, CMD_RELAY_5_GET, CMD_RELAY_5_SET);
     if (ret != -1)
       return ret;
-    parseForRelay(fp, &relay6, CMD_RELAY_6_GET, CMD_RELAY_6_SET);
+    parseForRelay(fp, &relay6, &relay6Busy, CMD_RELAY_6_GET, CMD_RELAY_6_SET);
     if (ret != -1)
       return ret;
   }
@@ -102,6 +136,46 @@ int parseCommand(fullPacket *fp)
 
     wireless.send(&resp);
     return 3;
+  }
+
+  // ############ RELAY 1 FLASH ############
+  else if (fp->p.type == CMD_RELAY_1_FLASH)
+  {
+    if (relay1Busy)
+    {
+      Serial.println("Relay 1 Busy");
+      return -1;
+    }
+
+    relay1Busy = true;
+
+    Serial.println("Relay 1 Flash");
+
+    int count = fp->p.data[0];
+    int speed = fp->p.data[1] * 10;
+
+    void *pvParameters[2] = {&count, &speed};
+
+    xTaskCreate([](void *pvParameters)
+                {
+                  int count = *(int *)((void **)pvParameters)[0];
+                  int speed = *(int *)((void **)pvParameters)[1];
+
+                  for (int i = 0; i < count; i++)
+                  {
+                    relay1.On();
+                    vTaskDelay(speed / portTICK_PERIOD_MS);
+                    relay1.Off();
+                    vTaskDelay(speed / portTICK_PERIOD_MS);
+                  }
+
+                  relay1Busy = false;
+
+                  vTaskDelete(NULL);
+                  //
+                },
+                "Flash", 1000, pvParameters, 1, &relay1FlashHandle);
+    return 4;
   }
 
   // ################### UNKNOW COMMAND ###################

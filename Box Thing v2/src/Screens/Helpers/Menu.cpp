@@ -168,13 +168,34 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 // ###### MenuItemNumber ######
 
 template <typename T>
-MenuItemNumber<T>::MenuItemNumber(String _name, T *_value, int _min, int _max) : MenuItem(_name)
+MenuItemNumber<T>::MenuItemNumber(String _name, T *_value, T _min, T _max) : MenuItem(_name)
 {
   type = MenuItemType::Number;
 
   value = _value;
   min = _min;
   max = _max;
+
+  isMutable = true;
+
+  addFunc(1, [this]()
+          {
+            selected = !selected;
+            if (onChange != nullptr)
+              onChange();
+            //
+          });
+}
+
+template <typename T>
+MenuItemNumber<T>::MenuItemNumber(String _name, T *_value, T _min, T _max, T _step) : MenuItem(_name)
+{
+  type = MenuItemType::Number;
+
+  value = _value;
+  min = _min;
+  max = _max;
+  step = _step;
 
   isMutable = true;
 
@@ -222,7 +243,7 @@ void MenuItemNumber<T>::increase()
 {
   if (isMutable && selected)
     if (*value < max)
-      *value += 1;
+      *value += step;
 }
 
 template <typename T>
@@ -230,7 +251,7 @@ void MenuItemNumber<T>::decrease()
 {
   if (isMutable && selected)
     if (*value > min)
-      *value -= 1;
+      *value -= step;
 }
 
 template <typename T>
@@ -387,16 +408,34 @@ void Menu::update()
 
   if (encoderGetCount() > 0)
   {
-    if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber<int> *)items[active])->isSelected())
-      ((MenuItemNumber<int> *)items[active])->increase();
+    if (items[active]->getType() == MenuItemType::Number)
+    {
+      if (((MenuItemNumber<int> *)items[active])->isSelected())
+        ((MenuItemNumber<int> *)items[active])->increase();
+      else if (((MenuItemNumber<long> *)items[active])->isSelected())
+        ((MenuItemNumber<long> *)items[active])->increase();
+      else if (((MenuItemNumber<uint8_t> *)items[active])->isSelected())
+        ((MenuItemNumber<uint8_t> *)items[active])->increase();
+      else
+        nextItem();
+    }
     else
       nextItem();
     encoderClearCount();
   }
   else if (encoderGetCount() < 0)
   {
-    if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber<int> *)items[active])->isSelected())
-      ((MenuItemNumber<int> *)items[active])->decrease();
+    if (items[active]->getType() == MenuItemType::Number)
+    {
+      if (((MenuItemNumber<int> *)items[active])->isSelected())
+        ((MenuItemNumber<int> *)items[active])->decrease();
+      else if (((MenuItemNumber<long> *)items[active])->isSelected())
+        ((MenuItemNumber<long> *)items[active])->decrease();
+      else if (((MenuItemNumber<uint8_t> *)items[active])->isSelected())
+        ((MenuItemNumber<uint8_t> *)items[active])->decrease();
+      else
+        prevItem();
+    }
     else
       prevItem();
     encoderClearCount();

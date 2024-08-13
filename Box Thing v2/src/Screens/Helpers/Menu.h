@@ -195,8 +195,9 @@ class MenuItemNumber : public MenuItem
 {
 private:
   T *value; ///< Pointer to the value being controlled by this menu item.
-  int min;  ///< The minimum value allowed.
-  int max;  ///< The maximum value allowed.
+  T min;  ///< The minimum value allowed.
+  T max;  ///< The maximum value allowed.
+  T step = 1; ///< The step size for increasing or decreasing the value.
 
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
 
@@ -213,7 +214,9 @@ public:
    * @param _min The minimum value allowed.
    * @param _max The maximum value allowed.
    */
-  MenuItemNumber(String _name, T *_value, int _min, int _max);
+  MenuItemNumber(String _name, T *_value, T _min, T _max);
+  MenuItemNumber(String _name, T *_value, T _min, T _max, T _step);
+
 
   void setOnChange(std::function<void()> _onChange);
   void removeOnChange();
@@ -248,6 +251,8 @@ public:
 
 template class MenuItemNumber<int>;
 template class MenuItemNumber<long>;
+template class MenuItemNumber<uint8_t>;
+
 
 // ###### Menu ######
 class Menu

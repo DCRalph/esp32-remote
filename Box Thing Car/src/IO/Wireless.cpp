@@ -6,12 +6,18 @@ Wireless::Wireless()
 
 void Wireless::setup()
 {
+#ifndef ESPNOW_NO_DISABLE_WIFI
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
+#endif
 
+#ifndef ESPNOW_NO_DISABLE_WIFI
   esp_wifi_set_promiscuous(true);
+#endif
   esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
+#ifndef ESPNOW_NO_DISABLE_WIFI
   esp_wifi_set_promiscuous(false);
+#endif
 
   delay(100);
   if (esp_now_init() != ESP_OK)

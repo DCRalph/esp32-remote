@@ -50,6 +50,8 @@ public:
                                                    //
                                                  });
 
+  MenuItemNavigate carFlashItem = MenuItemNavigate("Flash", "Car Flash");
+
   MenuItemToggle relay1Item = MenuItemToggle("R 1", &globalRelay1, false);
   MenuItemToggle relay2Item = MenuItemToggle("R 2", &globalRelay2, false);
   MenuItemToggle relay3Item = MenuItemToggle("R 3", &globalRelay3, false);
@@ -67,6 +69,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&lockDoorItem);
   menu.addMenuItem(&unlockDoorItem);
+  menu.addMenuItem(&carFlashItem);
   menu.addMenuItem(&relay1Item);
   menu.addMenuItem(&relay2Item);
   menu.addMenuItem(&relay3Item);
@@ -95,14 +98,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
 void CarControlScreen::draw()
 {
-
-  // char buffer[100];
-
-  // display.u8g2.setFont(u8g2_font_koleeko_tf);
-
-  // sprintf(buffer, "Res: %s", wireless.lastStatus == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
-  // display.u8g2.drawStr(0, 24, buffer);
-
   menu.draw();
 }
 

@@ -28,6 +28,7 @@
 
 #include "Screens/Control/EspnowSwitch.h"
 #include "Screens/Control/Car.h"
+#include "Screens/Control/CarFlash.h"
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/WiFiSettings.h"
@@ -51,6 +52,7 @@ SettingsScreen settings("Settings");
 // #### /Control
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
 CarControlScreen carControl("Car Control");
+CarFlashScreen carFlash("Car Flash");
 
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
@@ -153,6 +155,8 @@ void setup()
   espnowSwitch.setTopBarText("ESPNOW");
   screenManager.addScreen(&carControl);
   carControl.setTopBarText("Car");
+  screenManager.addScreen(&carFlash);
+  carFlash.setTopBarText("Flash");
 
   // #### /Settings
   screenManager.addScreen(&generalSettings);

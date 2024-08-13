@@ -12,6 +12,24 @@
 
 #define ESP_NOW_CHANNEL 1
 #define DEBUG_ESP_NOW
+#define ESPNOW_NO_DISABLE_WIFI
+
+// RELAY BUSY
+
+extern bool relay1Busy;
+extern bool relay2Busy;
+extern bool relay3Busy;
+extern bool relay4Busy;
+extern bool relay5Busy;
+extern bool relay6Busy;
+
+// task handles
+
+extern TaskHandle_t blinkLedHandle;
+extern TaskHandle_t relay1FlashHandle;
+extern TaskHandle_t lockDoorHandle;
+extern TaskHandle_t unlockDoorHandle;
+
 
 // PINS
 
@@ -48,3 +66,6 @@
 
 #define CMD_RELAY_6_SET 0x2b
 #define CMD_RELAY_6_GET 0x2c
+
+#define CMD_RELAY_1_FLASH 0x30
+#define CMD_RELAY_1_FLASH_STOP 0x31

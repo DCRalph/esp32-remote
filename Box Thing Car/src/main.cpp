@@ -15,33 +15,17 @@
 
 AsyncWebServer server(80);
 
-void lockDoors()
-{
-  // digitalWrite(RELAY1, 0);
-  led.On();
-  delay(300);
-  // digitalWrite(RELAY1, 1);
-  led.Off();
-
-  Serial.println("Doors Locked");
-}
-
-void unlockDoors()
-{
-  // digitalWrite(RELAY2, 0);
-  led.On();
-  delay(300);
-  // digitalWrite(RELAY2, 1);
-  led.Off();
-
-  Serial.println("Doors Unlocked");
-}
-
 void espNowRecvCb(fullPacket *fp)
 {
   int ret = parseCommand(fp);
 
   void *pvParameters = &ret;
+
+  // if (blinkLedHandle != NULL)
+  // {
+  //   Serial.println("Deleting blinkLedHandle before creating new task");
+  //   vTaskDelete(blinkLedHandle);
+  // }
 
   xTaskCreate([](void *pvParameters)
               {
@@ -53,8 +37,10 @@ void espNowRecvCb(fullPacket *fp)
                   delay(100);
                 }
 
-                vTaskDelete(NULL); },
-              "blink", 1000, pvParameters, 1, NULL);
+                vTaskDelete(NULL);
+                //
+              },
+              "blink", 1000, pvParameters, 1, &blinkLedHandle);
   //
 }
 
@@ -62,10 +48,9 @@ void setup()
 {
   Serial.begin(115200);
 
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
 
   GpIO::initIO();
-  // WiFi.disconnect();
 
   WiFi.softAP(WIFI_SSID, WIFI_PASS, CHANNEL, 1);
   WiFi.softAPConfig(IPAddress(10, 104, 19, 1), IPAddress(10, 104, 19, 1), IPAddress(255, 255, 255, 0));
@@ -75,10 +60,6 @@ void setup()
 
   server.on("/lock", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              digitalWrite(15, 1);
-              lockDoors();
-              digitalWrite(15, 0);
-
               JsonDocument doc;
 
               doc["type"] = "success";
@@ -91,10 +72,6 @@ void setup()
 
   server.on("/unlock", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-              digitalWrite(15, 1);
-              unlockDoors();
-              digitalWrite(15, 0);
-
               JsonDocument doc;
               doc["type"] = "success";
               doc["message"] = "Doors Unlocked";
@@ -131,4 +108,23 @@ void loop()
   // }
 
   // delay(1000);
+
+  // print task info for blinkLedHandle
+
+  // if (blinkLedHandle != NULL)
+  // {
+  //   Serial.println("blinkLedHandle Task Info");
+  //   Serial.println("Name: " + String(pcTaskGetTaskName(blinkLedHandle)));
+  //   Serial.println("Priority: " + String(uxTaskPriorityGet(blinkLedHandle)));
+  //   Serial.println("State: " + String(eTaskGetState(blinkLedHandle)));
+  //   Serial.println("Stack High Water Mark: " + String(uxTaskGetStackHighWaterMark(blinkLedHandle)));
+  //   Serial.println("Stack Size: " + String(uxTaskGetStackHighWaterMark(blinkLedHandle)));
+  //   Serial.println("Core: " + String(xTaskGetAffinity(blinkLedHandle)));
+  // }
+  // else
+  // {
+  //   Serial.println("blinkLedHandle is NULL");
+  // }
+
+  delay(500);
 }
