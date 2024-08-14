@@ -1,29 +1,37 @@
 #include "Commands.h"
 
-static void lockDoor()
+void lockDoor()
 {
-  xTaskCreate([](void *pvParameters)
-              {
-                relay7.On();
-                vTaskDelay(500 / portTICK_PERIOD_MS);
-                relay7.Off();
-                vTaskDelete(NULL);
-                //
-              },
-              "lockDoor", 1000, &lockDoorHandle, 1, NULL);
+  // xTaskCreate([](void *pvParameters)
+  //             {
+  //               relay7.On();
+  //               vTaskDelay(500 / portTICK_PERIOD_MS);
+  //               relay7.Off();
+  //               vTaskDelete(NULL);
+  //               //
+  //             },
+  //             "lockDoor", 1000, &lockDoorHandle, 1, NULL);
+
+  relay7.On();
+  delay(500);
+  relay7.Off();
 }
 
-static void unlockDoor()
+void unlockDoor()
 {
-  xTaskCreate([](void *pvParameters)
-              {
-                relay8.On();
-                vTaskDelay(500 / portTICK_PERIOD_MS);
-                relay8.Off();
-                vTaskDelete(NULL);
-                //
-              },
-              "unlockDoor", 1000, &unlockDoorHandle, 1, NULL);
+  // xTaskCreate([](void *pvParameters)
+  //             {
+  //               relay8.On();
+  //               vTaskDelay(500 / portTICK_PERIOD_MS);
+  //               relay8.Off();
+  //               vTaskDelete(NULL);
+  //               //
+  //             },
+  //             "unlockDoor", 1000, &unlockDoorHandle, 1, NULL);
+
+  relay8.On();
+  delay(500);
+  relay8.Off();
 }
 
 static int parseForRelay(fullPacket *fp, GpIO *relay, bool *busy, uint8_t get, uint8_t set)
@@ -154,27 +162,30 @@ int parseCommand(fullPacket *fp)
     int count = fp->p.data[0];
     int speed = fp->p.data[1] * 10;
 
-    void *pvParameters[2] = {&count, &speed};
+    relay1FlashCount = count;
+    relay1FlashDelay = speed;
 
-    xTaskCreate([](void *pvParameters)
-                {
-                  int count = *(int *)((void **)pvParameters)[0];
-                  int speed = *(int *)((void **)pvParameters)[1];
+    // void *pvParameters[2] = {&count, &speed};
 
-                  for (int i = 0; i < count; i++)
-                  {
-                    relay1.On();
-                    vTaskDelay(speed / portTICK_PERIOD_MS);
-                    relay1.Off();
-                    vTaskDelay(speed / portTICK_PERIOD_MS);
-                  }
+    // xTaskCreate([](void *pvParameters)
+    //             {
+    //               int count = *(int *)((void **)pvParameters)[0];
+    //               int speed = *(int *)((void **)pvParameters)[1];
 
-                  relay1Busy = false;
+    //               for (int i = 0; i < count; i++)
+    //               {
+    //                 relay1.On();
+    //                 vTaskDelay(speed / portTICK_PERIOD_MS);
+    //                 relay1.Off();
+    //                 vTaskDelay(speed / portTICK_PERIOD_MS);
+    //               }
 
-                  vTaskDelete(NULL);
-                  //
-                },
-                "Flash", 1000, pvParameters, 1, &relay1FlashHandle);
+    //               relay1Busy = false;
+
+    //               vTaskDelete(NULL);
+    //               //
+    //             },
+    //             "Flash", 1000, pvParameters, 1, NULL);
     return 4;
   }
 

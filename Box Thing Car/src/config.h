@@ -23,12 +23,9 @@ extern bool relay4Busy;
 extern bool relay5Busy;
 extern bool relay6Busy;
 
-// task handles
-
-extern TaskHandle_t blinkLedHandle;
-extern TaskHandle_t relay1FlashHandle;
-extern TaskHandle_t lockDoorHandle;
-extern TaskHandle_t unlockDoorHandle;
+// flash relay 1 settings
+extern uint8_t relay1FlashCount;
+extern uint8_t relay1FlashDelay;
 
 
 // PINS
