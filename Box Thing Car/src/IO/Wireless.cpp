@@ -13,13 +13,13 @@ void Wireless::setup()
 
 #ifndef ESPNOW_NO_DISABLE_WIFI
   esp_wifi_set_promiscuous(true);
-#endif
+// #endif
   esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
-#ifndef ESPNOW_NO_DISABLE_WIFI
+// #ifndef ESPNOW_NO_DISABLE_WIFI
   esp_wifi_set_promiscuous(false);
 #endif
 
-  delay(100);
+  // delay(100);
   if (esp_now_init() != ESP_OK)
   {
     Serial.println("Error initializing ESP-NOW");

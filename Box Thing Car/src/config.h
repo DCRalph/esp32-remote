@@ -11,6 +11,7 @@
 // WiFi
 
 #define ESP_NOW_CHANNEL 1
+#define CHANNEL 1
 #define DEBUG_ESP_NOW
 #define ESPNOW_NO_DISABLE_WIFI
 

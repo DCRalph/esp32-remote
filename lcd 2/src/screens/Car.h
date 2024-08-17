@@ -73,7 +73,7 @@ void CarScreen::update()
 
   if (ClickButtonUP.clicks == 1)
   {
-    packet p;
+    data_packet p;
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 0; // lock
@@ -83,7 +83,7 @@ void CarScreen::update()
 
   if (ClickButtonDOWN.clicks == 1)
   {
-    packet p;
+    data_packet p;
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 1; // unlock

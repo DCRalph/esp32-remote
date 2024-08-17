@@ -11,8 +11,6 @@
 
 #include "IO/Commands.h"
 
-#define CHANNEL 1
-
 uint64_t ledBlinkMs = 0;
 uint64_t relay1FlashMs = 0;
 
@@ -71,6 +69,9 @@ void setup()
   server.on("/lock", HTTP_POST, [](AsyncWebServerRequest *request)
             {
               lockDoor();
+              blinks = 4;
+              ledBlinkMs = millis();
+
               JsonDocument doc;
 
               doc["type"] = "success";
@@ -84,6 +85,9 @@ void setup()
   server.on("/unlock", HTTP_POST, [](AsyncWebServerRequest *request)
             {
               unlockDoor();
+              blinks = 4;
+              ledBlinkMs = millis();
+
               JsonDocument doc;
               doc["type"] = "success";
               doc["message"] = "Doors Unlocked";

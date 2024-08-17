@@ -11,6 +11,9 @@
 
 extern Preferences preferences;
 
+#define ESP_NOW_CHANNEL 1
+#define DEBUG_ESP_NOW
+
 #define BAUD_RATE 115200
 
 #define DEBUG true
@@ -45,8 +48,7 @@ extern Preferences preferences;
 
 // ################ ESP NOW ################
 
-static u8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
-
+static uint8_t car_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 
 // #########################################
 void initConfig();

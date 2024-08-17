@@ -44,34 +44,39 @@ void Wireless::loop()
     return;
 }
 
+bool Wireless::isSetupDone()
+{
+  return setupDone;
+}
+
 void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print("Last Packet Sent to: ");
+
+#ifdef DEBUG_ESP_NOW
+  Serial.println("########### Sent Packet ###########");
+  Serial.print("Sent to: ");
   Serial.println(macStr);
 
-  Serial.print("Last Packet Send Status: ");
+  Serial.print("Send Status: ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  Serial.println("###################################");
+#endif
 
-  if (status == ESP_NOW_SEND_SUCCESS)
-  {
-    screenManager.showPopup(new AutoClosePopup("Success", "Packet sent successfully", 1000));
-  }
-  else
-  {
-    screenManager.showPopup(new AutoClosePopup("Error", "Failed to send packet", 1000));
-  }
+  lastStatus = status;
 }
 
 void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len)
 {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print("Last Packet Recv from: ");
-  Serial.println(macStr);
+  data_packet *p = (data_packet *)data;
 
-  packet *p = (packet *)data;
+#ifdef DEBUG_ESP_NOW
+  Serial.println("########### Received Packet ###########");
+  Serial.print("Recv from: ");
+  Serial.println(macStr);
 
   Serial.print("Type: ");
   Serial.println(p->type);
@@ -86,11 +91,26 @@ void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int le
     Serial.print(" ");
   }
   Serial.println();
+  Serial.println("#######################################");
+#endif
+
+  fullPacket fp;
+  memcpy(fp.mac, mac_addr, 6);
+  fp.direction = PacketDirection::RECV;
+  memcpy(&fp.p, p, sizeof(data_packet));
+
+  if (recvCb != nullptr)
+    recvCb(&fp);
 }
 
-int Wireless::send(packet *p, u8_t *peer_addr)
+void Wireless::setRecvCb(std::function<void(fullPacket *fp)> cb)
 {
-  return send((u8_t *)p, sizeof(packet), peer_addr);
+  recvCb = cb;
+}
+
+int Wireless::send(data_packet *p, u8_t *peer_addr)
+{
+  return send((u8_t *)p, sizeof(data_packet), peer_addr);
 }
 
 int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
@@ -135,6 +155,19 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
 #endif
 
   return 0;
+}
+
+int Wireless::send(fullPacket *fp)
+{
+  if (fp->direction == PacketDirection::SEND)
+  {
+    return send(&fp->p, fp->mac);
+  }
+  else
+  {
+    Serial.println("Cannot send a receive packet");
+    return -1;
+  }
 }
 
 Wireless wireless;

@@ -18,7 +18,8 @@ void Display::drawTopBar()
   // bool wifiConnected = WiFi.status() == WL_CONNECTED;
   bool wifiConnected = false;
 
-  sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
+  // sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
+  sprite.fillRect(0, 0, LCD_WIDTH, 20, TFT_BLUE);
 
   sprite.setTextSize(2);
   sprite.setTextColor(TFT_BLACK);
