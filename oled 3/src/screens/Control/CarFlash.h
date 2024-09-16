@@ -13,20 +13,20 @@ public:
 
   MenuItemBack backItem;
 
-  uint8_t count = 10;
+  uint8_t count = 5;
   uint8_t delay = 50;
+  // uint8_t count = preferences.getUChar("relay1FlashCount", 5);
+  // uint8_t delay = preferences.getUChar("relay1FlashDelay", 50);
 
-  MenuItemAction relay1FlashItem = MenuItemAction("Flash R 1", 1, [&]()
+  MenuItemAction relay1FlashItem = MenuItemAction("Flash R 1", 2, [&]()
                                                   {
-                                                    fullPacket fp;
-                                                    memcpy(fp.mac, car_addr, 6);
-                                                    fp.direction == PacketDirection::SEND;
-                                                    fp.p.type = CMD_RELAY_1_FLASH;
-                                                    fp.p.len = 2;
-                                                    fp.p.data[0] = count;      // count
-                                                    fp.p.data[1] = delay / 10; // delay in ms * 10
+                                                    data_packet p;
+                                                    p.type = CMD_RELAY_1_FLASH;
+                                                    p.len = 2;
+                                                    p.data[0] = count;
+                                                    p.data[1] = uint8_t(delay / 10);
 
-                                                    wireless.send(&fp);
+                                                    wireless.send(&p, car_addr);
                                                     //
                                                   });
 
@@ -44,6 +44,12 @@ CarFlashScreen::CarFlashScreen(String _name) : Screen(_name)
   menu.addMenuItem(&relay1FlashItem);
   menu.addMenuItem(&relay1FlashCountItem);
   menu.addMenuItem(&relay1FlashDelayItem);
+
+  // relay1FlashCountItem.setOnChange([this]()
+  //                                  { preferences.putUChar("relay1FlashCount", count); });
+
+  // relay1FlashDelayItem.setOnChange([this]()
+  //                                  { preferences.putUChar("relay1FlashDelay", delay); });
 }
 
 void CarFlashScreen::draw()

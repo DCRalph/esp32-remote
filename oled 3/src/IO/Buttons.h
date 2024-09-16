@@ -12,7 +12,7 @@ class Buttons
   unsigned long sleepCountdownMillis = 0;
 
   long debounceTime = 10;
-  long multiclickTime = 80;
+  long multiclickTime = 100;
   long longClickTime = 400;
 
 public:

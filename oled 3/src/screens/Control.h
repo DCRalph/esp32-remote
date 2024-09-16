@@ -14,17 +14,40 @@ public:
   MenuItemBack backItem;
 
   MenuItemNavigate carLocksItem = MenuItemNavigate("Car Locks", "CarLocks");
-  MenuItemNavigate carItem = MenuItemNavigate("Car relays", "Car");
-  MenuItemAction flashItem = MenuItemAction("Flash", 2, [&]()
-                                            {
-                                              data_packet p;
-                                              p.type = 0x30;
-                                              p.len = 2;
-                                              p.data[0] = 5;       // 5 flashes
-                                              p.data[1] = 40 / 10; // 10; // 40ms
-                                              wireless.send(&p, car_addr);
-                                              //
-                                            });
+  MenuItemNavigate carItem = MenuItemNavigate("Car Control", "Car");
+
+  MenuItemAction flashItemPreset1 = MenuItemAction("Flash 5 30", 2, [&]()
+                                                   {
+                                                     data_packet p;
+                                                     p.type = 0x30;
+                                                     p.len = 2;
+                                                     p.data[0] = 5;       // 5 flashes
+                                                     p.data[1] = 30 / 10; // 10; // 40ms
+                                                     wireless.send(&p, car_addr);
+                                                     //
+                                                   });
+
+  MenuItemAction flashItemPreset2 = MenuItemAction("Flash 2 40", 2, [&]()
+                                                   {
+                                                     data_packet p;
+                                                     p.type = 0x30;
+                                                     p.len = 2;
+                                                     p.data[0] = 2;      // 3 flashes
+                                                     p.data[1] = 40 / 10; // 10; // 40ms
+                                                     wireless.send(&p, car_addr);
+                                                     //
+                                                   });
+
+  MenuItemAction flashItemPreset3 = MenuItemAction("Flash 8 50", 2, [&]()
+                                                   {
+                                                     data_packet p;
+                                                     p.type = 0x30;
+                                                     p.len = 2;
+                                                     p.data[0] = 8;       // 3 flashes
+                                                     p.data[1] = 50 / 10; // 10; // 40ms
+                                                     wireless.send(&p, car_addr);
+                                                     //
+                                                   });
 
   void draw() override;
   void update() override;
@@ -33,9 +56,11 @@ public:
 ControlScreen::ControlScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
-  menu.addMenuItem(&carLocksItem);
+  // menu.addMenuItem(&carLocksItem);
   menu.addMenuItem(&carItem);
-  menu.addMenuItem(&flashItem);
+  menu.addMenuItem(&flashItemPreset1);
+  menu.addMenuItem(&flashItemPreset2);
+  menu.addMenuItem(&flashItemPreset3);
 }
 
 void ControlScreen::draw()
