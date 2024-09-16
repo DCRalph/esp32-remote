@@ -14,6 +14,7 @@ extern GpIO relay6;
 extern GpIO relay7;
 extern GpIO relay8;
 
+extern GpIO *relayMap[8];
 
 
 enum PinMode

@@ -11,6 +11,8 @@ GpIO relay6(RELAY_6_PIN, Output, LOW);
 GpIO relay7(RELAY_7_PIN, Output, LOW);
 GpIO relay8(RELAY_8_PIN, Output, LOW);
 
+GpIO *relayMap[8];
+
 String GpIO::PinModeString(PinMode mode)
 {
   switch (mode)
@@ -131,6 +133,15 @@ void GpIO::initIO()
   relay6.init();
   relay7.init();
   relay8.init();
+
+  relayMap[0] = &relay1;
+  relayMap[1] = &relay2;
+  relayMap[2] = &relay3;
+  relayMap[3] = &relay4;
+  relayMap[4] = &relay5;
+  relayMap[5] = &relay6;
+  relayMap[6] = &relay7;
+  relayMap[7] = &relay8;
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();
