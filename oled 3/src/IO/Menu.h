@@ -113,6 +113,9 @@ public:
    */
   bool isHidden();
 
+  void executeFunc();
+  void executeFunc(int8_t _clicks);
+
   /**
    * @brief Draws the menu item on the screen.
    * @param _x The x-coordinate of the menu item.

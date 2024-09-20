@@ -97,6 +97,16 @@ Screen *ScreenManager::getCurrentScreen(void)
   return screens[currentScreen];
 }
 
+uint16_t ScreenManager::getScreenTopBarColor(void)
+{
+  return screens[currentScreen]->topBarColor;
+}
+
+uint16_t ScreenManager::getScreenTopBarTextColor(void)
+{
+  return screens[currentScreen]->topBarTextColor;
+}
+
 void ScreenManager::back(void)
 {
   if (screenHistory.size() > 1)

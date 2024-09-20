@@ -58,10 +58,14 @@ public:
   void draw() override;
   void update() override;
   void onEnter() override;
+  void onExit() override;
 };
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 {
+  topBarColor = TFT_RED;
+  topBarTextColor = TFT_WHITE;
+
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&lockDoorItem);
   menu.addMenuItem(&unlockDoorItem);
@@ -104,6 +108,8 @@ void CarControlScreen::update()
 
 void CarControlScreen::onEnter()
 {
+  btnLed.SetColor565(topBarColor);
+
   fullPacket fp;
   memcpy(fp.mac, car_addr, 6);
   fp.direction = PacketDirection::SEND;
@@ -111,4 +117,9 @@ void CarControlScreen::onEnter()
   fp.p.len = 0;
 
   wireless.send(&fp);
+}
+
+void CarControlScreen::onExit()
+{
+  btnLed.Off();
 }

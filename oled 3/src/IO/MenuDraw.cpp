@@ -205,7 +205,7 @@ void Menu::update()
 
     if ((items[active]->getType() == MenuItemType::Navigate || items[active]->getType() == MenuItemType::Back) && ClickButtonTRIGGER.clicks == 1)
     {
-      items[active]->functions[0].func();
+      items[active]->executeFunc();
     }
 
   if (ClickButtonDOWN.clicks == 1)

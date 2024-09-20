@@ -26,17 +26,23 @@ public:
 
   void draw() override;
   void update() override;
+  void onEnter() override;
+  void onExit() override;
 
   unsigned long long prevMillis1;
 };
 
 HomeScreen::HomeScreen(String _name) : Screen(_name)
 {
+  topBarColor = TFT_BLUE;
+  topBarTextColor = TFT_WHITE;
 
   settingsMenuItem.setTextColor(TFT_RED);
   settingsMenuItem.setBgColor(TFT_RED);
 
-  PowerOffMenuItem.setHidden(true);
+  // PowerOffMenuItem.setHidden(true);
+
+  ControlMenuItem.addRoute(3, "CarLocks"); 
 
   menu.addMenuItem(&ControlMenuItem);
   menu.addMenuItem(&settingsMenuItem);
@@ -107,4 +113,15 @@ void HomeScreen::update()
     //   break;
     // }
   }
+}
+
+void HomeScreen::onEnter()
+{
+  btnLed.SetColor565(topBarColor);
+  prevMillis1 = millis();
+}
+
+void HomeScreen::onExit()
+{
+  btnLed.Off();
 }

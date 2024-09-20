@@ -38,6 +38,10 @@ public:
 
   Screen *getCurrentScreen(void);
 
+  uint16_t getScreenTopBarColor(void);
+  uint16_t getScreenTopBarTextColor(void);
+
+
   void back(void);
   void clearHistory(void);
 

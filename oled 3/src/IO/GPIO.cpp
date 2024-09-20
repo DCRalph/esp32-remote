@@ -160,6 +160,13 @@ void GpIO_RGB::init()
   B.init();
 }
 
+void GpIO_RGB::Off()
+{
+  R.PWM(0);
+  G.PWM(0);
+  B.PWM(0);
+}
+
 void GpIO_RGB::SetColor(uint8_t _r, uint8_t _g, uint8_t _b)
 {
   R.PWM(_r);
@@ -167,9 +174,12 @@ void GpIO_RGB::SetColor(uint8_t _r, uint8_t _g, uint8_t _b)
   B.PWM(_b);
 }
 
-void GpIO_RGB::Off()
+void GpIO_RGB::SetColor(uint32_t color)
 {
-  R.PWM(0);
-  G.PWM(0);
-  B.PWM(0);
+  SetColor((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
+}
+
+void GpIO_RGB::SetColor565(uint16_t color)
+{
+  SetColor((color >> 8) & 0xF8, (color >> 3) & 0xFC, (color << 3) & 0xF8);
 }

@@ -58,6 +58,9 @@ public:
 
 ControlScreen::ControlScreen(String _name) : Screen(_name)
 {
+  topBarColor = TFT_CYAN;
+  topBarTextColor = TFT_BLACK;
+
   menu.addMenuItem(&backItem);
   // menu.addMenuItem(&carLocksItem);
   menu.addMenuItem(&carItem);
@@ -78,7 +81,7 @@ void ControlScreen::update()
 
 void ControlScreen::onEnter()
 {
-  btnLed.SetColor(255, 0, 255);
+  btnLed.SetColor565(topBarColor);
 }
 
 void ControlScreen::onExit()

@@ -65,4 +65,6 @@ public:
 
   void Off();
   void SetColor(uint8_t _r, uint8_t _g, uint8_t _b);
+  void SetColor(uint32_t color);
+  void SetColor565(uint16_t color);
 };

@@ -80,6 +80,25 @@ bool MenuItem::isHidden()
   return hidden;
 }
 
+void MenuItem::executeFunc()
+{
+  if (functions.size() > 0 && functions[0].clicksToRunUp == 2)
+    functions[0].func();
+}
+
+void MenuItem::executeFunc(int8_t _clicks)
+{
+  for (ActionFunction &actionFunc : functions)
+  {
+    if (actionFunc.clicksToRunUp == _clicks || actionFunc.clicksToRunDown == _clicks)
+    {
+      actionFunc.func();
+      break;
+    }
+  }
+}
+
+
 // ###### MenuItemAction ######
 
 MenuItemAction::MenuItemAction(String _name, int8_t _clicksToRun, std::function<void()> _func) : MenuItem(_name)

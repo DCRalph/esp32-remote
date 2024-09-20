@@ -20,10 +20,10 @@ void Display::drawTopBar()
   bool wifiConnected = false;
 
   // sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
-  sprite.fillRect(0, 0, LCD_WIDTH, 20 * TFT_SCALE, TFT_MAGENTA);
+  sprite.fillRect(0, 0, LCD_WIDTH, 20 * TFT_SCALE, screenManager.getScreenTopBarColor());
 
   sprite.setTextSize(2 * TFT_SCALE);
-  sprite.setTextColor(TFT_BLACK);
+  sprite.setTextColor(screenManager.getScreenTopBarTextColor());
   sprite.setTextDatum(ML_DATUM);
 
   String name = screenManager.getCurrentScreen()->name;
@@ -103,6 +103,7 @@ void Display::noTopBar(void)
 {
   showMenuBar = false;
 }
+
 
 void Display::push(void)
 {
