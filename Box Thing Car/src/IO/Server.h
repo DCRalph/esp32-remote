@@ -5,8 +5,11 @@
 #include "ESPAsyncWebServer.h"
 #include <ArduinoJson.h>
 
-#include "html.h"
 #include "IO/Commands.h"
+
+#include "html.h"
+#include "css.h"
+#include "keypad_js.h"
 
 
 extern AsyncWebServer server;

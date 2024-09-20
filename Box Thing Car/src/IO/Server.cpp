@@ -38,7 +38,6 @@ static void processGetRelays(AsyncWebServerRequest *request, uint8_t relay)
 
 void setupServer()
 {
-  setupRoutes();
   server.begin();
 }
 
@@ -46,6 +45,15 @@ void setupRoutes()
 {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send_P(200, "text/html", index_html); });
+
+  server.on("/index.css", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send_P(200, "text/css", index_css); });
+
+  server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send_P(200, "text/javascript", index_js); });
+
+              server.on("/keypad.js", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send_P(200, "text/javascript", keypad_js); });
 
   server.on("/lock", HTTP_POST, [](AsyncWebServerRequest *request)
             {

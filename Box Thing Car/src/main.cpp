@@ -30,13 +30,14 @@ void setup()
 
   GpIO::initIO();
 
-  WiFi.softAP(WIFI_SSID, WIFI_PASS, CHANNEL, 1);
+  WiFi.softAP(WIFI_SSID, WIFI_PASS, CHANNEL, 0);
   WiFi.softAPConfig(IPAddress(10, 104, 19, 1), IPAddress(10, 104, 19, 1), IPAddress(255, 255, 255, 0));
-
-  setupServer();
 
   wireless.setup();
   wireless.setRecvCb(espNowRecvCb);
+
+  setupRoutes();
+  setupServer();
 
   led.On();
   delay(500);
@@ -75,5 +76,24 @@ void loop()
 
     if (blinks == 0)
       led.Off();
+  }
+
+  if (Serial.available() > 0)
+  {
+    String input = Serial.readString();
+    while (Serial.available() > 0)
+      input += Serial.readString();
+    if (input == "reboot")
+      ESP.restart();
+    else if (input == "getip")
+      Serial.println(WiFi.localIP());
+    else if (input == "getmac")
+      Serial.println(WiFi.macAddress());
+    else if (input == "lock")
+      lockDoor();
+    else if (input == "unlock")
+      unlockDoor();
+    else
+      Serial.println("[INFO] [SERIAL] " + input);
   }
 }
