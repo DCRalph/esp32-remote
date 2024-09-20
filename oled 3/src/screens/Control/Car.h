@@ -24,27 +24,25 @@ public:
 
   MenuItemBack backItem;
 
-  MenuItemAction lockDoorItem = MenuItemAction("Lock Door", 1, []()
+  MenuItemAction lockDoorItem = MenuItemAction("Lock Door", 2, []()
                                                {
-                                                 fullPacket fp;
-                                                 memcpy(fp.mac, car_addr, 6);
-                                                 fp.direction == PacketDirection::SEND;
-                                                 fp.p.type = CMD_DOOR_LOCK;
-                                                 fp.p.data[0] = 0;
+                                                 data_packet p;
+                                                 p.type = CMD_DOOR_LOCK;
+                                                 p.len = 1;
+                                                 p.data[0] = 0;
 
-                                                 wireless.send(&fp);
+                                                 wireless.send(&p, car_addr);
                                                  //
                                                });
 
-  MenuItemAction unlockDoorItem = MenuItemAction("Unlock Door", 1, []()
+  MenuItemAction unlockDoorItem = MenuItemAction("Unlock Door", 2, []()
                                                  {
-                                                   fullPacket fp;
-                                                   memcpy(fp.mac, car_addr, 6);
-                                                   fp.direction == PacketDirection::SEND;
-                                                   fp.p.type = CMD_DOOR_LOCK;
-                                                   fp.p.data[0] = 1;
+                                                   data_packet p;
+                                                   p.type = CMD_DOOR_LOCK;
+                                                   p.len = 1;
+                                                   p.data[0] = 1;
 
-                                                   wireless.send(&fp);
+                                                   wireless.send(&p, car_addr);
                                                    //
                                                  });
 
