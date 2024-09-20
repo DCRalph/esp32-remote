@@ -7,7 +7,7 @@
 
 #include "IO/Commands.h"
 
-#include "web/index_html.h"
+#include "web/html.h"
 #include "web/css.h"
 #include "web/keypad_js.h"
 
