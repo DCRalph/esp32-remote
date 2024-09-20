@@ -12,6 +12,7 @@ public:
   Settings(String _name);
 
   long bootCount;
+  bool rainbowMode = false;
 
   Menu menu = Menu();
 
@@ -21,6 +22,9 @@ public:
   MenuItemNavigate systemInfoItem = MenuItemNavigate("System Info", "System Info");
   MenuItemNavigate wifiItem = MenuItemNavigate("Wi-Fi Info", "Wi-Fi info");
   MenuItemNavigate rssiItem = MenuItemNavigate("RSSI", "RSSI");
+
+  MenuItemToggle rainbowModeItem = MenuItemToggle("Rainbow Mode", &rainbowMode, false);
+
   MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot Count", &bootCount);
 
   MenuItemAction serialMacAddrItem = MenuItemAction("Serial MAC Address", 2, [&]()
@@ -56,8 +60,15 @@ Settings::Settings(String _name) : Screen(_name)
   menu.addMenuItem(&systemInfoItem);
   menu.addMenuItem(&wifiItem);
   menu.addMenuItem(&rssiItem);
+  menu.addMenuItem(&rainbowModeItem);
   menu.addMenuItem(&bootCountItem);
   menu.addMenuItem(&serialMacAddrItem);
+
+  rainbowModeItem.setOnChange([&]()
+                              {
+                                btnLed.SetMode(rainbowMode ? RGB_MODE::Manual : RGB_MODE::Rainbow);
+                                //
+                              });
 }
 
 void Settings::onEnter()
@@ -73,4 +84,6 @@ void Settings::draw()
 void Settings::update()
 {
   menu.update();
+
+  rainbowMode = btnLed.GetMode() == RGB_MODE::Rainbow;
 }

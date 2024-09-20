@@ -76,10 +76,13 @@ void CarFlashScreen::update()
 
 void CarFlashScreen::onEnter()
 {
-  btnLed.SetColor(255, 0, 0);
+  //                red           green     blue
+  uint32_t color = (255 << 16) | (0 << 8) | 0;
+  btnLed.SetPulsingColor(color);
+  btnLed.SetMode(RGB_MODE::Pulsing);
 }
 
 void CarFlashScreen::onExit()
 {
-  btnLed.Off();
+  btnLed.SetPrevMode();
 }

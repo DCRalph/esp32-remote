@@ -20,6 +20,13 @@ public:
   MenuItemAction testPopupItem = MenuItemAction("Test Popup", 2, []()
                                                 { screenManager.showPopup(new Popup("Test Popup", "This is a test gyY9 popup. pls wrap words TTTTT")); });
 
+  MenuItemAction testBlinkItem = MenuItemAction("Test Blink", 2, []()
+                                                { 
+                                                  uint32_t color = (0 << 16) | (255 << 8) | 0;
+                                                  btnLed.Blink(color, 200, 3);
+                                                //
+                                                });
+
   MenuItem testItem1 = MenuItem("Test 1");
   MenuItem testItem2 = MenuItem("Test 2");
   MenuItem testItem3 = MenuItem("Test 3");
@@ -48,6 +55,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&PowerOffMenuItem);
   menu.addMenuItem(&testPopupItem);
+  menu.addMenuItem(&testBlinkItem); 
   menu.addMenuItem(&testItem1);
   menu.addMenuItem(&testItem2);
   menu.addMenuItem(&testItem3);

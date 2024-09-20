@@ -34,7 +34,7 @@ void CarLocksScreen::draw()
 void CarLocksScreen::update()
 {
 
-  if (ClickButtonUP.clicks == 1)
+  if (ClickButtonUP.clicks == -1)
   {
     data_packet p;
     p.type = 0x10; // car locks
@@ -44,7 +44,7 @@ void CarLocksScreen::update()
     wireless.send(&p, car_addr);
   }
 
-  if (ClickButtonDOWN.clicks == 1)
+  if (ClickButtonDOWN.clicks == -1)
   {
     data_packet p;
     p.type = 0x10; // car locks
@@ -54,6 +54,6 @@ void CarLocksScreen::update()
     wireless.send(&p, car_addr);
   }
 
-  if (ClickButtonUP.clicks == 2)
+  if (ClickButtonUP.clicks == 1 || ClickButtonDOWN.clicks == 1)
     screenManager.back();
 }

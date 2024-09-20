@@ -63,8 +63,8 @@ public:
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 {
-  topBarColor = TFT_RED;
-  topBarTextColor = TFT_WHITE;
+  topBarColor = TFT_WHITE;
+  topBarTextColor = TFT_BLACK;
 
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&lockDoorItem);

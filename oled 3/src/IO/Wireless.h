@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "IO/ScreenManager.h"
+#include "IO/GPIO.h"
 
 struct __attribute__((packed)) data_packet
 {

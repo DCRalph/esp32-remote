@@ -29,8 +29,11 @@ void Display::drawTopBar()
   String name = screenManager.getCurrentScreen()->name;
   // if (name.length() > 8)
   //   name = name.substring(0, 5) + "...";
-
-  sprite.drawString(name, 10, 10 * TFT_SCALE);
+#ifdef TFT_BIG
+  sprite.drawString(name, 10, 22);
+#else
+  sprite.drawString(name, 5, 10);
+#endif
   char buf[20];
   // sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
   // sprintf(buf, "%i %.2f%%", wifiConnected, battery.getPercentageF());
@@ -39,7 +42,11 @@ void Display::drawTopBar()
   sprintf(buf, "%i%%", battery.getPercentageI());
 
   sprite.setTextDatum(MR_DATUM);
-  sprite.drawString(buf, LCD_WIDTH - 10, 10 * TFT_SCALE);
+#ifdef TFT_BIG
+  sprite.drawString(buf, LCD_WIDTH - 10, 22);
+#else
+  sprite.drawString(buf, LCD_WIDTH - 5, 10);
+#endif
 }
 
 void Display::clearScreen(u16_t color)
@@ -104,7 +111,6 @@ void Display::noTopBar(void)
   showMenuBar = false;
 }
 
-
 void Display::push(void)
 {
   lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (u16_t *)sprite.getPointer());
@@ -119,9 +125,10 @@ void Display::display(void)
     drawTopBar();
   showMenuBar = true;
 
-  screenManager.drawPopup();
-
-  screenManager.update();
+  if (screenManager.isPopupActive())
+    screenManager.drawPopup();
+  else
+    screenManager.update();
 
   push();
 }

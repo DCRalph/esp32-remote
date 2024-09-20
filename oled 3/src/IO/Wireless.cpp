@@ -71,7 +71,11 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
 
   if (status != ESP_NOW_SEND_SUCCESS)
   {
-    screenManager.showPopup(new Popup("Send Failed", "Failed to send data to " + String(macStr)));
+    // screenManager.showPopup(new Popup("Send Failed", "Failed to send data to " + String(macStr)));
+    btnLed.Blink(0xFF0000, 100, 3);
+  } else {
+    // screenManager.showPopup(new Popup("Send Success", "Data sent to " + String(macStr)));
+    btnLed.Blink(0x00FF00, 100, 3);
   }
 }
 

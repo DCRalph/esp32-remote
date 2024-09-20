@@ -178,4 +178,9 @@ void ScreenManager::drawPopup(void){
   }
 }
 
+bool ScreenManager::isPopupActive(void)
+{
+  return popupActive;
+}
+
 ScreenManager screenManager;
