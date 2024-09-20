@@ -3,6 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
+#include "IO/GPIO.h"
 
 class HomeScreen : public Screen
 {
@@ -22,7 +23,6 @@ public:
   MenuItem testItem1 = MenuItem("Test 1");
   MenuItem testItem2 = MenuItem("Test 2");
   MenuItem testItem3 = MenuItem("Test 3");
-
 
   void draw() override;
   void update() override;
@@ -45,7 +45,6 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&testItem1);
   menu.addMenuItem(&testItem2);
   menu.addMenuItem(&testItem3);
-
 }
 
 void HomeScreen::draw()
@@ -107,6 +106,5 @@ void HomeScreen::update()
     //   str += "Unknown";
     //   break;
     // }
-
   }
 }

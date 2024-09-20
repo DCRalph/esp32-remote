@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "IO/ScreenManager.h"
 
 struct __attribute__((packed)) data_packet
 {

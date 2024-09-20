@@ -2,7 +2,8 @@
 
 #include "config.h"
 #include "IO/Display.h"
-#include <IO/Wireless.h>
+#include "IO/Wireless.h"
+#include "IO/GPIO.h"
 
 class ControlScreen : public Screen
 {
@@ -32,7 +33,7 @@ public:
                                                      data_packet p;
                                                      p.type = 0x30;
                                                      p.len = 2;
-                                                     p.data[0] = 2;      // 3 flashes
+                                                     p.data[0] = 2;       // 3 flashes
                                                      p.data[1] = 40 / 10; // 10; // 40ms
                                                      wireless.send(&p, car_addr);
                                                      //
@@ -51,6 +52,8 @@ public:
 
   void draw() override;
   void update() override;
+  void onEnter() override;
+  void onExit() override;
 };
 
 ControlScreen::ControlScreen(String _name) : Screen(_name)
@@ -71,4 +74,14 @@ void ControlScreen::draw()
 void ControlScreen::update()
 {
   menu.update();
+}
+
+void ControlScreen::onEnter()
+{
+  btnLed.SetColor(255, 0, 255);
+}
+
+void ControlScreen::onExit()
+{
+  btnLed.Off();
 }

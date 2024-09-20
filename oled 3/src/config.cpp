@@ -48,6 +48,8 @@ void deepSleepSetup()
     bool button1Pressed = (digitalRead(BTN_UP_PIN) == LOW);
     bool button2Pressed = (digitalRead(BTN_DOWN_PIN) == LOW);
 
+    btnLed.SetColor(255, 0, 0);
+
     // Check if both buttons are pressed
     do
     {
@@ -61,6 +63,8 @@ void deepSleepSetup()
         break;
 
     } while (button1Pressed || button2Pressed);
+
+    btnLed.SetColor(0, 255, 0);
 
     do
     {

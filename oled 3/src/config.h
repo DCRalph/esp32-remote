@@ -12,6 +12,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include "esp_log.h"
+#include "IO/GPIO.h"
 
 
 
@@ -27,10 +28,17 @@ extern esp_sleep_wakeup_cause_t wakeup_reason;
 
 #define BTN_UP_PIN 13
 #define BTN_DOWN_PIN 12
+#define BTN_TRIGGER_PIN 14
+
 #define BTN_UP_GPIO GPIO_NUM_13
 #define BTN_DOWN_GPIO GPIO_NUM_12
 
 #define LED_PIN 38
+
+#define BTN_LED_R_PIN 1
+#define BTN_LED_G_PIN 2
+#define BTN_LED_B_PIN 3
+
 
 #define BATT_MAX 4.2
 #define BATT_MIN 3.0

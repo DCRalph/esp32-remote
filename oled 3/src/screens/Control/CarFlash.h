@@ -36,6 +36,7 @@ public:
   void draw() override;
   void update() override;
   void onEnter() override;
+  void onExit() override;
 };
 
 CarFlashScreen::CarFlashScreen(String _name) : Screen(_name)
@@ -60,8 +61,25 @@ void CarFlashScreen::draw()
 void CarFlashScreen::update()
 {
   menu.update();
+
+  if (ClickButtonTRIGGER.clicks == 1)
+  {
+    data_packet p;
+    p.type = CMD_RELAY_1_FLASH;
+    p.len = 2;
+    p.data[0] = count;
+    p.data[1] = uint8_t(delay / 10);
+
+    wireless.send(&p, car_addr);
+  }
 }
 
 void CarFlashScreen::onEnter()
 {
+  btnLed.SetColor(255, 0, 0);
+}
+
+void CarFlashScreen::onExit()
+{
+  btnLed.Off();
 }

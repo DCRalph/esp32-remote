@@ -104,7 +104,6 @@ void CarControlScreen::update()
 
 void CarControlScreen::onEnter()
 {
-
   fullPacket fp;
   memcpy(fp.mac, car_addr, 6);
   fp.direction = PacketDirection::SEND;

@@ -21,7 +21,10 @@ void Wireless::setup()
   }
 
   esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status)
-                           { wireless.sendCallback(mac_addr, status); });
+                           {
+                             wireless.sendCallback(mac_addr, status);
+                             //
+                           });
 
   esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len)
                            { wireless.recvCallback(mac_addr, data, len); });
@@ -65,6 +68,11 @@ void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t statu
 #endif
 
   lastStatus = status;
+
+  if (status != ESP_NOW_SEND_SUCCESS)
+  {
+    screenManager.showPopup(new Popup("Send Failed", "Failed to send data to " + String(macStr)));
+  }
 }
 
 void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len)

@@ -33,7 +33,6 @@ class MenuItem
 {
 private:
   String name;
-  std::vector<ActionFunction> functions;
 
 protected:
   MenuItemType type;
@@ -44,6 +43,7 @@ protected:
   u16_t bgColor;
 
 public:
+  std::vector<ActionFunction> functions;
   /**
    * @brief Constructs a MenuItem object with the specified name.
    * @param _name The name of the menu item.
@@ -287,7 +287,6 @@ class Menu
 {
 private:
   uint8_t active;
-  std::vector<MenuItem *> items;
 
   uint8_t maxItemsPerPage = 5;
 
@@ -296,6 +295,7 @@ private:
   uint8_t offsetFromTop;
 
 public:
+  std::vector<MenuItem *> items;
   Menu();
 
   // String name;

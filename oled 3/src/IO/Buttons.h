@@ -5,6 +5,7 @@
 
 extern ClickButton ClickButtonUP;
 extern ClickButton ClickButtonDOWN;
+extern ClickButton ClickButtonTRIGGER;
 class Buttons
 {
   const int sleepCountdownTime = 3000;

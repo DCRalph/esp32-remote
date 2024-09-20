@@ -29,6 +29,7 @@
 #include "screens/Control/CarLocks.h"
 #include "screens/Control/Car.h"
 #include "screens/Control/CarFlash.h"
+#include "IO/GPIO.h"
 
 WiFiClient espClient;
 
@@ -58,43 +59,6 @@ unsigned long long sleepCountdownMillis = 0;
 long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
-// class BigClass
-// {
-//   uint64_t a;
-//   uint64_t b;
-//   uint64_t c;
-//   uint64_t d;
-
-// public:
-//   std::vector<uint64_t> values;
-//   uint64_t numValues = 1000;
-//   BigClass()
-//   {
-//     genvalues();
-//   }
-
-// public:
-//   void genvalues()
-//   {
-//     for (int i = 0; i < numValues; i++)
-//     {
-//       values.push_back(random(0, 18446744073709551614));
-//     }
-//   }
-
-//   void expensiceFunction()
-//   {
-//     for (int i = 0; i < numValues; i++)
-//     {
-//       a = values[i] * 2;
-//       b = values[i] * 3;
-//       c = values[i] * 4;
-//       d = values[i] * 5;
-//     }
-//   }
-// };
-
-// std::vector<BigClass> bigVector;
 
 void espNowCb(fullPacket *fp)
 {
@@ -127,9 +91,8 @@ void setup()
   initConfig();
   configureDeepSleep();
 
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
-
+  GpIO::initIO();
+  led.On();
   buttons.setup();
 
   deepSleepSetup();
@@ -172,7 +135,8 @@ void setup()
   //   bigVector.push_back(bigClass);
   // }
 
-  digitalWrite(LED_PIN, LOW);
+  led.Off();
+  btnLed.Off();
   screenManager.setScreen("Home");
   buttons.update();
 }

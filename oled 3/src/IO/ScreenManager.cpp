@@ -37,6 +37,7 @@ void ScreenManager::setScreen(int screen)
   if (currentScreen != -1)
   {
     screens[currentScreen]->onExit();
+    
   }
 
   currentScreen = screen;
