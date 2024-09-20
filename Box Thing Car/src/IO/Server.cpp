@@ -49,8 +49,8 @@ void setupRoutes()
   server.on("/index.css", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send_P(200, "text/css", index_css); });
 
-  server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send_P(200, "text/javascript", index_js); });
+  // server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request)
+  //           { request->send_P(200, "text/javascript", index_js); });
 
               server.on("/keypad.js", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send_P(200, "text/javascript", keypad_js); });

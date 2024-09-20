@@ -7,9 +7,9 @@
 
 #include "IO/Commands.h"
 
-#include "html.h"
-#include "css.h"
-#include "keypad_js.h"
+#include "web/index_html.h"
+#include "web/css.h"
+#include "web/keypad_js.h"
 
 
 extern AsyncWebServer server;
