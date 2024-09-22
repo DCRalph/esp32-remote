@@ -23,6 +23,24 @@
 #include "screens/Send.h"
 #include "screens/Car.h"
 
+#include "tensorflow/lite/micro/all_ops_resolver.h"
+// #include "tensorflow/lite/micro/micro_error_reporter.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+// #include "tensorflow/lite/version.h"
+
+constexpr int kTensorArenaSize = 20 * 1024;
+uint8_t tensor_arena[kTensorArenaSize];
+
+// Globals, used for compatibility with Arduino-style sketches.
+namespace {
+// tflite::ErrorReporter* error_reporter = nullptr;
+const tflite::Model* model = nullptr;
+tflite::MicroInterpreter* interpreter = nullptr;
+TfLiteTensor* input = nullptr;
+TfLiteTensor* output = nullptr;
+}  //
+
 WiFiClient espClient;
 
 ErrorScreen errorScreen("Error");
@@ -51,6 +69,10 @@ void setup()
 
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
+
+  while (!digitalRead(0) || !digitalRead(2))
+  {
+  }
 
   // setup buttons
   buttons.setup();
@@ -181,7 +203,6 @@ void loop()
     // Serial.println(battery.getVoltage());
 
     String voltageS = (String)battery.getVoltage();
-
   }
 
   if (!sleepLoop())

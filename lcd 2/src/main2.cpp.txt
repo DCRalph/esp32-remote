@@ -1,0 +1,94 @@
+#include <Arduino.h>
+#include "tensorflow/lite/micro/all_ops_resolver.h"
+#include "tensorflow/lite/micro/micro_error_reporter.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+#include "tensorflow/lite/version.h"
+
+// Include your model data (converted to a C array)
+#include "model.h"  // Replace with your actual model header file
+
+// Create a static memory buffer for TFLM
+constexpr int kTensorArenaSize = 20 * 1024;
+uint8_t tensor_arena[kTensorArenaSize];
+
+// Globals, used for compatibility with Arduino-style sketches.
+namespace {
+tflite::ErrorReporter* error_reporter = nullptr;
+const tflite::Model* model = nullptr;
+tflite::MicroInterpreter* interpreter = nullptr;
+TfLiteTensor* input = nullptr;
+TfLiteTensor* output = nullptr;
+}  // namespace
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial)
+    ;  // Wait for Serial port to be available
+  Serial.println("Starting TensorFlow Lite Micro inference...");
+
+  // Set up the error reporter
+  static tflite::MicroErrorReporter micro_error_reporter;
+  error_reporter = &micro_error_reporter;
+
+  // Map the model into a usable data structure
+  model = tflite::GetModel(g_model);  // g_model is your model array
+  if (model->version() != TFLITE_SCHEMA_VERSION) {
+    error_reporter->Report(
+        "Model provided is schema version %d not equal "
+        "to supported version %d.",
+        model->version(), TFLITE_SCHEMA_VERSION);
+    return;
+  }
+
+  // This pulls in all the operation implementations
+  static tflite::AllOpsResolver resolver;
+
+  // Build an interpreter to run the model
+  static tflite::MicroInterpreter static_interpreter(
+      model, resolver, tensor_arena, kTensorArenaSize, error_reporter);
+  interpreter = &static_interpreter;
+
+  // Allocate memory from the tensor_arena for the model's tensors
+  TfLiteStatus allocate_status = interpreter->AllocateTensors();
+  if (allocate_status != kTfLiteOk) {
+    error_reporter->Report("AllocateTensors() failed");
+    return;
+  }
+
+  // Obtain pointers to the model's input and output tensors
+  input = interpreter->input(0);
+  output = interpreter->output(0);
+
+  // Check input dimensions
+  if (input->dims->size != 2 || input->dims->data[0] != 1) {
+    error_reporter->Report("Bad input tensor parameters in model");
+    return;
+  }
+
+  Serial.println("Setup completed successfully.");
+}
+
+void loop() {
+  // Fill input tensor with your data
+  // Example: For a model expecting a single float input
+  float input_value = 0.5f;  // Replace with actual input
+  input->data.f[0] = input_value;
+
+  // Run inference
+  TfLiteStatus invoke_status = interpreter->Invoke();
+  if (invoke_status != kTfLiteOk) {
+    error_reporter->Report("Invoke failed");
+    return;
+  }
+
+  // Read output
+  float output_value = output->data.f[0];
+  Serial.print("Input: ");
+  Serial.print(input_value);
+  Serial.print(" Output: ");
+  Serial.println(output_value);
+
+  // Add a delay between inferences
+  delay(1000);
+}

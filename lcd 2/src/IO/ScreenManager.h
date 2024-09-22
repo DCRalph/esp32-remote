@@ -44,6 +44,8 @@ public:
   void showPopup(Popup *popup);
   void closePopup(void);
   void drawPopup(void);
+  bool isPopupActive(void);
+
 };
 
 extern ScreenManager screenManager;

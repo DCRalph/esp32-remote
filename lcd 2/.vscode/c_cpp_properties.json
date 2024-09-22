@@ -18,6 +18,7 @@
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/lib/ClickButton",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/Arduino_TensorFlowLite/src",
                 "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/ArduinoJson/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include",
@@ -212,7 +213,10 @@
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/qio_opi/include",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/variants/lilygo_t_display_s3",
+                "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/lib/pubsubclient-2.8/src",
+                "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/ArduinoBLE/src",
+                "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/Arduino_LSM9DS1/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
@@ -239,7 +243,6 @@
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 ""
             ],
             "browse": {
@@ -255,6 +258,7 @@
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/lib/ClickButton",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                    "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/Arduino_TensorFlowLite/src",
                     "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/ArduinoJson/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include",
@@ -449,7 +453,10 @@
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/qio_opi/include",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/variants/lilygo_t_display_s3",
+                    "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/lib/pubsubclient-2.8/src",
+                    "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/ArduinoBLE/src",
+                    "C:/Users/Willi/Documents/GitHub/esp32-remote/lcd 2/.pio/libdeps/T-Display/Arduino_LSM9DS1/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
@@ -476,7 +483,6 @@
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                    "C:/Users/Willi/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     ""
                 ]
             },

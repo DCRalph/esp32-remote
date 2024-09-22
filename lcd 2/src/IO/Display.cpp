@@ -114,13 +114,14 @@ void Display::display(void)
   clearScreen();
 
   screenManager.draw();
-  screenManager.update();
-
   if (showMenuBar)
     drawTopBar();
   showMenuBar = true;
 
-  screenManager.drawPopup();
+  if (screenManager.isPopupActive())
+    screenManager.drawPopup();
+  else
+    screenManager.update();
 
   push();
 }
