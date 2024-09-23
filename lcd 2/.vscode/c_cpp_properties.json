@@ -11,6 +11,8 @@
                 "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/include",
                 "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/src",
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/lib/Chirale_TensorFLowLite/src",
+                "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/lib/TFT_eSPI",
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/LittleFS/src",
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/SPIFFS/src",
@@ -245,7 +247,6 @@
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 ""
             ],
             "browse": {
@@ -254,6 +255,8 @@
                     "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/include",
                     "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/src",
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                    "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/lib/Chirale_TensorFLowLite/src",
+                    "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "/Users/williamgiles/Documents/GitHub/esp32-remote/lcd 2/lib/TFT_eSPI",
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/LittleFS/src",
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/SPIFFS/src",
@@ -488,7 +491,6 @@
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                    "/Users/williamgiles/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     ""
                 ]
             },
@@ -499,7 +501,6 @@
                 "ARDUINO_USB_CDC_ON_BOOT=1",
                 "ARDUINO_RUNNING_CORE=1",
                 "ARDUINO_EVENT_RUNNING_CORE=1",
-                "DISABLE_ALL_LIBRARY_WARNINGS",
                 "BOARD_HAS_PSRAM",
                 "ARDUINO_USB_CDC_ON_BOOT=1",
                 "ARDUINO_USB_MODE=1",
