@@ -21,8 +21,8 @@ enum class MenuItemType
 struct ActionFunction
 {
   std::function<void()> func;
-  s8_t clicksToRunUp;
-  s8_t clicksToRunDown;
+  int8_t clicksToRunUp;
+  int8_t clicksToRunDown;
 };
 
 /**
@@ -33,16 +33,17 @@ class MenuItem
 {
 private:
   String name;
-  std::vector<ActionFunction> functions;
 
 protected:
   MenuItemType type;
+  bool hidden = false;
 
   u16_t textColor;
   u16_t activeTextColor;
   u16_t bgColor;
 
 public:
+  std::vector<ActionFunction> functions;
   /**
    * @brief Constructs a MenuItem object with the specified name.
    * @param _name The name of the menu item.
@@ -55,8 +56,7 @@ public:
    * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed.
    */
-  void addFunc(s8_t _clicksToRun, std::function<void()> _func);
-
+  void addFunc(int8_t _clicksToRun, std::function<void()> _func);
   /**
    * @brief Sets the action to be performed when the menu item is selected.
    *
@@ -64,8 +64,7 @@ public:
    * @param _clicksToRunDown The number of clicks required to run the action when the DOWN button is pressed.
    * @param _func The action to be performed.
    */
-  void addFunc(s8_t _clicksToRunUp, s8_t _clicksToRunDown, std::function<void()> _func);
-
+  void addFunc(int8_t _clicksToRunUp, int8_t _clicksToRunDown, std::function<void()> _func);
   /**
    * @brief Sets the name of the menu item.
    * @param _name The name of the menu item.
@@ -103,12 +102,27 @@ public:
   void setBgColor(u16_t _color);
 
   /**
+   * @brief Sets the visibility of the menu item.
+   * @param _hidden Indicates whether the menu item is hidden or not.
+   */
+  void setHidden(bool _hidden);
+
+  /**
+   * @brief Checks if the menu item is hidden.
+   * @return true if the menu item is hidden, false otherwise.
+   */
+  bool isHidden();
+
+  void executeFunc();
+  void executeFunc(int8_t _clicks);
+
+  /**
    * @brief Draws the menu item on the screen.
    * @param _x The x-coordinate of the menu item.
    * @param _y The y-coordinate of the menu item.
    * @param _active Indicates whether the menu item is active or not.
    */
-  virtual void draw(u8_t _x, u8_t _y, bool _active);
+  virtual void draw(uint8_t _x, uint8_t _y, bool _active);
 
   /**
    * @brief Runs the menu item.
@@ -133,9 +147,9 @@ public:
    * @param _clicksToRun The number of clicks required to run the action.
    * @param _func The action to be performed when the menu item is selected.
    */
-  MenuItemAction(String _name, s8_t _clicksToRun, std::function<void()> _func);
+  MenuItemAction(String _name, int8_t _clicksToRun, std::function<void()> _func);
 
-  // void draw(u8_t _x, u8_t _y, bool _active) override;
+  // void draw(u8 _x, u8 _y, bool _active) override;
 };
 class MenuItemNavigate : public MenuItem
 {
@@ -156,9 +170,9 @@ public:
    *
    * @param route The route to be added.
    */
-  void addRoute(s8_t _clicksToRun, String _target);
+  void addRoute(int8_t _clicksToRun, String _target);
 
-  // void draw(u8_t _x, u8_t _y, bool _active) override;
+  // void draw(u8 _x, u8 _y, bool _active) override;
 };
 
 /**
@@ -172,7 +186,7 @@ public:
    */
   MenuItemBack();
 
-  // void draw(u8_t _x, u8_t _y, bool _active) override;
+  // void draw(u8 _x, u8 _y, bool _active) override;
 };
 
 /**
@@ -184,7 +198,9 @@ public:
 class MenuItemToggle : public MenuItem
 {
 private:
-  bool *value;
+  bool *value;            ///< Pointer to the boolean value associated with the menu item.
+  bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
+  std::function<void()> onChange;
 
 public:
   /**
@@ -193,24 +209,34 @@ public:
    * @param _name The name of the menu item.
    * @param _value A pointer to the boolean value associated with the menu item.
    */
-  MenuItemToggle(String _name, bool *_value);
+  MenuItemToggle(String _name, bool *_value, bool _isMutable = true);
 
-  void draw(u8_t _x, u8_t _y, bool _active) override;
+  void setOnChange(std::function<void()> _onChange);
+  void removeOnChange();
+
+  void set(bool _value);
+  bool get();
+
+  void draw(uint8_t _x, uint8_t _y, bool _active) override;
 };
 
 /**
  * @brief Represents a menu item for selecting a number value.
  */
+template <typename T>
 class MenuItemNumber : public MenuItem
 {
 private:
-  long *value; ///< Pointer to the value being controlled by this menu item.
-  s16_t min;   ///< The minimum value allowed.
-  s16_t max;   ///< The maximum value allowed.
+  T *value;   ///< Pointer to the value being controlled by this menu item.
+  T min;      ///< The minimum value allowed.
+  T max;      ///< The maximum value allowed.
+  T step = 1; ///< The step size for increasing or decreasing the value.
 
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
 
   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+
+  std::function<void()> onChange;
 
 public:
   /**
@@ -221,7 +247,11 @@ public:
    * @param _min The minimum value allowed.
    * @param _max The maximum value allowed.
    */
-  MenuItemNumber(String _name, long *_value, s16_t _min, s16_t _max);
+  MenuItemNumber(String _name, T *_value, T _min, T _max);
+  MenuItemNumber(String _name, T *_value, T _min, T _max, T _step);
+
+  void setOnChange(std::function<void()> _onChange);
+  void removeOnChange();
 
   /**
    * @brief Constructs a new MenuItemNumber object.
@@ -229,7 +259,7 @@ public:
    * @param _name The name of the menu item.
    * @param _value Pointer to the value being controlled by this menu item.
    */
-  MenuItemNumber(String _name, long *_value);
+  MenuItemNumber(String _name, T *_value);
 
   /**
    * @brief Checks if this menu item is currently selected.
@@ -248,32 +278,36 @@ public:
    */
   void decrease();
 
-  void draw(u8_t _x, u8_t _y, bool _active) override;
+  void draw(uint8_t _x, uint8_t _y, bool _active) override;
 };
+
+template class MenuItemNumber<int>;
+template class MenuItemNumber<long>;
+template class MenuItemNumber<uint8_t>;
 
 // ###### Menu ######
 class Menu
 {
 private:
-  u8_t active;
-  std::vector<MenuItem *> items;
+  uint8_t active;
 
-  u8_t maxItemsPerPage = 7;
+  uint8_t maxItemsPerPage = 5;
 
-  u8_t offsetFromTop;
-  u8_t numItems;
-  u8_t numItemsPerPage;
+  uint8_t numItems;
+  uint8_t numItemsPerPage;
+  uint8_t offsetFromTop;
 
 public:
+  std::vector<MenuItem *> items;
   Menu();
 
   // String name;
 
-  void setItemsPerPage(u8_t _itemsPerPage);
-  u8_t getItemsPerPage();
+  void setItemsPerPage(uint8_t _itemsPerPage);
+  uint8_t getItemsPerPage();
 
-  void setActive(u8_t _active);
-  u8_t getActive();
+  void setActive(uint8_t _active);
+  uint8_t getActive();
 
   void nextItem();
   void prevItem();

@@ -18,7 +18,7 @@ public:
   MenuItemNavigate batteryItem = MenuItemNavigate("Battery", "Battery");
   MenuItemNavigate wifiItem = MenuItemNavigate("Wi-Fi Info", "Wi-Fi info");
   MenuItemNavigate rssiItem = MenuItemNavigate("RSSI", "RSSI");
-  MenuItemNumber bootCountItem = MenuItemNumber("Boot Count", &bootCount);
+  MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot Count", &bootCount);
 
   MenuItemAction serialMacAddrItem = MenuItemAction("Serial MAC Address", 2, [&]()
                                                     {
