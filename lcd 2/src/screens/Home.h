@@ -3,6 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
+#include "IO/ML.h"
 
 class HomeScreen : public Screen
 {
@@ -21,11 +22,17 @@ public:
                                                   //
                                                 });
 
-                                                  MenuItemAction testPopupItem2 = MenuItemAction("Test Popup 2", 2, []()
-                                                {
-                                                  screenManager.showPopup(new AutoClosePopup("Test Popup 2", "This is a test", 5000));
-                                                  //
-                                                });
+  MenuItemAction testPopupItem2 = MenuItemAction("Test Popup 2", 2, []()
+                                                 {
+                                                   screenManager.showPopup(new AutoClosePopup("Test Popup 2", "This is a test", 5000));
+                                                   //
+                                                 });
+
+  MenuItemAction initML = MenuItemAction("Init ML", 2, []()
+                                         {
+                                           ml.init();
+                                           //
+                                         });
 
   void draw() override;
   void update() override;
@@ -38,13 +45,13 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   settingsMenuItem.setBgColor(TFT_RED);
 
   menu.addMenuItem(&ControlMenuItem);
-  ControlMenuItem.addRoute(3, "CarLocks"); 
-
+  ControlMenuItem.addRoute(3, "CarLocks");
 
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&sendMenuItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testPopupItem2);
+  menu.addMenuItem(&initML);
 }
 
 void HomeScreen::draw()

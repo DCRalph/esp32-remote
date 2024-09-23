@@ -18,10 +18,15 @@ class ML
   TfLiteTensor *input = nullptr;
   TfLiteTensor *output = nullptr;
 
-  int kTensorArenaSize = 2000;
-  alignas(16) uint8_t tensor_arena[2000];
+  int kTensorArenaSize = 5000;
+  alignas(16) uint8_t tensor_arena[5000];
+
+  bool setupDone = false;
 
 public:
   ML();
   void init();
+  void run();
 };
+
+extern ML ml;
