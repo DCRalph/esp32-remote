@@ -18,11 +18,10 @@ void Display::drawTopBar()
   // bool wifiConnected = WiFi.status() == WL_CONNECTED;
   bool wifiConnected = false;
 
-  // sprite.fillSmoothRoundRect(0, 0, LCD_WIDTH, 20, 20, TFT_BLUE);
-  sprite.fillRect(0, 0, LCD_WIDTH, 20, TFT_BLUE);
+  sprite.fillRect(0, 0, LCD_WIDTH, 20, screenManager.getScreenTopBarColor());
 
   sprite.setTextSize(2);
-  sprite.setTextColor(TFT_BLACK);
+  sprite.setTextColor(screenManager.getScreenTopBarTextColor());
   sprite.setTextDatum(ML_DATUM);
 
   String name = screenManager.getCurrentScreen()->name;
@@ -31,10 +30,6 @@ void Display::drawTopBar()
 
   sprite.drawString(name, 10, 10);
   char buf[20];
-  // sprintf(buf, "%i %.1fV", wifiConnected, battery.getVoltage());
-  // sprintf(buf, "%i %.2f%%", wifiConnected, battery.getPercentageF());
-  // sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentageI());
-  // sprintf(buf, "%i %i%%", wifiConnected, battery.getPercentage10());
   sprintf(buf, "%i%%", battery.getPercentageI());
 
   sprite.setTextDatum(MR_DATUM);
@@ -105,7 +100,6 @@ void Display::noTopBar(void)
 
 void Display::push(void)
 {
-  // lcd_PushColors(0, 0, LCD_WIDTH, LCD_HEIGHT, (u16_t *)sprite.getPointer());
   sprite.pushSprite(0, 0);
 }
 

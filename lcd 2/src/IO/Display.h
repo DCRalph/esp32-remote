@@ -39,6 +39,9 @@ class Screen
 public:
   String name;
 
+    uint16_t topBarColor = TFT_BLUE;
+  uint16_t topBarTextColor = TFT_BLACK;
+
   /**
    * @brief Constructs a new Screen object with the specified name.
    *

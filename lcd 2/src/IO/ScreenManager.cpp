@@ -1,5 +1,7 @@
 #include "ScreenManager.h"
 
+static const char* TAG = "ScreenManager";
+
 ScreenManager::ScreenManager()
 {
   currentScreen = -1;
@@ -8,7 +10,8 @@ ScreenManager::ScreenManager()
 
 void ScreenManager::init()
 {
-  Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
+  // Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
+  ESP_LOGI(TAG, "Initialized");
 }
 
 void ScreenManager::draw(void)
@@ -26,18 +29,21 @@ void ScreenManager::setScreen(int screen)
 {
   if (screen == currentScreen)
   {
-    Serial.println("[WARN] [SCREEN MANAGER] Screen already set");
+    // Serial.println("[WARN] [SCREEN MANAGER] Screen already set");
+    ESP_LOGW(TAG, "Screen already set");
     return;
   }
 
   if (currentScreen != -1)
   {
     screens[currentScreen]->onExit();
+    
   }
 
   currentScreen = screen;
 
-  Serial.println("[INFO] [SCREEN MANAGER] >> " + screens[screen]->name);
+  // Serial.println("[INFO] [SCREEN MANAGER] >> " + screens[screen]->name);
+  ESP_LOGI(TAG, ">> %s", screens[screen]->name.c_str());
 
   updateHistory();
 
@@ -54,15 +60,17 @@ void ScreenManager::setScreen(String screenName)
       return;
     }
   }
-  Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+  // Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+  ESP_LOGW(TAG, "Screen not found");
 }
 
 void ScreenManager::addScreen(Screen *screen)
 {
   screens.push_back(screen);
 
-  String msg = "\t[INFO] [SCREEN MANAGER] " + screen->name + " added";
-  Serial.println(msg);
+  // String msg = "\t[INFO] [SCREEN MANAGER] " + screen->name + " added";
+  // Serial.println(msg);
+  ESP_LOGI(TAG, "Added: %s", screen->name.c_str());
 }
 
 void ScreenManager::removeScreen(int screen)
@@ -80,12 +88,23 @@ void ScreenManager::removeScreen(String screenName)
       return;
     }
   }
-  Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+  // Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+  ESP_LOGW(TAG, "Screen not found");
 }
 
 Screen *ScreenManager::getCurrentScreen(void)
 {
   return screens[currentScreen];
+}
+
+uint16_t ScreenManager::getScreenTopBarColor(void)
+{
+  return screens[currentScreen]->topBarColor;
+}
+
+uint16_t ScreenManager::getScreenTopBarTextColor(void)
+{
+  return screens[currentScreen]->topBarTextColor;
 }
 
 void ScreenManager::back(void)
@@ -98,7 +117,8 @@ void ScreenManager::back(void)
 
     currentScreen = screenHistory.back();
 
-    Serial.println("[INFO] [SCREEN MANAGER] << " + screens[currentScreen]->name);
+    // Serial.println("[INFO] [SCREEN MANAGER] << " + screens[currentScreen]->name);
+    ESP_LOGI(TAG, "<< %s", screens[currentScreen]->name.c_str());
 
     screens[currentScreen]->onEnter();
   }

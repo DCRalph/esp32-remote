@@ -291,7 +291,7 @@ class Menu
 private:
   uint8_t active;
 
-  uint8_t maxItemsPerPage = 5;
+  uint8_t maxItemsPerPage = 7;
 
   uint8_t numItems;
   uint8_t numItemsPerPage;

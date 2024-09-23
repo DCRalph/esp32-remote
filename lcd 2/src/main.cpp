@@ -19,27 +19,18 @@
 #include "screens/Settings/RSSIMeter.h"
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/WiFiInfo.h"
+#include "screens/Settings/SystemInfoScreen.h"  
 
 #include "screens/Send.h"
-#include "screens/Car.h"
 
-#include "tensorflow/lite/micro/all_ops_resolver.h"
-// #include "tensorflow/lite/micro/micro_error_reporter.h"
-#include "tensorflow/lite/micro/micro_interpreter.h"
-#include "tensorflow/lite/schema/schema_generated.h"
-// #include "tensorflow/lite/version.h"
+#include "screens/Control.h"
 
-constexpr int kTensorArenaSize = 20 * 1024;
-uint8_t tensor_arena[kTensorArenaSize];
+// /control
+#include "screens/Control/CarLocks.h"
+#include "screens/Control/Car.h"
+#include "screens/Control/CarFlash.h"
 
-// Globals, used for compatibility with Arduino-style sketches.
-namespace {
-// tflite::ErrorReporter* error_reporter = nullptr;
-const tflite::Model* model = nullptr;
-tflite::MicroInterpreter* interpreter = nullptr;
-TfLiteTensor* input = nullptr;
-TfLiteTensor* output = nullptr;
-}  //
+
 
 WiFiClient espClient;
 
@@ -50,9 +41,16 @@ Settings settings("Settings");
 RSSIMeter rssiMeter("RSSI");
 BatteryScreen batteryScreen("Battery");
 WiFiInfoScreen WiFiInfo("Wi-Fi info");
+SystemInfoScreen systemInfoScreen("System Info");
 
 SendScreen sendScreen("Send");
-CarScreen carScreen("Car");
+
+ControlScreen controlScreen("Control");
+
+// /control
+CarLocksScreen carLocksScreen("CarLocks");
+CarControlScreen carScreen("Car");
+CarFlashScreen carFlashScreen("CarFlash");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
@@ -70,7 +68,7 @@ void setup()
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
 
-  while (!digitalRead(0) || !digitalRead(2))
+  while (!digitalRead(BTN_DOWN_PIN) || !digitalRead(BTN_UP_PIN))
   {
   }
 
@@ -86,13 +84,21 @@ void setup()
   screenManager.addScreen(&errorScreen);
   screenManager.addScreen(&homeScreen);
 
+  // /settings
   screenManager.addScreen(&rssiMeter);
   screenManager.addScreen(&settings);
   screenManager.addScreen(&batteryScreen);
   screenManager.addScreen(&WiFiInfo);
+  screenManager.addScreen(&systemInfoScreen);
 
   screenManager.addScreen(&sendScreen);
+
+  screenManager.addScreen(&controlScreen);
+
+  // /control
+  screenManager.addScreen(&carLocksScreen);
   screenManager.addScreen(&carScreen);
+  screenManager.addScreen(&carFlashScreen);
 
   screenManager.setScreen("Home");
 

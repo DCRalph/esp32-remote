@@ -16,6 +16,7 @@ public:
   MenuItemBack backItem;
 
   MenuItemNavigate batteryItem = MenuItemNavigate("Battery", "Battery");
+  MenuItemNavigate systemInfoItem = MenuItemNavigate("System Info", "System Info");
   MenuItemNavigate wifiItem = MenuItemNavigate("Wi-Fi Info", "Wi-Fi info");
   MenuItemNavigate rssiItem = MenuItemNavigate("RSSI", "RSSI");
   MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot Count", &bootCount);
@@ -46,6 +47,7 @@ Settings::Settings(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&batteryItem);
+  menu.addMenuItem(&systemInfoItem);
   menu.addMenuItem(&wifiItem);
   menu.addMenuItem(&rssiItem);
   menu.addMenuItem(&bootCountItem);
