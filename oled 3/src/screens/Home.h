@@ -21,10 +21,10 @@ public:
                                                 { screenManager.showPopup(new Popup("Test Popup", "This is a test gyY9 popup. pls wrap words TTTTT")); });
 
   MenuItemAction testBlinkItem = MenuItemAction("Test Blink", 2, []()
-                                                { 
+                                                {
                                                   uint32_t color = (0 << 16) | (255 << 8) | 0;
                                                   btnLed.Blink(color, 200, 3);
-                                                //
+                                                  //
                                                 });
 
   MenuItem testItem1 = MenuItem("Test 1");
@@ -49,13 +49,13 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
 
   // PowerOffMenuItem.setHidden(true);
 
-  ControlMenuItem.addRoute(3, "CarLocks"); 
+  ControlMenuItem.addRoute(3, "CarLocks");
 
   menu.addMenuItem(&ControlMenuItem);
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&PowerOffMenuItem);
   menu.addMenuItem(&testPopupItem);
-  menu.addMenuItem(&testBlinkItem); 
+  menu.addMenuItem(&testBlinkItem);
   menu.addMenuItem(&testItem1);
   menu.addMenuItem(&testItem2);
   menu.addMenuItem(&testItem3);
@@ -70,6 +70,12 @@ void HomeScreen::draw()
 void HomeScreen::update()
 {
   menu.update();
+
+  if (ClickButtonTRIGGER.clicks == 1)
+  {
+    uint32_t color = (0 << 16) | (255 << 8) | 0;
+    btnLed.Blink(color, 200, 3);
+  }
 
   if (millis() - prevMillis1 > 10)
   {

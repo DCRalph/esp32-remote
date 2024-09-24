@@ -167,12 +167,15 @@ void GpIO_RGB::_SetColor(uint32_t color)
   _SetColor((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
 }
 
-void GpIO_RGB::_SetMode(RGB_MODE _newMode)
+void GpIO_RGB::_UpdateModeHistory(RGB_MODE _oldMode)
 {
-
   if (modeHistory.size() >= maxModeHistory)
     modeHistory.erase(modeHistory.begin());
-  modeHistory.push_back(mode);
+  modeHistory.push_back(_oldMode);
+}
+
+void GpIO_RGB::_SetMode(RGB_MODE _newMode)
+{
   mode = _newMode;
 
   ESP_LOGI("RGB", "Mode changed to %d", mode);
@@ -308,15 +311,6 @@ void GpIO_RGB::StartBlink()
 
                   rgb->Blink();
 
-                  // if (rgb->modeHistory.size() > 0)
-                  // {
-                  //   rgb->mode = rgb->modeHistory.back();
-                  //   rgb->modeHistory.pop_back();
-                  // }
-                  // else
-                  //   rgb->mode = RGB_MODE::Manual;
-
-                  // rgb->_SetMode(RGB_MODE::Manual);
                   rgb->SetPrevMode();
 
                   rgb->blinkHandle = NULL;
@@ -402,6 +396,7 @@ void GpIO_RGB::SetMode(RGB_MODE _newMode)
   }
 
   ESP_LOGI("RGB", "Mode changed to %d", _newMode);
+  _UpdateModeHistory(mode);
   _SetMode(_newMode);
 }
 
@@ -416,7 +411,7 @@ void GpIO_RGB::SetPrevMode()
 
   ESP_LOGI("RGB", "[PREV] Mode changed to %d", modeHistory.back());
 
-  mode = modeHistory.back();
+  _SetMode( modeHistory.back());
   modeHistory.pop_back();
 }
 
@@ -455,5 +450,6 @@ void GpIO_RGB::Blink(uint32_t _color, uint8_t _speed, uint8_t _count)
   blinkSpeed = _speed;
   blinkCount = _count;
 
-  SetMode(RGB_MODE::Blink);
+  _UpdateModeHistory(mode);
+  _SetMode(RGB_MODE::Blink);
 }

@@ -74,6 +74,7 @@ private:
 
   void _SetColor(uint8_t _r, uint8_t _g, uint8_t _b);
   void _SetColor(uint32_t color);
+  void _UpdateModeHistory(RGB_MODE _oldMode);
   void _SetMode(RGB_MODE _mode);
 
   xTaskHandle rainbowHandle = NULL;

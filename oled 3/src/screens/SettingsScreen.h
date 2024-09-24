@@ -14,6 +14,8 @@ public:
   long bootCount;
   bool rainbowMode = false;
 
+
+
   Menu menu = Menu();
 
   MenuItemBack backItem;
@@ -51,10 +53,15 @@ public:
   void draw() override;
   void update() override;
   void onEnter() override;
+  void onExit() override;
 };
 
 Settings::Settings(String _name) : Screen(_name)
 {
+
+  topBarColor = TFT_RED;
+  topBarTextColor = TFT_WHITE;
+
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&batteryItem);
   menu.addMenuItem(&systemInfoItem);
@@ -71,10 +78,6 @@ Settings::Settings(String _name) : Screen(_name)
                               });
 }
 
-void Settings::onEnter()
-{
-  bootCount = preferences.getLong("bootCount", 0);
-}
 
 void Settings::draw()
 {
@@ -86,4 +89,16 @@ void Settings::update()
   menu.update();
 
   rainbowMode = btnLed.GetMode() == RGB_MODE::Rainbow;
+}
+
+void Settings::onEnter()
+{
+  btnLed.SetColor565(topBarColor);
+  bootCount = preferences.getLong("bootCount", 0);
+
+}
+
+void Settings::onExit()
+{
+  btnLed.Off();
 }
