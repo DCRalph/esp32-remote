@@ -10,16 +10,16 @@
 
 #include "Model/model_colour_channels4.h"
 
+
 class ML
 {
-
   const tflite::Model *model = nullptr;
   tflite::MicroInterpreter *interpreter = nullptr;
   TfLiteTensor *input = nullptr;
   TfLiteTensor *output = nullptr;
 
-  int kTensorArenaSize = 5000;
-  alignas(16) uint8_t tensor_arena[5000];
+  int kTensorArenaSize = 2000000;
+  uint8_t *tensor_arena;
 
   bool setupDone = false;
 

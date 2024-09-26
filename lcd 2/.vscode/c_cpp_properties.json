@@ -514,6 +514,7 @@
             "cppStandard": "gnu++11",
             "compilerPath": "C:/Users/Willi/.platformio/packages/toolchain-xtensa-esp32s3/bin/xtensa-esp32s3-elf-gcc.exe",
             "compilerArgs": [
+                "-mfix-esp32-psram-cache-issue",
                 "-mlongcalls",
                 ""
             ]

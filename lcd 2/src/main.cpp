@@ -19,7 +19,7 @@
 #include "screens/Settings/RSSIMeter.h"
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/WiFiInfo.h"
-#include "screens/Settings/SystemInfoScreen.h"  
+#include "screens/Settings/SystemInfoScreen.h"
 
 #include "screens/Send.h"
 
@@ -31,6 +31,8 @@
 #include "screens/Control/CarFlash.h"
 
 #include "IO/ML.h"
+
+uint8_t *bigArr;
 
 WiFiClient espClient;
 
@@ -64,6 +66,7 @@ void setup()
 {
   initConfig();
   // pinMode(LED_PIN, OUTPUT);
+
 
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
@@ -211,8 +214,16 @@ void loop()
     String voltageS = (String)battery.getVoltage();
   }
 
-  if (ClickButtonUP.clicks == 5){
+  if (ClickButtonUP.clicks == 5)
+  {
+    ESP_LOGI("Main", "5 clicks");
     ml.init();
+  }
+
+  if (ClickButtonUP.clicks == 6)
+  {
+    ESP_LOGI("Main", "6 clicks");
+    ml.run();
   }
 
   if (!sleepLoop())
