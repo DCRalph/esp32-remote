@@ -16,6 +16,8 @@
 #define NUM_LEDS 1   // Number of LEDs
 CRGB leds[NUM_LEDS]; // Create a CRGB array for LED
 
+uint64_t receivedFrames = 0;
+
 QueueHandle_t xBlinkQueue;
 void BlinkTask(void *pvParameters);
 
@@ -24,10 +26,9 @@ void handleSerialInput();
 // task to print the rpm and headlight state every 1 second
 void printTask(void *pvParameters);
 
-
-RPMDecoder rpmDecoder; // Create an RPM decoder with ID 0x1dc
+RPMDecoder rpmDecoder;               // Create an RPM decoder with ID 0x1dc
 HeadLightsDecoder headLightsDecoder; // Create a HeadLights decoder with ID 0x164
-GearDecoder gearDecoder; // Create a Gear decoder with ID 0x188
+GearDecoder gearDecoder;             // Create a Gear decoder with ID 0x188
 ShifterPosDecoder shifterPosDecoder; // Create a ShifterPos decoder with ID 0x188
 
 void setup()
@@ -39,6 +40,10 @@ void setup()
   canInit();
   canNormal();
 
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  delay(1000);
+
   // Initialize FastLED
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, NUM_LEDS);
   FastLED.clear();
@@ -48,7 +53,7 @@ void setup()
   xBlinkQueue = xQueueCreate(100, sizeof(CRGB)); // Queue with 10 items
 
   // Create the blink task
-  xTaskCreate(BlinkTask, "BlinkTask", 2048, NULL, 1, NULL);
+  // xTaskCreate(BlinkTask, "BlinkTask", 2048, NULL, 1, NULL);
 
   // Create the print task
   // xTaskCreate(printTask, "PrintTask", 2048, NULL, 1, NULL);
@@ -60,60 +65,77 @@ void setup()
   decoderManager.add(&headLightsDecoder);
   decoderManager.add(&gearDecoder);
   decoderManager.add(&shifterPosDecoder);
-
-  // canFrame frame;
-  // frame.id = 0x1dc;
-  // frame.extFlag = 0;
-  // frame.len = 4;
-  // frame.data[0] = 0x02;
-  // frame.data[1] = 0x02;
-  // frame.data[2] = 0xb3;
-  // frame.data[3] = 0x2a;
-
-  // decoderManager.process(frame);
-
-  // Serial.print("RPM: ");
-  // Serial.println(rpmDecoder.get());
-
-  // frame.id = 0x164;
-  // frame.extFlag = 0;
-  // frame.len = 8;
-  // frame.data[0] = 0x27;
-
-  // decoderManager.process(frame);
-
-  // Serial.print("Headlights: ");
-  // Serial.println(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
-  
 }
 
 void loop()
 {
   // Check for incoming serial data (from SavvyCAN)
-  if (Serial.available())
-  {
-    handleSerialInput();
-    // Send red color to blink task without blocking
-    CRGB color = CRGB::Red;
-    xQueueSend(xBlinkQueue, &color, 0);
-  }
+  // if (Serial.available())
+  // {
+  //   // handleSerialInput();
+  //   // Send red color to blink task without blocking
+  //   CRGB color = CRGB::Red;
+  //   xQueueSend(xBlinkQueue, &color, 0);
+  // }
 
   // Check for incoming CAN data
   if (canInterupt())
   {
-
+    canSleep();
+    receivedFrames++;
     canFrame frame;
 
     canRead(&frame);
 
-    savvyCanSend(&frame);
+    // savvyCanSend(&frame);
 
     // Process the frame with the decoder manager
-    decoderManager.process(frame);
+    uint64_t startProcessingTime = micros();
+    bool res = decoderManager.process(&frame);
+    uint64_t endProcessingTime = micros();
+
+    if (!res)
+    {
+      canNormal();
+      return;
+    }
+
+    // Serial.print("Processing Time: ");
+    // Serial.println(endProcessingTime - startProcessingTime);
 
     // Send blue color to blink task without blocking
-    CRGB color = CRGB::Blue;
-    xQueueSend(xBlinkQueue, &color, 0);
+    // CRGB color = CRGB::Blue;
+    // xQueueSend(xBlinkQueue, &color, 0);
+
+    Serial.print("RPM: ");
+    Serial.print(rpmDecoder.get());
+
+    Serial.print("\t");
+
+    Serial.print("Headlights: ");
+    // Serial.print(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
+    Serial.print((int)headLightsDecoder.get());
+
+    Serial.print("\t");
+
+    Serial.print("Gear: ");
+    // Serial.print(GearStateMap.at(gearDecoder.get()).c_str());
+    Serial.print((int)gearDecoder.get());
+
+    Serial.print("\t");
+
+    Serial.print("Shifter Position: ");
+    // Serial.print(ShifterStateMap.at(shifterPosDecoder.get()).c_str());
+    Serial.print((int)shifterPosDecoder.get());
+
+    Serial.println();
+
+    if (rpmDecoder.get() < 100)
+    {
+      frame.print();
+    }
+
+    canNormal();
   }
 }
 
@@ -146,21 +168,44 @@ void BlinkTask(void *pvParameters)
     {
       leds[0] = color;
       FastLED.show();
+      digitalWrite(2, HIGH);
       vTaskDelay(pdMS_TO_TICKS(100)); // Non-blocking delay
       leds[0] = CRGB::Black;
       FastLED.show();
+      digitalWrite(2, LOW);
     }
   }
 }
 
 void printTask(void *pvParameters)
 {
+  vTaskDelay(pdMS_TO_TICKS(1000));
+
   while (1)
   {
     Serial.print("RPM: ");
-    Serial.println(rpmDecoder.get());
+    Serial.print(rpmDecoder.get());
+
+    Serial.print("\t");
+
     Serial.print("Headlights: ");
-    Serial.println(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
+    // Serial.print(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
+    Serial.print((int)headLightsDecoder.get());
+
+    Serial.print("\t");
+
+    Serial.print("Gear: ");
+    // Serial.print(GearStateMap.at(gearDecoder.get()).c_str());
+    Serial.print((int)gearDecoder.get());
+
+    Serial.print("\t");
+
+    Serial.print("Shifter Position: ");
+    // Serial.print(ShifterStateMap.at(shifterPosDecoder.get()).c_str());
+    Serial.print((int)shifterPosDecoder.get());
+
+    Serial.println();
+
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }

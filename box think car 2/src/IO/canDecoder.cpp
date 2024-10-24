@@ -29,9 +29,25 @@ void CANDecoderManager::add(CANFrameDecoderBase *decoder)
 }
 
 // Process the frame using the appropriate decoder(s)
-bool CANDecoderManager::process(const canFrame &frame)
+bool CANDecoderManager::process(canFrame *frame)
 {
-  auto it = decoders.find(frame.id); // Try to find the decoders by the frame ID
+  // check if the data is all 0
+  bool allZero = true;
+  for (int i = 0; i < frame->len; i++)
+  {
+    if (frame->data[i] != 0)
+    {
+      allZero = false;
+      break;
+    }
+  }
+
+  if (allZero)
+  {
+    return false;
+  }
+
+  auto it = decoders.find(frame->id); // Try to find the decoders by the frame ID
   if (it != decoders.end())
   {
     // Iterate over all decoders for this ID and call their process methods

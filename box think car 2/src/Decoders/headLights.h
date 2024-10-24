@@ -10,5 +10,19 @@ public:
     HeadLightsDecoder();
 
     // Override the process method to decode RPM data from the frame
-    void process(const canFrame &frame) override;
+    void process(canFrame *frame) override;
 };
+
+HeadLightsDecoder::HeadLightsDecoder()
+{
+    decoderId = 0x164;
+    result = HeadLightsState::OFF;
+}
+
+void HeadLightsDecoder::process(canFrame *frame)
+{
+    // Decode RPM data from the frame
+    uint8_t state = frame->data[0];
+
+    result = static_cast<HeadLightsState>(state);
+}

@@ -3,24 +3,25 @@
 #include "config.h"
 #include "IO/canDecoder.h"
 
-class GearDecoder : public CANFrameDecoder<int>
+class GearDecoder : public CANFrameDecoder<GearState>
 {
 public:
     // Constructor that takes a reference to CANFrameManager
     GearDecoder();
 
     // Override the process method to decode RPM data from the frame
-    void process(const canFrame& frame) override;
+    void process(canFrame *frame) override;
 };
 
 GearDecoder::GearDecoder()
 {
     decoderId = 0x188;
+    result = GearState::NEUTRAL;
 }
 
-void GearDecoder::process(const canFrame& frame)
+void GearDecoder::process(canFrame *frame)
 {
-    // Decode RPM data from the frame
-    result = 0;
-}
+    uint8_t state = frame->data[1];
 
+    result = static_cast<GearState>(state);
+}

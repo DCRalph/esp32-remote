@@ -25,7 +25,7 @@ public:
   uint32_t getId() const;
 
   // Virtual process method to be overridden by derived classes
-  virtual void process(const canFrame &frame) = 0;
+  virtual void process(canFrame *frame) = 0;
 };
 
 // Template class for decoding CAN frames (inherits from base, no canFrame member)
@@ -58,10 +58,12 @@ public:
   void add(CANFrameDecoderBase *decoder);
 
   // Method to find and process the decoders for a specific frame
-  bool process(const canFrame &frame);
+  bool process(canFrame *frame);
 };
 
 template class CANFrameDecoder<int>;
 template class CANFrameDecoder<HeadLightsState>;
+template class CANFrameDecoder<GearState>;
+template class CANFrameDecoder<ShifterState>;
 
 extern CANDecoderManager decoderManager;
