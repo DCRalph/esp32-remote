@@ -74,6 +74,6 @@ void deepSleepSetup()
   }
   else
   {
-    esp_deep_sleep_start();
+    // esp_deep_sleep_start();
   }
 }
