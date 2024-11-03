@@ -309,6 +309,8 @@ void GpIO_RGB::StartBlink()
                 {
                   GpIO_RGB *rgb = (GpIO_RGB *)pvParameters;
 
+                  vTaskDelay(pdMS_TO_TICKS(5));
+
                   rgb->Blink();
 
                   rgb->SetPrevMode();
@@ -411,7 +413,7 @@ void GpIO_RGB::SetPrevMode()
 
   ESP_LOGI("RGB", "[PREV] Mode changed to %d", modeHistory.back());
 
-  _SetMode( modeHistory.back());
+  _SetMode(modeHistory.back());
   modeHistory.pop_back();
 }
 

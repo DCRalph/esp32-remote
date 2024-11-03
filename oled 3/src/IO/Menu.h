@@ -284,6 +284,7 @@ public:
 template class MenuItemNumber<int>;
 template class MenuItemNumber<long>;
 template class MenuItemNumber<uint8_t>;
+template class MenuItemNumber<uint32_t>;
 
 // ###### Menu ######
 class Menu

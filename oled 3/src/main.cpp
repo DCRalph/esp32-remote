@@ -30,6 +30,8 @@
 #include "screens/Control/Car.h"
 #include "screens/Control/CarFlash.h"
 
+// /remoteRelay
+#include "screens/RemoteRelay.h"
 
 #include "IO/GPIO.h"
 
@@ -53,6 +55,9 @@ CarLocksScreen carLocksScreen("CarLocks");
 CarControlScreen carScreen("Car");
 CarFlashScreen carFlashScreen("CarFlash");
 
+// /remoteRelay
+RemoteRelayScreen remoteRelayScreen("RemoteRelay");
+
 unsigned long long prevMillis1;
 int interval1 = 200;
 
@@ -61,6 +66,19 @@ unsigned long long sleepCountdownMillis = 0;
 long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
+unsigned long long lastDraw = 0;
+
+TaskHandle_t fpsTask;
+
+void fpsTaskFunction(void *pvParameters)
+{
+  for (;;)
+  {
+    lastFps = fps;
+    fps = 0;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
 
 void espNowCb(fullPacket *fp)
 {
@@ -122,25 +140,28 @@ void setup()
   screenManager.addScreen(&carLocksScreen);
   screenManager.addScreen(&carScreen);
   screenManager.addScreen(&carFlashScreen);
-  
+
+  // /remoteRelay
+  screenManager.addScreen(&remoteRelayScreen);
 
   wireless.setup();
   wireless.setRecvCb(espNowCb);
 
   prevMillis1 = millis();
 
-  // for (int i = 0; i < 300; i++)
-  // {
-  //   BigClass bigClass;
-  //   bigClass.genvalues();
-
-  //   bigVector.push_back(bigClass);
-  // }
-
   led.Off();
   btnLed.Off();
   screenManager.setScreen("Home");
   buttons.update();
+
+  xTaskCreatePinnedToCore(
+      fpsTaskFunction, /* Task function. */
+      "fpsTask",       /* name of task. */
+      10000,           /* Stack size of task */
+      NULL,            /* parameter of the task */
+      1,               /* priority of the task */
+      &fpsTask,        /* Task handle to keep track of created task */
+      0);              /* pin task to core 0 */
 }
 
 bool sleepLoop()
@@ -207,35 +228,22 @@ bool sleepLoop()
 
 void loop()
 {
-
-  buttons.update();
+  fps++;
 
   if (millis() - prevMillis1 > interval1)
   {
     prevMillis1 = millis();
     battery.update();
-
-    // for (uint64_t i = 0; i < bigVector.size(); i++)
-    // {
-    //   bigVector[i].expensiceFunction();
-    // }
-
-    // Serial.println(battery.getVoltage());
-
-    // String voltageS = (String)battery.getVoltage();
-
-    // Serial.print("1: ");
-    // Serial.print(digitalRead(1));
-    // Serial.print(" 2: ");
-    // Serial.println(digitalRead(2));
-
-    // log_i("Total heap: %u", ESP.getHeapSize());
-    // log_i("Free heap: %u", ESP.getFreeHeap());
-    // log_i("Total PSRAM: %u", ESP.getPsramSize());
-    // log_i("Free PSRAM: %d", ESP.getFreePsram());
-    // log_i("spiram size %u", esp_spiram_get_size());
   }
 
-  if (!sleepLoop())
+  if (!sleepLoop() && millis() - lastDraw > 25)
+  {
+    lastDraw = millis();
+
+    buttons.update();
+
+    frameTime = millis();
     display.display();
+    lastFrameTime = millis() - frameTime;
+  }
 }

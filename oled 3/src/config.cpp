@@ -5,6 +5,11 @@ static const char *TAG = "Config";
 Preferences preferences;
 esp_sleep_wakeup_cause_t wakeup_reason;
 
+uint32_t fps = 0;
+uint32_t lastFps = 0;
+uint32_t frameTime = 0;
+uint32_t lastFrameTime = 0;
+
 bool globalRelay1 = false;
 bool globalRelay2 = false;
 bool globalRelay3 = false;

@@ -19,6 +19,11 @@
 extern Preferences preferences;
 extern esp_sleep_wakeup_cause_t wakeup_reason;
 
+extern uint32_t fps;
+extern uint32_t lastFps;
+extern uint32_t frameTime;
+extern uint32_t lastFrameTime;
+
 #define ESP_NOW_CHANNEL 1
 
 #define BAUD_RATE 115200

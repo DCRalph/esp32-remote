@@ -27,9 +27,10 @@ public:
                                                   //
                                                 });
 
-  MenuItem testItem1 = MenuItem("Test 1");
-  MenuItem testItem2 = MenuItem("Test 2");
-  MenuItem testItem3 = MenuItem("Test 3");
+  MenuItemNavigate remoteRelay = MenuItemNavigate("Remote Relay", "RemoteRelay");
+
+  MenuItemNumber<uint32_t> fpsItem = MenuItemNumber<uint32_t>("FPS", &lastFps);
+  MenuItemNumber<uint32_t> frameTimeItem = MenuItemNumber<uint32_t>("Frame Time", &lastFrameTime);
 
   void draw() override;
   void update() override;
@@ -47,18 +48,17 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   settingsMenuItem.setTextColor(TFT_RED);
   settingsMenuItem.setBgColor(TFT_RED);
 
-  // PowerOffMenuItem.setHidden(true);
-
   ControlMenuItem.addRoute(3, "CarLocks");
+
+  menu.addMenuItem(&fpsItem);
+  menu.addMenuItem(&frameTimeItem);
 
   menu.addMenuItem(&ControlMenuItem);
   menu.addMenuItem(&settingsMenuItem);
+  menu.addMenuItem(&remoteRelay);
   menu.addMenuItem(&PowerOffMenuItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testBlinkItem);
-  menu.addMenuItem(&testItem1);
-  menu.addMenuItem(&testItem2);
-  menu.addMenuItem(&testItem3);
 }
 
 void HomeScreen::draw()
@@ -71,62 +71,12 @@ void HomeScreen::update()
 {
   menu.update();
 
-  if (ClickButtonTRIGGER.clicks == 1)
-  {
-    uint32_t color = (0 << 16) | (255 << 8) | 0;
-    btnLed.Blink(color, 200, 3);
-  }
+  // if (ClickButtonTRIGGER.clicks == 1)
+  // {
+  //   uint32_t color = (0 << 16) | (255 << 8) | 0;
+  //   btnLed.Blink(color, 200, 3);
+  // }
 
-  if (millis() - prevMillis1 > 10)
-  {
-
-    // String str = "";
-    // switch (wakeup_reason)
-    // {
-    // case ESP_SLEEP_WAKEUP_UNDEFINED:
-    //   str += "UNDEFINED";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_ALL:
-    //   str += "ALL";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_EXT0:
-    //   str += "EXT0";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_EXT1:
-    //   str += "EXT1";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_TIMER:
-    //   str += "TIMER";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_TOUCHPAD:
-    //   str += "TOUCHPAD";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_ULP:
-    //   str += "ULP";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_GPIO:
-    //   str += "GPIO";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_UART:
-    //   str += "UART";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_WIFI:
-    //   str += "WIFI";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_COCPU:
-    //   str += "COCPU";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG:
-    //   str += "COCPU_TRAP_TRIG";
-    //   break;
-    // case ESP_SLEEP_WAKEUP_BT:
-    //   str += "BT";
-    //   break;
-    // default:
-    //   str += "Unknown";
-    //   break;
-    // }
-  }
 }
 
 void HomeScreen::onEnter()

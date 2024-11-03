@@ -14,8 +14,6 @@ public:
   long bootCount;
   bool rainbowMode = false;
 
-
-
   Menu menu = Menu();
 
   MenuItemBack backItem;
@@ -78,7 +76,6 @@ Settings::Settings(String _name) : Screen(_name)
                               });
 }
 
-
 void Settings::draw()
 {
   menu.draw();
@@ -95,7 +92,6 @@ void Settings::onEnter()
 {
   btnLed.SetColor565(topBarColor);
   bootCount = preferences.getLong("bootCount", 0);
-
 }
 
 void Settings::onExit()
