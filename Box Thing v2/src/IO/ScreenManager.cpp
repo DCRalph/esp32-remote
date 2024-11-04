@@ -88,6 +88,19 @@ Screen *ScreenManager::getCurrentScreen(void)
   return screens[currentScreen];
 }
 
+Screen *ScreenManager::getScreen(String screenName)
+{
+  for (std::vector<Screen *>::size_type i = 0; i < screens.size(); i++)
+  {
+    if (screens[i]->name == screenName)
+    {
+      return screens[i];
+    }
+  }
+  Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
+  return nullptr;
+}
+
 void ScreenManager::back(void)
 {
   if (screenHistory.size() > 1)

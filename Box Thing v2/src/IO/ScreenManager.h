@@ -33,6 +33,7 @@ public:
   void removeScreen(String screenName);
 
   Screen *getCurrentScreen(void);
+  Screen *getScreen(String screenName);
 
   void back(void);
   void clearHistory(void);

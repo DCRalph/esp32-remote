@@ -1,10 +1,11 @@
 #pragma once
 
 #include "config.h"
+#include "Display.h"
+
 #include <vector>
 
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#define MENU_DEFUALT_CLICKS 1
 
 class Menu;
 
@@ -32,13 +33,17 @@ class MenuItem
 {
 private:
   String name;
-  std::vector<ActionFunction> functions;
 
 protected:
   MenuItemType type;
   bool hidden = false;
 
+  u16_t textColor;
+  u16_t activeTextColor;
+  u16_t bgColor;
+
 public:
+  std::vector<ActionFunction> functions;
   /**
    * @brief Constructs a MenuItem object with the specified name.
    * @param _name The name of the menu item.
@@ -72,6 +77,24 @@ public:
   MenuItemType getType();
 
   /**
+   * @brief Sets the text color of the menu item.
+   * @param _color The text color.
+   */
+  void setTextColor(u16_t _color);
+
+  /**
+   * @brief Sets the active text color of the menu item.
+   * @param _color The active text color.
+   */
+  void setActiveTextColor(u16_t _color);
+
+  /**
+   * @brief Sets the background color of the menu item.
+   * @param _color The background color.
+   */
+  void setBgColor(u16_t _color);
+
+  /**
    * @brief Sets the visibility of the menu item.
    * @param _hidden Indicates whether the menu item is hidden or not.
    */
@@ -82,6 +105,9 @@ public:
    * @return true if the menu item is hidden, false otherwise.
    */
   bool isHidden();
+
+  void executeFunc();
+  void executeFunc(int8_t _clicks);
 
   /**
    * @brief Draws the menu item on the screen.
@@ -165,7 +191,7 @@ public:
 class MenuItemToggle : public MenuItem
 {
 private:
-  bool *value; ///< Pointer to the boolean value associated with the menu item.
+  bool *value;            ///< Pointer to the boolean value associated with the menu item.
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
   std::function<void()> onChange;
 
@@ -187,86 +213,159 @@ public:
   void draw(uint8_t _x, uint8_t _y, bool _active) override;
 };
 
+enum class NumberValueType
+{
+  INT,
+  FLOAT,
+  LONG,
+  UINT8_T,
+  UINT32_T,
+  UNKNOWN
+};
+
+/**
+ * @brief Abstract base class for MenuItemNumber to provide a common interface.
+ */
+class MenuItemNumberBase : public MenuItem
+{
+protected:
+  bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+
+  bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
+
+public:
+  MenuItemNumberBase(String _name);
+
+  virtual ~MenuItemNumberBase() = default;
+
+  // Pure virtual methods to be implemented by derived classes
+  bool isSelected() const;
+  virtual void increase() = 0;
+  virtual void decrease() = 0;
+  virtual NumberValueType getValueType() const = 0;
+};
+
 /**
  * @brief Represents a menu item for selecting a number value.
  */
 template <typename T>
-class MenuItemNumber : public MenuItem
+class MenuItemNumber : public MenuItemNumberBase
 {
 private:
-  T *value; ///< Pointer to the value being controlled by this menu item.
-  T min;  ///< The minimum value allowed.
-  T max;  ///< The maximum value allowed.
+  T *value;   ///< Pointer to the value being controlled by this menu item.
+  T min;      ///< The minimum value allowed.
+  T max;      ///< The maximum value allowed.
   T step = 1; ///< The step size for increasing or decreasing the value.
 
-  bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
+  NumberValueType valueType; ///< The type of the value being controlled by this menu item.
 
-  bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+  std::function<void()> onChange; ///< Optional callback when the value changes.
 
-  std::function<void()> onChange;
+  void determineValueType();
 
 public:
-  /**
-   * @brief Constructs a new MenuItemNumber object.
-   *
-   * @param _name The name of the menu item.
-   * @param _value Pointer to the value being controlled by this menu item.
-   * @param _min The minimum value allowed.
-   * @param _max The maximum value allowed.
-   */
+  // Constructors
   MenuItemNumber(String _name, T *_value, T _min, T _max);
   MenuItemNumber(String _name, T *_value, T _min, T _max, T _step);
-
-
-  void setOnChange(std::function<void()> _onChange);
-  void removeOnChange();
-
-  /**
-   * @brief Constructs a new MenuItemNumber object.
-   *
-   * @param _name The name of the menu item.
-   * @param _value Pointer to the value being controlled by this menu item.
-   */
   MenuItemNumber(String _name, T *_value);
 
-  /**
-   * @brief Checks if this menu item is currently selected.
-   *
-   * @return true if this menu item is selected, false otherwise.
-   */
-  bool isSelected();
+  // Override virtual methods
+  void toggleSelected();
+  virtual void increase() override;
+  virtual void decrease() override;
+  virtual NumberValueType getValueType() const override;
+  virtual void draw(uint8_t _x, uint8_t _y, bool _active) override;
 
-  /**
-   * @brief Increases the value by one.
-   */
-  void increase();
-
-  /**
-   * @brief Decreases the value by one.
-   */
-  void decrease();
-
-  void draw(uint8_t _x, uint8_t _y, bool _active) override;
+  // Additional methods
+  void setOnChange(std::function<void()> _onChange);
+  void removeOnChange();
 };
 
+// /**
+//  * @brief Represents a menu item for selecting a number value.
+//  */
+// template <typename T>
+// class MenuItemNumber : public MenuItem
+// {
+// private:
+//   T *value;   ///< Pointer to the value being controlled by this menu item.
+//   T min;      ///< The minimum value allowed.
+//   T max;      ///< The maximum value allowed.
+//   T step = 1; ///< The step size for increasing or decreasing the value.
+
+//   NumberValueType valueType; ///< The type of the value being controlled by this menu item.
+
+//   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
+
+//   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
+
+//   std::function<void()> onChange;
+
+// public:
+//   /**
+//    * @brief Constructs a new MenuItemNumber object.
+//    *
+//    * @param _name The name of the menu item.
+//    * @param _value Pointer to the value being controlled by this menu item.
+//    * @param _min The minimum value allowed.
+//    * @param _max The maximum value allowed.
+//    */
+//   MenuItemNumber(String _name, T *_value, T _min, T _max);
+//   MenuItemNumber(String _name, T *_value, T _min, T _max, T _step);
+
+//   /**
+//    * @brief Constructs a new MenuItemNumber object.
+//    *
+//    * @param _name The name of the menu item.
+//    * @param _value Pointer to the value being controlled by this menu item.
+//    */
+//   MenuItemNumber(String _name, T *_value);
+
+//   NumberValueType getValueType() const;
+
+//   void setOnChange(std::function<void()> _onChange);
+//   void removeOnChange();
+
+//   /**
+//    * @brief Checks if this menu item is currently selected.
+//    *
+//    * @return true if this menu item is selected, false otherwise.
+//    */
+//   bool isSelected();
+
+//   /**
+//    * @brief Increases the value by one.
+//    */
+//   void increase();
+
+//   /**
+//    * @brief Decreases the value by one.
+//    */
+//   void decrease();
+
+//   void draw(uint8_t _x, uint8_t _y, bool _active) override;
+// };
+
 template class MenuItemNumber<int>;
+template class MenuItemNumber<float>;
 template class MenuItemNumber<long>;
 template class MenuItemNumber<uint8_t>;
-
+template class MenuItemNumber<uint32_t>;
 
 // ###### Menu ######
 class Menu
 {
 private:
   uint8_t active;
-  std::vector<MenuItem *> items;
 
   uint8_t maxItemsPerPage = 3;
 
   uint8_t numItems;
   uint8_t numItemsPerPage;
+  uint8_t offsetFromTop;
 
 public:
+  std::vector<MenuItem *> items;
   Menu();
 
   // String name;

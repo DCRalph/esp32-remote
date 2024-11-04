@@ -5,7 +5,7 @@
 #include "IO/GPIO.h"
 #include "IO/Wireless.h"
 
-#include "Screens/Helpers/Menu.h"
+#include "IO/Menu.h"
 
 class WiFiSettingsScreen : public Screen
 {
@@ -31,7 +31,7 @@ public:
   MenuItemAction wifiForgetItem = MenuItemAction("Reset WiFi", 1, [&]()
                                                  {
                                                    wm.resetSettings();
-                                                  //  updateButtons();
+                                                   //  updateButtons();
                                                    //
                                                  });
 

@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-#include "Screens/Helpers/Menu.h"
+#include "IO/Menu.h"
 
 class SettingsScreen : public Screen
 {

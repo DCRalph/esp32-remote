@@ -50,7 +50,9 @@ GpIO::GpIO(uint8_t _pin, PinMode _mode, bool _activeState)
 
 void GpIO::init()
 {
+#ifdef DEBUG_GPIO
   Serial.println("\t[GPIO] " + String(pin) + " as " + PinModeString(mode) + " Initializing...");
+#endif
   pinMode(pin, mode);
 
   // Serial.println("\t[GPIO] Initialized");
@@ -144,10 +146,15 @@ void GpIO::initIO()
   // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
   // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
 
+#ifdef DEBUG_GPIO
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();
+#endif
 
+#ifdef DEBUG_GPIO
   Serial.println("\t[Encoder] Initializing...");
+#endif
+
   // encoder.begin();
 
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
@@ -158,7 +165,7 @@ void GpIO::initIO()
 
 int64_t encoderGetCount()
 {
-  uint64_t value = encoder.getCount()/4;
+  uint64_t value = encoder.getCount() / 4;
 
   if (value != lastEncoderValue)
   {

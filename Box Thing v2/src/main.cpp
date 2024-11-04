@@ -126,29 +126,46 @@ void setup()
   digitalWrite(LATCH_PIN, HIGH); // Set latch pin to high as soon as possible
 
   initConfig();
-  Serial.println("[INFO] [SETUP] Starting...");
-  Serial.println("[INFO] [SETUP] IOInit...");
-  GpIO::initIO();
-
-  Serial.println("[INFO] [SETUP] Display...");
 
   display.init();
   screenManager.init();
 
   screenManager.addScreen(&startUp);
+
+  screenManager.setScreen("Start Up");
+  display.display();
+
+  Serial.println("[INFO] [SETUP] Starting...");
+  Serial.println("[INFO] [SETUP] IOInit...");
+  GpIO::initIO();
+
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(1);
+  display.display();
+
+  Serial.println("[INFO] [SETUP] Display...");
+
   screenManager.addScreen(&updateProgress);
   screenManager.addScreen(&shutdown);
+
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(2);
+  display.display();
 
   // #### /Debug
   screenManager.addScreen(&debug);
   screenManager.addScreen(&ioTest);
   screenManager.addScreen(&battery);
 
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(3);
+  display.display();
+
   // #### /
   screenManager.addScreen(&homeScreen);
   screenManager.addScreen(&switchMenu);
   switchMenu.setTopBarText("Control");
   screenManager.addScreen(&settings);
+
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(4);
+  display.display();
 
   // #### /Control
   screenManager.addScreen(&espnowSwitch);
@@ -158,16 +175,22 @@ void setup()
   screenManager.addScreen(&carFlash);
   carFlash.setTopBarText("Flash");
 
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(5);
+  display.display();
+
   // #### /Settings
   screenManager.addScreen(&generalSettings);
   generalSettings.setTopBarText("General");
   screenManager.addScreen(&wifiSettings);
   wifiSettings.setTopBarText("Wi-Fi");
 
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(6);
+  display.display();
+
   // #### /Settings/WiFi
   screenManager.addScreen(&wifiInfo);
 
-  screenManager.setScreen("Start Up");
+  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(7);
   display.display();
 
   if (preferences.getBool("espnowOn", false))

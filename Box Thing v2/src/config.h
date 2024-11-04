@@ -17,6 +17,8 @@ extern int autoOffMin;
 
 #define BAUD_RATE 115200
 
+#define DEBUG_GPIO
+
 // WiFi
 #define HOSTNAME "esp32-box-thing"
 #define AP_SSID "ESP32-Box-Thing"

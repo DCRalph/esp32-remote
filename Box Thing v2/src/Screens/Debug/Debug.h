@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 
-#include "Screens/Helpers/Menu.h"
+#include "IO/Menu.h"
 
 class DebugScreen : public Screen
 {
@@ -46,13 +46,12 @@ DebugScreen::DebugScreen(String _name) : Screen(_name)
   ledItem.setOnChange([&]()
                       { led.Write(ledState); });
 
-  otaItem.setOnChange([&]() {
+  otaItem.setOnChange([&]()
+                      {
     if (!otaSetup){
       InitOta();
     }
-    otaSetupTmp = true;
-  });
-
+    otaSetupTmp = true; });
 }
 
 void DebugScreen::draw()

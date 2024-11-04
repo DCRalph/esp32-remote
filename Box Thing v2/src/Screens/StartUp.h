@@ -16,6 +16,7 @@ class StartUpScreen : public Screen
 {
 private:
   StartUpState state;
+  int stage;
 
 public:
   StartUpScreen(String _name);
@@ -25,11 +26,15 @@ public:
 
   void setState(StartUpState _state);
   StartUpState getState();
+
+  void setStage(int _stage);
+  int getStage();
 };
 
 StartUpScreen::StartUpScreen(String _name) : Screen(_name)
 {
   state = StartUpState::StartUp;
+  stage = 0;
 }
 
 void StartUpScreen::setState(StartUpState _state)
@@ -40,6 +45,16 @@ void StartUpScreen::setState(StartUpState _state)
 StartUpState StartUpScreen::getState()
 {
   return state;
+}
+
+void StartUpScreen::setStage(int _stage)
+{
+  stage = _stage;
+}
+
+int StartUpScreen::getStage()
+{
+  return stage;
 }
 
 void StartUpScreen::draw()
@@ -53,6 +68,7 @@ void StartUpScreen::draw()
     display.u8g2.setDrawColor(1);
 
     display.drawCenteredText(30, "Starting up...");
+    display.drawCenteredText(48, "Stage " + String(stage));
 
     break;
 
