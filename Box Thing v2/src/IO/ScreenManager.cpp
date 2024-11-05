@@ -12,11 +12,19 @@ void ScreenManager::init()
 
 void ScreenManager::update(void)
 {
+  if (currentScreen == -1)
+  {
+    return;
+  }
   screens[currentScreen]->update();
 }
 
 void ScreenManager::draw(void)
 {
+  if (currentScreen == -1)
+  {
+    return;
+  }
   screens[currentScreen]->draw();
 }
 
@@ -85,6 +93,10 @@ void ScreenManager::removeScreen(String screenName)
 
 Screen *ScreenManager::getCurrentScreen(void)
 {
+  if (currentScreen == -1)
+  {
+    return nullptr;
+  }
   return screens[currentScreen];
 }
 

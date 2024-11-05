@@ -12,7 +12,7 @@ struct __attribute__((packed)) data_packet
 enum class PacketDirection
 {
   SEND,
-  RECV
+  RECV 
 };
 
 struct fullPacket

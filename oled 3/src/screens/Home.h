@@ -29,6 +29,8 @@ public:
 
   MenuItemNavigate remoteRelay = MenuItemNavigate("Remote Relay", "RemoteRelay");
 
+  MenuItemNavigate boxThingEncoderItem = MenuItemNavigate("BoxThingEncoder", "BoxThingEncoder");
+
   MenuItemNumber<uint32_t> fpsItem = MenuItemNumber<uint32_t>("FPS", &lastFps);
   MenuItemNumber<uint32_t> frameTimeItem = MenuItemNumber<uint32_t>("Frame Time", &lastFrameTime);
 
@@ -56,6 +58,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&ControlMenuItem);
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&remoteRelay);
+  menu.addMenuItem(&boxThingEncoderItem);
   menu.addMenuItem(&PowerOffMenuItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testBlinkItem);

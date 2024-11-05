@@ -15,6 +15,18 @@ extern WiFiManager wm;
 extern uint64_t lastInteract;
 extern int autoOffMin;
 
+extern uint32_t fps;
+extern uint32_t lastFps;
+extern uint32_t frameTime;
+extern uint32_t lastFrameTime;
+
+extern uint64_t clearBufferTime;
+extern uint64_t screenManagerDrawTime;
+extern uint64_t drawTopBarTime;
+extern uint64_t sendBufferTime;
+extern uint64_t screenUpdateDrawTime;
+
+
 #define BAUD_RATE 115200
 
 #define DEBUG_GPIO
@@ -24,7 +36,7 @@ extern int autoOffMin;
 #define AP_SSID "ESP32-Box-Thing"
 
 #define ESP_NOW_CHANNEL 1
-#define DEBUG_ESP_NOW
+// #define DEBUG_ESP_NOW
 
 // Display
 #define DISPLAY_WIDTH 128

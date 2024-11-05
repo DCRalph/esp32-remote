@@ -351,6 +351,7 @@ template class MenuItemNumber<float>;
 template class MenuItemNumber<long>;
 template class MenuItemNumber<uint8_t>;
 template class MenuItemNumber<uint32_t>;
+template class MenuItemNumber<uint64_t>;
 
 // ###### Menu ######
 class Menu

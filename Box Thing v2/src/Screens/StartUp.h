@@ -68,7 +68,7 @@ void StartUpScreen::draw()
     display.u8g2.setDrawColor(1);
 
     display.drawCenteredText(30, "Starting up...");
-    display.drawCenteredText(48, "Stage " + String(stage));
+    display.drawCenteredText(54, "Stage " + String(stage));
 
     break;
 

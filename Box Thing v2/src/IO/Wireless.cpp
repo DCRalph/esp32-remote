@@ -165,6 +165,7 @@ int Wireless::send(fullPacket *fp)
   }
   else
   {
+    Serial.println(int(fp->direction));
     Serial.println("Cannot send a receive packet");
     return -1;
   }

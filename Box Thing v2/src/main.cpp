@@ -3,7 +3,6 @@
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <WiFiManager.h>
 
 #include "config.h"
 #include "Setup/InitOTA.h"
@@ -29,6 +28,8 @@
 #include "Screens/Control/EspnowSwitch.h"
 #include "Screens/Control/Car.h"
 #include "Screens/Control/CarFlash.h"
+#include "Screens/Control/RemoteRelay.h"
+#include "Screens/Control/EncoderTransmiter.h"
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/WiFiSettings.h"
@@ -53,6 +54,8 @@ SettingsScreen settings("Settings");
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
 CarControlScreen carControl("Car Control");
 CarFlashScreen carFlash("Car Flash");
+RemoteRelayScreen remoteRelay("Remote Relay");
+EncoderTransmiterScreen encoderTransmiter("Encoder Transmiter");
 
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
@@ -63,6 +66,20 @@ WiFiInfoScreen wifiInfo("WiFi Info");
 
 unsigned long batteryLoopMs = 0;
 char buffer[100];
+
+TaskHandle_t fpsTask;
+uint64_t lastDraw = 0;
+
+
+void fpsTaskFunction(void *pvParameters)
+{
+  for (;;)
+  {
+    lastFps = fps;
+    fps = 0;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
 
 void setupWiFi()
 {
@@ -127,6 +144,7 @@ void setup()
 
   initConfig();
 
+
   display.init();
   screenManager.init();
 
@@ -174,6 +192,10 @@ void setup()
   carControl.setTopBarText("Car");
   screenManager.addScreen(&carFlash);
   carFlash.setTopBarText("Flash");
+  screenManager.addScreen(&remoteRelay);
+  remoteRelay.setTopBarText("Relay");
+  screenManager.addScreen(&encoderTransmiter);
+  encoderTransmiter.setTopBarText("Encoder");
 
   ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(5);
   display.display();
@@ -206,6 +228,15 @@ void setup()
   Serial.println("[INFO] [SETUP] Done");
   Serial.println();
 
+  xTaskCreatePinnedToCore(
+      fpsTaskFunction, /* Task function. */
+      "fpsTask",       /* name of task. */
+      10000,           /* Stack size of task */
+      NULL,            /* parameter of the task */
+      1,               /* priority of the task */
+      &fpsTask,        /* Task handle to keep track of created task */
+      0);
+
   do
   {
     ClickButtonEnc.Update();
@@ -217,10 +248,10 @@ void setup()
 
 void loop()
 {
+  fps++;
+
   if (!wireless.isSetupDone())
     wm.process();
-
-  ClickButtonEnc.Update();
 
   if (otaSetup)
     ArduinoOTA.handle();
@@ -248,5 +279,15 @@ void loop()
   if (ClickButtonEnc.clicks == -3)
     screenManager.setScreen("Shutdown");
 
-  display.display();
+  // display.display();
+  if (millis() - lastDraw > 20)
+  {
+    lastDraw = millis();
+
+    ClickButtonEnc.Update();
+
+    frameTime = millis();
+    display.display();
+    lastFrameTime = millis() - frameTime;
+  }
 }

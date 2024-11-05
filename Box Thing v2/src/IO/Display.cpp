@@ -9,6 +9,7 @@ void Display::init(void)
 {
   Serial.println("\t[INFO] [Display] Initializing...");
   u8g2.begin();
+  u8g2.setBusClock(1600000);
 
   Serial.println("\t[INFO] [Display] Initialized");
 }
@@ -42,6 +43,12 @@ void Display::drawTopBar(void)
     u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x00c6);
   else
     u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0079);
+
+  // draw the variable lastFrameTime in the top bar before the wifi icon
+  // sprintf(buffer, "%dms", lastFrameTime);
+  // u8g2.setFont(u8g2_font_koleeko_tf);
+  // int frameTimeW = u8g2.getStrWidth(buffer);
+  // u8g2.drawStr(DISPLAY_WIDTH - 8 - battW - 2 - frameTimeW - 2, 9, buffer);
 }
 
 void Display::noTopBar()
@@ -52,15 +59,41 @@ void Display::noTopBar()
 void Display::display(void)
 {
 
-  u8g2.firstPage();
-  do
-  {
-    screenManager.draw();
-    if (!_noTopBar)
-      drawTopBar();
-  } while (u8g2.nextPage());
+  // u8g2.firstPage();
+  // do
+  // {
+  //   screenManager.draw();
+  //   if (!_noTopBar)
+  //     drawTopBar();
+  // } while (u8g2.nextPage());
 
+  startTime = micros();
+  u8g2.clearBuffer(); // Clear the internal buffer
+  elapsedTime = micros() - startTime;
+  clearBufferTime = elapsedTime;
+
+  startTime = micros();
+  screenManager.draw();
+  elapsedTime = micros() - startTime;
+  screenManagerDrawTime = elapsedTime;
+
+  startTime = micros();
+  if (!_noTopBar)
+    drawTopBar();
+  elapsedTime = micros() - startTime;
+  drawTopBarTime = elapsedTime;
+
+  startTime = micros();
+  u8g2.sendBuffer();
+  elapsedTime = micros() - startTime;
+  sendBufferTime = elapsedTime;
+
+  startTime = micros();
   screenManager.update();
+  elapsedTime = micros() - startTime;
+  screenUpdateDrawTime = elapsedTime;
+
+
   _noTopBar = false;
 }
 

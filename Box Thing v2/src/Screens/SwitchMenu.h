@@ -18,6 +18,10 @@ public:
 
   MenuItemNavigate carItem = MenuItemNavigate("Car", "Car Control");
 
+  MenuItemNavigate remoteRelayItem = MenuItemNavigate("Relay", "Remote Relay");
+
+  MenuItemNavigate encoderTransmiterItem = MenuItemNavigate("Encoder", "Encoder Transmiter");
+
   void draw() override;
   void update() override;
 };
@@ -27,6 +31,8 @@ SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
   menu.addMenuItem(&espnowSwitchItem);
   menu.addMenuItem(&carItem);
+  menu.addMenuItem(&remoteRelayItem);
+  menu.addMenuItem(&encoderTransmiterItem);
 }
 
 void SwitchMenuScreen::draw()

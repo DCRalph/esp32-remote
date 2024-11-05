@@ -6,6 +6,17 @@ WiFiManager wm;
 uint64_t lastInteract;
 int autoOffMin;
 
+uint32_t fps = 0;
+uint32_t lastFps = 0;
+uint32_t frameTime = 0;
+uint32_t lastFrameTime = 0;
+
+uint64_t clearBufferTime = 0;
+uint64_t screenManagerDrawTime = 0;
+uint64_t drawTopBarTime = 0;
+uint64_t sendBufferTime = 0;
+uint64_t screenUpdateDrawTime = 0;
+
 bool globalRelay1 = false;
 bool globalRelay2 = false;
 bool globalRelay3 = false;

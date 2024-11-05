@@ -16,6 +16,7 @@
 // /
 #include "screens/Home.h"
 #include "screens/Control.h"
+#include "screens/boxThingEncoder.h"
 
 // /settings
 #include "screens/SettingsScreen.h"
@@ -42,6 +43,7 @@ ErrorScreen errorScreen("Error");
 // /
 HomeScreen homeScreen("Home");
 ControlScreen controlScreen("Control");
+BoxThingEncoderScreen boxThingEncoderScreen("BoxThingEncoder");
 
 // /settings
 Settings settings("Settings");
@@ -104,6 +106,11 @@ void espNowCb(fullPacket *fp)
     globalRelay5 = fp->p.data[4];
     globalRelay6 = fp->p.data[5];
   }
+
+  else if (fp->p.type == 0xa3)
+  {
+    boxThingEncoderScreen.onRecv(fp);
+  }
 }
 
 void setup()
@@ -128,6 +135,7 @@ void setup()
   // /
   screenManager.addScreen(&homeScreen);
   screenManager.addScreen(&controlScreen);
+  screenManager.addScreen(&boxThingEncoderScreen);
 
   // /settings
   screenManager.addScreen(&rssiMeter);

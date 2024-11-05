@@ -23,6 +23,10 @@ public:
   void drawTopBar(void);
   void noTopBar(void);
   void display(void);
+
+  // profileing
+  uint64_t startTime;
+  uint64_t elapsedTime;
 };
 
 class Screen
