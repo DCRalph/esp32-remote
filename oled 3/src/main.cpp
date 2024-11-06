@@ -27,9 +27,9 @@
 
 // /control
 #include "screens/Send.h"
-#include "screens/Control/CarLocks.h"
-#include "screens/Control/Car.h"
-#include "screens/Control/CarFlash.h"
+// #include "screens/Control/CarLocks.h"
+// #include "screens/Control/Car.h"
+// #include "screens/Control/CarFlash.h"
 
 // /remoteRelay
 #include "screens/RemoteRelay.h"
@@ -53,9 +53,9 @@ WiFiInfoScreen WiFiInfo("Wi-Fi info");
 SystemInfoScreen systemInfoScreen("System Info");
 
 // /control
-CarLocksScreen carLocksScreen("CarLocks");
-CarControlScreen carScreen("Car");
-CarFlashScreen carFlashScreen("CarFlash");
+// CarLocksScreen carLocksScreen("CarLocks");
+// CarControlScreen carScreen("Car");
+// CarFlashScreen carFlashScreen("CarFlash");
 
 // /remoteRelay
 RemoteRelayScreen remoteRelayScreen("RemoteRelay");
@@ -145,9 +145,9 @@ void setup()
   screenManager.addScreen(&systemInfoScreen);
 
   // /control
-  screenManager.addScreen(&carLocksScreen);
-  screenManager.addScreen(&carScreen);
-  screenManager.addScreen(&carFlashScreen);
+  // screenManager.addScreen(&carLocksScreen);
+  // screenManager.addScreen(&carScreen);
+  // screenManager.addScreen(&carFlashScreen);
 
   // /remoteRelay
   screenManager.addScreen(&remoteRelayScreen);

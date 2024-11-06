@@ -24,7 +24,7 @@ public:
                                                      p.len = 2;
                                                      p.data[0] = 5;       // 5 flashes
                                                      p.data[1] = 30 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.send(&p, remote_addr);
                                                      //
                                                    });
 
@@ -35,7 +35,7 @@ public:
                                                      p.len = 2;
                                                      p.data[0] = 2;       // 3 flashes
                                                      p.data[1] = 40 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.send(&p, remote_addr);
                                                      //
                                                    });
 
@@ -46,7 +46,7 @@ public:
                                                      p.len = 2;
                                                      p.data[0] = 8;       // 3 flashes
                                                      p.data[1] = 50 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.send(&p, remote_addr);
                                                      //
                                                    });
 

@@ -26,7 +26,6 @@ extern uint64_t drawTopBarTime;
 extern uint64_t sendBufferTime;
 extern uint64_t screenUpdateDrawTime;
 
-
 #define BAUD_RATE 115200
 
 #define DEBUG_GPIO
@@ -36,8 +35,7 @@ extern uint64_t screenUpdateDrawTime;
 #define AP_SSID "ESP32-Box-Thing"
 
 #define ESP_NOW_CHANNEL 1
-// #define DEBUG_ESP_NOW
-
+#define DEBUG_ESP_NOW
 // Display
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
@@ -49,6 +47,9 @@ extern bool globalRelay3;
 extern bool globalRelay4;
 extern bool globalRelay5;
 extern bool globalRelay6;
+extern bool globalRelay7;
+extern bool globalRelay8;
+
 
 // PINS
 #define LED_PIN 21
@@ -70,7 +71,7 @@ extern bool globalRelay6;
 #define MCP_STATE_2_PIN 48
 
 // COMMANDS
-#define CMD_DOOR_LOCK 0x10
+#define CMD_PING 0x01
 
 #define CMD_RELAY_ALL 0x20
 
@@ -92,9 +93,13 @@ extern bool globalRelay6;
 #define CMD_RELAY_6_SET 0x2b
 #define CMD_RELAY_6_GET 0x2c
 
-#define CMD_RELAY_1_FLASH 0x30
+#define CMD_RELAY_7_SET 0x2d
+#define CMD_RELAY_7_GET 0x2e
 
-// static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
-static uint8_t car_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
+#define CMD_RELAY_8_SET 0x2f
+#define CMD_RELAY_8_GET 0x30
+
+
+static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 
 void initConfig();

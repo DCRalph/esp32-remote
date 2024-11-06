@@ -26,8 +26,8 @@
 #include "Screens/Settings.h"
 
 #include "Screens/Control/EspnowSwitch.h"
-#include "Screens/Control/Car.h"
-#include "Screens/Control/CarFlash.h"
+// #include "Screens/Control/Car.h"
+// #include "Screens/Control/CarFlash.h"
 #include "Screens/Control/RemoteRelay.h"
 #include "Screens/Control/EncoderTransmiter.h"
 
@@ -52,8 +52,8 @@ SettingsScreen settings("Settings");
 
 // #### /Control
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
-CarControlScreen carControl("Car Control");
-CarFlashScreen carFlash("Car Flash");
+// CarControlScreen carControl("Car Control");
+// CarFlashScreen carFlash("Car Flash");
 RemoteRelayScreen remoteRelay("Remote Relay");
 EncoderTransmiterScreen encoderTransmiter("Encoder Transmiter");
 
@@ -69,7 +69,6 @@ char buffer[100];
 
 TaskHandle_t fpsTask;
 uint64_t lastDraw = 0;
-
 
 void fpsTaskFunction(void *pvParameters)
 {
@@ -117,6 +116,10 @@ void espNowCb(fullPacket *fp)
     globalRelay5 = fp->p.data[0];
   else if (fp->p.type == CMD_RELAY_6_GET)
     globalRelay6 = fp->p.data[0];
+  else if (fp->p.type == CMD_RELAY_7_GET)
+    globalRelay7 = fp->p.data[0];
+  else if (fp->p.type == CMD_RELAY_8_GET)
+    globalRelay8 = fp->p.data[0];
 
   else if (fp->p.type == CMD_RELAY_ALL)
   {
@@ -126,6 +129,8 @@ void espNowCb(fullPacket *fp)
     globalRelay4 = fp->p.data[3];
     globalRelay5 = fp->p.data[4];
     globalRelay6 = fp->p.data[5];
+    globalRelay7 = fp->p.data[6];
+    globalRelay8 = fp->p.data[7];
   }
 }
 
@@ -133,8 +138,6 @@ void setupESPNOW()
 {
   wireless.setup();
   ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::EspNowStarted);
-
-  wireless.setRecvCb(espNowCb);
 }
 
 void setup()
@@ -143,7 +146,6 @@ void setup()
   digitalWrite(LATCH_PIN, HIGH); // Set latch pin to high as soon as possible
 
   initConfig();
-
 
   display.init();
   screenManager.init();
@@ -188,10 +190,10 @@ void setup()
   // #### /Control
   screenManager.addScreen(&espnowSwitch);
   espnowSwitch.setTopBarText("ESPNOW");
-  screenManager.addScreen(&carControl);
-  carControl.setTopBarText("Car");
-  screenManager.addScreen(&carFlash);
-  carFlash.setTopBarText("Flash");
+  // screenManager.addScreen(&carControl);
+  // carControl.setTopBarText("Car");
+  // screenManager.addScreen(&carFlash);
+  // carFlash.setTopBarText("Flash");
   screenManager.addScreen(&remoteRelay);
   remoteRelay.setTopBarText("Relay");
   screenManager.addScreen(&encoderTransmiter);
@@ -224,6 +226,8 @@ void setup()
     setupWiFi();
     InitOta();
   }
+
+  wireless.setRecvCb(espNowCb);
 
   Serial.println("[INFO] [SETUP] Done");
   Serial.println();

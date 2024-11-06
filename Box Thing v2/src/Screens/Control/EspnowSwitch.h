@@ -52,7 +52,7 @@ void EspnowSwitchScreen::update()
     p.len = 1;
     p.data[0] = 0; // lock
 
-    wireless.send(&p, car_addr);
+    wireless.send(&p, remote_addr);
 
     state = 1;
     lastSend = millis();
@@ -65,7 +65,7 @@ void EspnowSwitchScreen::update()
     p.len = 1;
     p.data[0] = 1; // unlock
 
-    wireless.send(&p, car_addr);
+    wireless.send(&p, remote_addr);
 
     state = 2;
     lastSend = millis();

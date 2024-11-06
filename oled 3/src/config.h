@@ -14,8 +14,6 @@
 #include "esp_log.h"
 #include "IO/GPIO.h"
 
-
-
 extern Preferences preferences;
 extern esp_sleep_wakeup_cause_t wakeup_reason;
 
@@ -44,10 +42,8 @@ extern uint32_t lastFrameTime;
 #define BTN_LED_G_PIN 2
 #define BTN_LED_B_PIN 3
 
-
 #define BATT_MAX 4.2
 #define BATT_MIN 3.0
-
 
 /***********************config*************************/
 #define LCD_USB_QSPI_DREVER 1
@@ -94,16 +90,16 @@ extern uint32_t lastFrameTime;
 
 // ################ ESP NOW ################
 
-
 extern bool globalRelay1;
 extern bool globalRelay2;
 extern bool globalRelay3;
 extern bool globalRelay4;
 extern bool globalRelay5;
 extern bool globalRelay6;
+extern bool globalRelay7;
+extern bool globalRelay8;
 
 // COMMANDS
-#define CMD_DOOR_LOCK 0x10
 
 #define CMD_RELAY_ALL 0x20
 
@@ -125,10 +121,13 @@ extern bool globalRelay6;
 #define CMD_RELAY_6_SET 0x2b
 #define CMD_RELAY_6_GET 0x2c
 
-#define CMD_RELAY_1_FLASH 0x30
+#define CMD_RELAY_7_SET 0x2d
+#define CMD_RELAY_7_GET 0x2e
 
-// static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
-static uint8_t car_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
+#define CMD_RELAY_8_SET 0x2f
+#define CMD_RELAY_8_GET 0x30
+
+static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 
 // #########################################
 void initConfig();
