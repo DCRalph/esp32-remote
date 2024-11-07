@@ -3,11 +3,26 @@
 #include "config.h"
 #include "IO/Wireless.h"
 #include "IO/Commands.h"
+#include "IO/LCD.h"
+
+#include "Screens/HomeScreen.h"
 
 uint64_t ledBlinkMs = 0;
 uint8_t blinks = 0;
 
 bool lastArmed = false;
+
+void lcdTask(void *pvParameters)
+{
+  for (;;)
+  {
+    lcd.loop();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+}
+
+// lcd task handle
+TaskHandle_t lcdTaskHandle = NULL;
 
 void espNowRecvCb(fullPacket *fp)
 {
@@ -25,6 +40,7 @@ void setup()
   WiFi.mode(WIFI_AP_STA);
 
   GpIO::initIO();
+  lcd.init();
 
   wireless.setup();
   wireless.setRecvCb(espNowRecvCb);
@@ -32,6 +48,14 @@ void setup()
   led.On();
   delay(500);
   led.Off();
+
+  xTaskCreatePinnedToCore(
+      lcdTask,   /* Task function. */
+      "lcdTask", /* name of task. */
+      10000,     /* Stack size of task */
+      NULL,      /* parameter of the task */
+      1,         /* priority of the task */
+      &lcdTaskHandle, 0);
 }
 
 void loop()
@@ -47,6 +71,11 @@ void loop()
     else
       Serial.println("NO");
     relay8.Write(lastArmed);
+
+    if (lastArmed)
+      lcd.setScreen(&HomeScreen);
+    else
+      lcd.setScreen(nullptr);
   }
 
   if (blinks > 0)
