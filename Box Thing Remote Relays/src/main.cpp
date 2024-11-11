@@ -7,30 +7,38 @@
 
 #include "Screens/HomeScreen.h"
 
-uint64_t ledBlinkMs = 0;
-uint8_t blinks = 0;
-
-bool lastArmed = false;
-
-void lcdTask(void *pvParameters)
-{
-  for (;;)
-  {
-    lcd.loop();
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
-}
-
-// lcd task handle
-TaskHandle_t lcdTaskHandle = NULL;
+bool lastArmedSW = false;
+uint64_t lastLedShow = 0;
 
 void espNowRecvCb(fullPacket *fp)
 {
   int ret = parseCommand(fp);
+}
 
-  blinks = ret == -1 ? 2 : 4;
+void armedStateCB(ArmedState state)
+{
+  Serial.println("[INFO] [ARMED] State changed to " + ArmedStateMap.at(state));
 
-  ledBlinkMs = millis();
+  switch (state)
+  {
+  case ArmedState::ARMED:
+    armedLed.SetMode(RGB_MODE::Manual);
+    armedLed.SetColor(0, 255, 0);
+    break;
+  case ArmedState::READY:
+    // armedLed.SetColor(255, 255, 0);
+    armedLed.SetPulsingColor(255, 255, 0);
+    armedLed.SetMode(RGB_MODE::Pulsing);
+    break;
+  case ArmedState::DISARMED:
+    armedLed.SetMode(RGB_MODE::Manual);
+    armedLed.SetColor(0, 0, 0);
+    break;
+  case ArmedState::LOCKED:
+    armedLed.SetMode(RGB_MODE::Manual);
+    armedLed.SetColor(255, 0, 0);
+    break;
+  }
 }
 
 void setup()
@@ -42,53 +50,39 @@ void setup()
   GpIO::initIO();
   lcd.init();
 
+  armed.setOnStateChange(armedStateCB);
+
   wireless.setup();
   wireless.setRecvCb(espNowRecvCb);
 
-  led.On();
-  delay(500);
-  led.Off();
+  pwrLed.SetColor(255, 0, 0);
 
-  xTaskCreatePinnedToCore(
-      lcdTask,   /* Task function. */
-      "lcdTask", /* name of task. */
-      10000,     /* Stack size of task */
-      NULL,      /* parameter of the task */
-      1,         /* priority of the task */
-      &lcdTaskHandle, 0);
+  lcd.setScreen(&HomeScreen);
 }
 
 void loop()
 {
-
-  if (armed.read() != lastArmed)
+  if (armedSW.read() != lastArmedSW)
   {
-    lastArmed = armed.read();
-
-    Serial.print("Armed: ");
-    if (lastArmed)
-      Serial.println("YES");
-    else
-      Serial.println("NO");
-    relay8.Write(lastArmed);
-
-    if (lastArmed)
-      lcd.setScreen(&HomeScreen);
-    else
-      lcd.setScreen(nullptr);
+    lastArmedSW = armedSW.read();
+    armed.setSW(armedSW.read());
   }
 
-  if (blinks > 0)
+  if(millis() - lastRemotePing > 1000)
   {
-    if (millis() - ledBlinkMs > 100)
-    {
-      ledBlinkMs = millis();
-      led.Toggle();
-      blinks--;
-    }
+    lastRemotePing = millis();
+    remoteConnected = false;
+    armed.setRemote(false);
+  }
 
-    if (blinks == 0)
-      led.Off();
+  armed.update();
+
+  lcd.loop();
+
+  if (millis() - lastLedShow > 10)
+  {
+    lastLedShow = millis();
+    GpIO_RGB::showStrip();
   }
 
   if (Serial.available() > 0)
@@ -125,12 +119,18 @@ void loop()
 
     else if (input == "getarmed")
     {
-      Serial.println(armed.read());
+      Serial.println(armed.getStateString());
     }
 
-    else if (input == "disarmed")
+    else if (input == "test")
     {
-      armed.Off();
+      runTestProcedure();
+    }
+
+    else if (input == "fire")
+    {
+      bool relayToFire[8] = {true, true, true, true, true, true, true, true};
+      fireRelays(relayToFire);
     }
 
     else

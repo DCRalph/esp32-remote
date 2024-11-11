@@ -105,14 +105,19 @@
 // #include "IO/myespnow.h"
 #include "IO/Wireless.h"
 
-static void relayChangeCb(uint8_t cmd, bool *global)
+static void fireRelay(int relay)
 {
+  bool relays[8] = {false, false, false, false, false, false, false, false};
+
+  relays[relay] = true;
+
   fullPacket fp;
-  memcpy(fp.mac, remote_addr, 6);
   fp.direction = PacketDirection::SEND;
-  fp.p.type = cmd;
-  fp.p.len = 1;
-  fp.p.data[0] = !*global;
+  memcpy(fp.mac, remote_addr, 6);
+  fp.p.type = CMD_FIRE;
+  fp.p.len = 8;
+
+  memcpy(fp.p.data, relays, 8);
 
   wireless.send(&fp);
 }
@@ -125,16 +130,83 @@ public:
   Menu menu = Menu();
 
   MenuItemBack backItem;
-  MenuItemToggle relay1Item = MenuItemToggle("R 1", &globalRelay1, false);
-  MenuItemToggle relay2Item = MenuItemToggle("R 2", &globalRelay2, false);
-  MenuItemToggle relay3Item = MenuItemToggle("R 3", &globalRelay3, false);
-  MenuItemToggle relay4Item = MenuItemToggle("R 4", &globalRelay4, false);
-  MenuItemToggle relay5Item = MenuItemToggle("R 5", &globalRelay5, false);
-  MenuItemToggle relay6Item = MenuItemToggle("R 6", &globalRelay6, false);
-  MenuItemToggle relay7Item = MenuItemToggle("R 7", &globalRelay7, false);
-  MenuItemToggle relay8Item = MenuItemToggle("R 8", &globalRelay8, false);
 
-  uint64_t lastFetch = 0;
+  uint64_t lastPing = 0;
+  uint64_t lastConfirmedPing = 0;
+  bool connected = false;
+  bool lastConnected = false;
+
+  bool armed = false;
+
+  MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
+
+  MenuItemAction testItem = MenuItemAction("Test", 1, [&]()
+                                           {
+                                             fullPacket fp;
+                                             fp.direction = PacketDirection::SEND;
+                                             memcpy(fp.mac, remote_addr, 6);
+                                             fp.p.type = CMD_TEST;
+                                             fp.p.len = 0;
+
+                                             wireless.send(&fp); });
+
+  MenuItemToggle armItem = MenuItemToggle("Armed", &armed);
+
+  MenuItemAction fire1Item = MenuItemAction("Fire 1", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(0);
+                                              //
+                                            });
+
+  MenuItemAction fire2Item = MenuItemAction("Fire 2", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(1);
+                                              //
+                                            });
+
+  MenuItemAction fire3Item = MenuItemAction("Fire 3", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(2);
+                                              //
+                                            });
+
+  MenuItemAction fire4Item = MenuItemAction("Fire 4", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(3);
+                                              //
+                                            });
+
+  MenuItemAction fire5Item = MenuItemAction("Fire 5", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(4);
+                                              //
+                                            });
+
+  MenuItemAction fire6Item = MenuItemAction("Fire 6", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(5);
+                                              //
+                                            });
+
+  MenuItemAction fire7Item = MenuItemAction("Fire 7", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(6);
+                                              //
+                                            });
+
+  MenuItemAction fire8Item = MenuItemAction("Fire 8", 1, [&]()
+                                            {
+                                              if (connected && armed)
+                                                fireRelay(7);
+                                              //
+                                            });
 
   void draw() override;
   void update() override;
@@ -145,38 +217,38 @@ RemoteRelayScreen::RemoteRelayScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
 
-  menu.addMenuItem(&relay1Item);
-  menu.addMenuItem(&relay2Item);
-  menu.addMenuItem(&relay3Item);
-  menu.addMenuItem(&relay4Item);
-  menu.addMenuItem(&relay5Item);
-  menu.addMenuItem(&relay6Item);
-  menu.addMenuItem(&relay7Item);
-  menu.addMenuItem(&relay8Item);
+  menu.addMenuItem(&connectionItem);
+  menu.addMenuItem(&armItem);
+  menu.addMenuItem(&testItem);
 
-  relay1Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_1_SET, &globalRelay1); });
+  menu.addMenuItem(&fire1Item);
+  menu.addMenuItem(&fire2Item);
+  menu.addMenuItem(&fire3Item);
+  menu.addMenuItem(&fire4Item);
+  menu.addMenuItem(&fire5Item);
+  menu.addMenuItem(&fire6Item);
+  menu.addMenuItem(&fire7Item);
+  menu.addMenuItem(&fire8Item);
 
-  relay2Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_2_SET, &globalRelay2); });
+  armItem.setOnChange([&]()
+                      {
+                        fullPacket fp;
+                        fp.direction = PacketDirection::SEND;
+                        memcpy(fp.mac, remote_addr, 6);
+                        fp.p.len = 0;
 
-  relay3Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_3_SET, &globalRelay3); });
+                        if (armed)
+                        {
+                          fp.p.type = CMD_ARM;
+                        }
+                        else
+                        {
+                          fp.p.type = CMD_DISARM;
+                        }
 
-  relay4Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_4_SET, &globalRelay4); });
-
-  relay5Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_5_SET, &globalRelay5); });
-
-  relay6Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_6_SET, &globalRelay6); });
-
-  relay7Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_7_SET, &globalRelay7); });
-
-  relay8Item.setOnChange([]()
-                         { relayChangeCb(CMD_RELAY_8_SET, &globalRelay8); });
+                        wireless.send(&fp);
+                        //
+                      });
 }
 
 void RemoteRelayScreen::draw()
@@ -188,14 +260,26 @@ void RemoteRelayScreen::update()
 {
   menu.update();
 
-  if (millis() - lastFetch > 1000)
+  connected = millis() - lastConfirmedPing < 1000;
+
+  if (connected != lastConnected)
   {
-    lastFetch = millis();
+    lastConnected = connected;
+
+    if (!connected)
+    {
+      armed = false;
+    }
+  }
+
+  if (millis() - lastPing > 200)
+  {
+    lastPing = millis();
 
     fullPacket fp;
-    memcpy(fp.mac, remote_addr, 6);
     fp.direction = PacketDirection::SEND;
-    fp.p.type = CMD_RELAY_ALL;
+    memcpy(fp.mac, remote_addr, 6);
+    fp.p.type = CMD_PING;
     fp.p.len = 0;
 
     wireless.send(&fp);
@@ -204,12 +288,4 @@ void RemoteRelayScreen::update()
 
 void RemoteRelayScreen::onEnter()
 {
-
-  fullPacket fp;
-  memcpy(fp.mac, remote_addr, 6);
-  fp.direction = PacketDirection::SEND;
-  fp.p.type = CMD_RELAY_ALL;
-  fp.p.len = 0;
-
-  wireless.send(&fp);
 }

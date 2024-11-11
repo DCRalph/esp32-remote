@@ -17,15 +17,6 @@ uint64_t drawTopBarTime = 0;
 uint64_t sendBufferTime = 0;
 uint64_t screenUpdateDrawTime = 0;
 
-bool globalRelay1 = false;
-bool globalRelay2 = false;
-bool globalRelay3 = false;
-bool globalRelay4 = false;
-bool globalRelay5 = false;
-bool globalRelay6 = false;
-bool globalRelay7 = false;
-bool globalRelay8 = false;
-
 void initConfig()
 {
   Serial.begin(BAUD_RATE);

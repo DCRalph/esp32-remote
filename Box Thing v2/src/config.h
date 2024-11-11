@@ -40,17 +40,6 @@ extern uint64_t screenUpdateDrawTime;
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
 
-// global relay booleans
-extern bool globalRelay1;
-extern bool globalRelay2;
-extern bool globalRelay3;
-extern bool globalRelay4;
-extern bool globalRelay5;
-extern bool globalRelay6;
-extern bool globalRelay7;
-extern bool globalRelay8;
-
-
 // PINS
 #define LED_PIN 21
 
@@ -71,34 +60,13 @@ extern bool globalRelay8;
 #define MCP_STATE_2_PIN 48
 
 // COMMANDS
-#define CMD_PING 0x01
+#define CMD_PING 0xd1
+#define CMD_TEST 0xd2
 
-#define CMD_RELAY_ALL 0x20
+#define CMD_ARM 0xf0
+#define CMD_DISARM 0xf1
 
-#define CMD_RELAY_1_SET 0x21
-#define CMD_RELAY_1_GET 0x22
-
-#define CMD_RELAY_2_SET 0x23
-#define CMD_RELAY_2_GET 0x24
-
-#define CMD_RELAY_3_SET 0x25
-#define CMD_RELAY_3_GET 0x26
-
-#define CMD_RELAY_4_SET 0x27
-#define CMD_RELAY_4_GET 0x28
-
-#define CMD_RELAY_5_SET 0x29
-#define CMD_RELAY_5_GET 0x2a
-
-#define CMD_RELAY_6_SET 0x2b
-#define CMD_RELAY_6_GET 0x2c
-
-#define CMD_RELAY_7_SET 0x2d
-#define CMD_RELAY_7_GET 0x2e
-
-#define CMD_RELAY_8_SET 0x2f
-#define CMD_RELAY_8_GET 0x30
-
+#define CMD_FIRE 0xf2
 
 static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 

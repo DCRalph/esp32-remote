@@ -104,33 +104,8 @@ void setupWiFi()
 
 void espNowCb(fullPacket *fp)
 {
-  if (fp->p.type == CMD_RELAY_1_GET)
-    globalRelay1 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_2_GET)
-    globalRelay2 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_3_GET)
-    globalRelay3 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_4_GET)
-    globalRelay4 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_5_GET)
-    globalRelay5 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_6_GET)
-    globalRelay6 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_7_GET)
-    globalRelay7 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_8_GET)
-    globalRelay8 = fp->p.data[0];
-
-  else if (fp->p.type == CMD_RELAY_ALL)
-  {
-    globalRelay1 = fp->p.data[0];
-    globalRelay2 = fp->p.data[1];
-    globalRelay3 = fp->p.data[2];
-    globalRelay4 = fp->p.data[3];
-    globalRelay5 = fp->p.data[4];
-    globalRelay6 = fp->p.data[5];
-    globalRelay7 = fp->p.data[6];
-    globalRelay8 = fp->p.data[7];
+  if(fp->p.type == CMD_PING){
+    remoteRelay.lastConfirmedPing = millis();
   }
 }
 
