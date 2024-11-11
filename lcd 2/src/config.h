@@ -10,6 +10,7 @@
 #include <esp_wifi.h>
 
 extern Preferences preferences;
+extern HardwareSerial Copro;
 
 #define ESP_NOW_CHANNEL 1
 #define DEBUG_ESP_NOW
@@ -18,6 +19,8 @@ extern Preferences preferences;
 
 #define DEBUG true
 #define DEBUG_ESP_NOW false
+#define DEBUG_COPRO true
+#define ENABLE_COPRO true
 
 #define BTN_UP_PIN 14
 #define BTN_DOWN_PIN 0

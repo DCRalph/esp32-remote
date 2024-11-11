@@ -4,6 +4,7 @@
 #include "IO/Display.h"
 #include "IO/Buttons.h"
 #include "IO/ML.h"
+#include "IO/CoProcessor.h"
 
 class HomeScreen : public Screen
 {
@@ -14,6 +15,9 @@ public:
 
   MenuItemNavigate ControlMenuItem = MenuItemNavigate("Control", "Control");
   MenuItemNavigate settingsMenuItem = MenuItemNavigate("Settings", "Settings");
+
+  MenuItemNavigate bactosureMainItem = MenuItemNavigate("Bactosure", "Bactosure");
+
   MenuItemNavigate sendMenuItem = MenuItemNavigate("Send", "Send");
 
   MenuItemAction testPopupItem = MenuItemAction("Test Popup", 2, []()
@@ -27,12 +31,6 @@ public:
                                                    screenManager.showPopup(new AutoClosePopup("Test Popup 2", "This is a test", 5000));
                                                    //
                                                  });
-
-  MenuItemAction initML = MenuItemAction("Init ML", 2, []()
-                                         {
-                                           ml.init();
-                                           //
-                                         });
 
   void draw() override;
   void update() override;
@@ -48,10 +46,10 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   ControlMenuItem.addRoute(3, "CarLocks");
 
   menu.addMenuItem(&settingsMenuItem);
+  menu.addMenuItem(&bactosureMainItem);
   menu.addMenuItem(&sendMenuItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testPopupItem2);
-  menu.addMenuItem(&initML);
 }
 
 void HomeScreen::draw()

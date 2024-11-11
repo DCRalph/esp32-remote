@@ -1,0 +1,55 @@
+#pragma once
+
+#define MIN_COPRO_VERSION 0x05
+
+#define IDX_ID 0
+#define IDX_CMD 1
+#define IDX_LEN 2
+#define IDX_CHECKSUM 3
+#define COPRO_HEADER_BYTES 4
+
+#define MAX_DATA_TRANSFER_SIZE 64
+
+///////////////////////////////////////////////////////////////
+
+#define ERROR_REPLY 0x99
+
+#define CMD_INIT 0x01
+#define CMD_RESET 0x02
+#define CMD_RETRY 0x03
+
+#define CMD_PING 0x05
+#define CMD_PONG 0x06
+
+#define GET_ALL_CMD 0x07
+
+#define SET_WHITE_CMD 0x10
+#define GET_WHITE_CMD 0x11
+
+#define SET_UVC_CMD 0x12
+#define GET_UVC_CMD 0x13
+
+#define SET_UVA_CMD 0x14
+#define GET_UVA_CMD 0x15
+
+#define SET_HEATER_CMD 0x40
+#define GET_HEATER_CMD 0x41
+#define SET_HEATER_PID_ENABLED_CMD 0x42
+#define GET_HEATER_PID_ENABLED_CMD 0x43
+#define SET_HEATER_TARGET_TEMP_CMD 0x44
+#define GET_HEATER_TARGET_TEMP_CMD 0x45
+
+#define SET_HEATER_PID_KP_CMD 0x46
+#define GET_HEATER_PID_KP_CMD 0x47
+#define SET_HEATER_PID_KI_CMD 0x48
+#define GET_HEATER_PID_KI_CMD 0x49
+#define SET_HEATER_PID_KD_CMD 0x4A
+#define GET_HEATER_PID_KD_CMD 0x4B
+#define SET_HEATER_PID_DT_CMD 0x4C
+#define GET_HEATER_PID_DT_CMD 0x4D
+
+#define GET_TEMP_CMD 0x50
+#define GET_TEMP_CALIBRATION_CMD 0x51
+#define SET_TEMP_CALIBRATION_CMD 0x52
+
+#define GET_COLOUR_CMD 0x60

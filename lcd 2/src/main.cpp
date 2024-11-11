@@ -3,6 +3,7 @@
 #include "config.h"
 
 #include <WiFi.h>
+#include "IO/Logger.h"
 
 #include "IO/Battery.h"
 #include "IO/buttons.h"
@@ -30,7 +31,13 @@
 #include "screens/Control/Car.h"
 #include "screens/Control/CarFlash.h"
 
+// /bactosure
+#include "screens/Bactosure/main.h"
+#include "screens/Bactosure/experimentScreen.h"
+
 #include "IO/ML.h"
+
+#include "IO/CoProcessor.h"
 
 uint8_t *bigArr;
 
@@ -54,6 +61,11 @@ CarLocksScreen carLocksScreen("CarLocks");
 CarControlScreen carScreen("Car");
 CarFlashScreen carFlashScreen("CarFlash");
 
+// /bactosure
+BactosureMainScreen bsMain("Bactosure");
+BactosureExperScreen bsExper("BactosureExperScreen");
+
+
 unsigned long long prevMillis1;
 int interval1 = 200;
 
@@ -67,6 +79,8 @@ void setup()
   initConfig();
   // pinMode(LED_PIN, OUTPUT);
 
+  logger.init(&Serial);
+  delay(2000);
 
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
@@ -103,6 +117,10 @@ void setup()
   screenManager.addScreen(&carScreen);
   screenManager.addScreen(&carFlashScreen);
 
+  // /bactosure
+  screenManager.addScreen(&bsMain);
+  screenManager.addScreen(&bsExper);
+
   screenManager.setScreen("Home");
 
   // WiFi.mode(WIFI_STA);
@@ -110,6 +128,10 @@ void setup()
   // WiFi.setAutoReconnect(true);
 
   wireless.setup();
+
+  initAllCoPro();
+
+  experimentManager.init();
 
   // WiFi.mode(WIFI_STA);
   // esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
@@ -204,6 +226,9 @@ void loop()
 
   buttons.update();
 
+  loopAllCoPro();
+  experimentManager.mainLoop();
+
   if (millis() - prevMillis1 > interval1)
   {
     prevMillis1 = millis();
@@ -213,6 +238,7 @@ void loop()
 
     String voltageS = (String)battery.getVoltage();
   }
+
 
   if (ClickButtonUP.clicks == 5)
   {
