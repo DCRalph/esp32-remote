@@ -8,6 +8,9 @@ GpIO armedSW(ARMED_PIN, InputPullup, LOW);
 GpIO_RGB pwrLed(0, 1);
 GpIO_RGB armedLed(1, 1);
 
+GpIO batterySense(BATTERY_SENSE_PIN, Input);
+GpIO battery2Sense(BATTERY2_SENSE_PIN, Input);
+
 GpIO relay1(RELAY_1_PIN, Output, LOW);
 GpIO relay2(RELAY_2_PIN, Output, LOW);
 GpIO relay3(RELAY_3_PIN, Output, LOW);
@@ -189,6 +192,9 @@ void GpIO::initIO()
   pwrLed.initStrip();
   armedLed.initStrip();
 
+  batterySense.init();
+  battery2Sense.init();
+
   relay1.init();
   relay2.init();
   relay3.init();
@@ -241,7 +247,7 @@ void GpIO_RGB::_SetColor(uint8_t _r, uint8_t _g, uint8_t _b)
   {
     leds[i] = CRGB(_r, _g, _b);
   }
-  // showStrip();
+  showStrip();
 }
 
 void GpIO_RGB::_SetColor(uint32_t color)
@@ -293,7 +299,7 @@ void GpIO_RGB::_StartRainbow()
                               }
                               //
                             },
-                            "Rainbow", 4096, this, 1, &rainbowHandle, FASTLED_CORE);
+                            "Rainbow", 4096, this, 0, &rainbowHandle, FASTLED_CORE);
 }
 
 void GpIO_RGB::_StopRainbow()
@@ -340,7 +346,7 @@ void GpIO_RGB::_StartPulsing()
                               }
                               //
                             },
-                            "Pulsing", 4096, this, 1, &pulsingHandle, FASTLED_CORE);
+                            "Pulsing", 4096, this, 0, &pulsingHandle, FASTLED_CORE);
   // ESP_LOGI("RGB", "StartPulsing e");
 }
 
@@ -389,7 +395,7 @@ void GpIO_RGB::_StartBlink()
                               vTaskDelete(NULL);
                               //
                             },
-                            "Blink", 4096, this, 1, &blinkHandle, FASTLED_CORE);
+                            "Blink", 4096, this, 0, &blinkHandle, FASTLED_CORE);
 }
 
 void GpIO_RGB::_StopBlink()

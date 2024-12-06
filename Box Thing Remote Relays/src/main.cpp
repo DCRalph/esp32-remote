@@ -4,11 +4,15 @@
 #include "IO/Wireless.h"
 #include "IO/Commands.h"
 #include "IO/LCD.h"
+#include "IO/Battery.h"
+#include "Timer.h"
 
 #include "Screens/HomeScreen.h"
 
 bool lastArmedSW = false;
 uint64_t lastLedShow = 0;
+
+unsigned long batteryLoopMs = 0;
 
 void espNowRecvCb(fullPacket *fp)
 {
@@ -60,15 +64,61 @@ void setup()
   lcd.setScreen(&HomeScreen);
 }
 
+uint32_t loopsPerSecond = 0;
+uint64_t lastLoopPerSecondMs = 0;
+
 void loop()
 {
+  loopsPerSecond++;
+
+  if (millis() - lastLoopPerSecondMs > 1000)
+  {
+    lastLoopPerSecondMs = millis();
+    Serial.println("Loops per second: " + String(loopsPerSecond));
+    loopsPerSecond = 0;
+  }
+
+  if (millis() - batteryLoopMs > 500)
+  {
+    batteryLoopMs = millis();
+
+    // Timer battery1Timer("Battery 1", Timer::TimerAction::AUTOSTART);
+    batteryUpdate();
+    // battery1Timer.print();
+
+    // Timer battery2Timer("Battery 2", Timer::TimerAction::AUTOSTART);
+    battery2Update();
+    // battery2Timer.print();
+
+#ifdef DEBUG_BATTERY
+    // print pretty box with battery info
+    Serial.println("---------------------------------");
+    Serial.println("Battery 1:");
+    Serial.print("Voltage: ");
+    Serial.print(batteryGetVoltageSmooth());
+    Serial.println("V");
+    Serial.print("Percentage: ");
+    Serial.print(batteryGetPercentageSmooth());
+    Serial.println("%");
+    Serial.println("---------------------------------");
+    Serial.println("Battery 2:");
+    Serial.print("Voltage: ");
+    Serial.print(battery2GetVoltageSmooth());
+    Serial.println("V");
+    Serial.print("Percentage: ");
+    Serial.print(battery2GetPercentageSmooth());
+    Serial.println("%");
+    Serial.println("---------------------------------");
+#endif
+  }
+
   if (armedSW.read() != lastArmedSW)
   {
     lastArmedSW = armedSW.read();
     armed.setSW(armedSW.read());
   }
 
-  if(millis() - lastRemotePing > 1000)
+  if (millis() - lastRemotePing > 1000)
   {
     lastRemotePing = millis();
     remoteConnected = false;
@@ -77,12 +127,16 @@ void loop()
 
   armed.update();
 
+  // Timer lcdTimer("LCD", Timer::TimerAction::AUTOSTART);
   lcd.loop();
+  // lcdTimer.print();
 
-  if (millis() - lastLedShow > 10)
+  if (millis() - lastLedShow > 5)
   {
-    lastLedShow = millis();
-    GpIO_RGB::showStrip();
+    // lastLedShow = millis();
+    // Timer ledTimer("LED", Timer::TimerAction::AUTOSTART);
+    // GpIO_RGB::showStrip();
+    // ledTimer.print();
   }
 
   if (Serial.available() > 0)

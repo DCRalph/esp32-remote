@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "IO/LCD.h"
+#include "IO/Battery.h"
 
 void homeScreenDraw()
 {
@@ -39,6 +40,20 @@ void homeScreenDraw()
   {
     lcd.lcd.print(char(LCD_CROSS));
   }
+
+  lcd.lcd.setCursor(0, 1);
+  lcd.lcd.print("Battery Info:");
+
+  char buffer[32];
+  sprintf(buffer, "1: %d%%   2: %d%%  ", batteryGetPercentageSmooth(), battery2GetPercentageSmooth());
+
+  lcd.lcd.setCursor(0, 2);
+  lcd.lcd.print(buffer);
+
+  sprintf(buffer, "1: %.2fV 2: %.2fV  ", batteryGetVoltageSmooth(), battery2GetVoltageSmooth());
+
+  lcd.lcd.setCursor(0, 3);
+  lcd.lcd.print(buffer);
 }
 
 void homeScreenOnEnter()

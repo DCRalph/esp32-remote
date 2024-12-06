@@ -16,6 +16,9 @@ extern GpIO armedSW;
 extern GpIO_RGB pwrLed;
 extern GpIO_RGB armedLed;
 
+extern GpIO batterySense;
+extern GpIO battery2Sense;
+
 extern GpIO relay1;
 extern GpIO relay2;
 extern GpIO relay3;

@@ -14,7 +14,6 @@
 #define DEBUG_ESP_NOW
 #define ESPNOW_NO_DISABLE_WIFI
 
-
 //
 
 extern bool remoteConnected;
@@ -37,6 +36,20 @@ extern uint64_t lastRemotePing;
 
 #define RGB_STRIP_PIN 16
 
+#define BATTERY_SENSE_PIN 3
+#define BATTERY_SENSE_R1 9980 // 10k
+#define BATTERY_SENSE_R2 997   // 1k
+#define BATTERY_SENSE_VCC 3.3
+#define BATTERY_SENSE_OFFSET 0.47
+
+#define BATTERY2_SENSE_PIN 4
+#define BATTERY2_SENSE_R1 4620 // 4.7k
+#define BATTERY2_SENSE_R2 993   // 1k
+#define BATTERY2_SENSE_VCC 3.3
+#define BATTERY2_SENSE_OFFSET -0.07
+
+// #define DEBUG_BATTERY
+
 // Leds
 #define NUM_LEDS 2
 
@@ -48,5 +61,3 @@ extern uint64_t lastRemotePing;
 #define CMD_DISARM 0xf1
 
 #define CMD_FIRE 0xf2
-
-

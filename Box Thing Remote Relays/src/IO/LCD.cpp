@@ -5,14 +5,14 @@ Screen::Screen(const char *name, void (*draw)(), void (*update)(), void (*onEnte
 {
 }
 
-LCD::LCD() : lcd(0x27, 16, 2)
+LCD::LCD() : lcd(0x27, 20, 4)
 {
 }
 
 void LCD::init()
 {
   lcd.init();
-  Wire.setClock(200000);
+  Wire.setClock(50000);
 
   lcd.createChar(0, LCD_cross);
   lcd.createChar(1, LCD_check);
@@ -25,7 +25,7 @@ void LCD::init()
 
 void LCD::loop()
 {
-  if (millis() - lastDraw < 100)
+  if (millis() - lastDraw < 250)
   {
     return;
   }
