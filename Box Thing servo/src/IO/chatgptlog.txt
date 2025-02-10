@@ -1,0 +1,1666 @@
+
+You said:
+i have this code in cpp for a esp32
+
+/*
+ * Wireless.h
+*/
+
+#pragma once
+
+#include "config.h"
+#include "IO/GPIO.h"
+
+struct __attribute__((packed)) data_packet
+{
+  uint8_t type;
+  uint8_t len;
+  uint8_t data[200];
+};
+
+enum class PacketDirection
+{
+  SEND,
+  RECV
+};
+
+struct fullPacket
+{
+  uint8_t mac[6];
+  PacketDirection direction;
+  data_packet p;
+};
+
+class Wireless
+{
+private:
+  bool setupDone = false;
+
+  std::function<void(fullPacket *fp)> recvCb;
+
+public:
+  esp_now_send_status_t lastStatus = ESP_NOW_SEND_FAIL;
+
+  Wireless();
+  void setup();
+  void unSetup();
+  void loop();
+
+  bool isSetupDone();
+
+  void sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status);
+  void recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len);
+
+  void setRecvCb(std::function<void(fullPacket *fp)> cb);
+
+  // void enable();
+  // void disable();
+
+  int send(data_packet *p, u8_t *peer_addr);
+  int send(u8_t *data, size_t len, u8_t *peer_addr);
+
+  int send(fullPacket *fp);
+};
+
+extern Wireless wireless;
+
+/*
+ * Wireless.cpp
+*/
+
+#include "Wireless.h"
+
+Wireless::Wireless()
+{
+}
+
+void Wireless::setup()
+{
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
+
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
+
+  delay(1);
+  if (esp_now_init() != ESP_OK)
+  {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status)
+                           {
+                             wireless.sendCallback(mac_addr, status);
+                             //
+                           });
+
+  esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len)
+                           { wireless.recvCallback(mac_addr, data, len); });
+
+  setupDone = true;
+}
+
+void Wireless::unSetup()
+{
+  setupDone = false;
+  esp_now_deinit();
+
+  esp_now_unregister_recv_cb();
+  esp_now_unregister_send_cb();
+}
+
+void Wireless::loop()
+{
+  if (!setupDone)
+    return;
+}
+
+bool Wireless::isSetupDone()
+{
+  return setupDone;
+}
+
+void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status)
+{
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+
+#ifdef DEBUG_ESP_NOW
+  Serial.println("########### Sent Packet ###########");
+  Serial.print("Sent to: ");
+  Serial.println(macStr);
+
+  Serial.print("Send Status: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  Serial.println("###################################");
+#endif
+
+  lastStatus = status;
+
+  // if (status != ESP_NOW_SEND_SUCCESS)
+  // {
+  //   // screenManager.showPopup(new Popup("Send Failed", "Failed to send data to " + String(macStr)));
+  //   btnLed.Blink(0xFF0000, 100, 3);
+  // } else {
+  //   // screenManager.showPopup(new Popup("Send Success", "Data sent to " + String(macStr)));
+  //   btnLed.Blink(0x00FF00, 100, 3);
+  // }
+}
+
+void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len)
+{
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  data_packet *p = (data_packet *)data;
+
+#ifdef DEBUG_ESP_NOW
+  Serial.println("########### Received Packet ###########");
+  Serial.print("Recv from: ");
+  Serial.println(macStr);
+
+  Serial.print("Type: ");
+  Serial.println(p->type);
+
+  Serial.print("Len: ");
+  Serial.println(p->len);
+
+  Serial.print("Data: ");
+  for (int i = 0; i < p->len; i++)
+  {
+    Serial.print(p->data[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+  Serial.println("#######################################");
+#endif
+
+  fullPacket fp;
+  memcpy(fp.mac, mac_addr, 6);
+  fp.direction = PacketDirection::RECV;
+  memcpy(&fp.p, p, sizeof(data_packet));
+
+  if (recvCb != nullptr)
+    recvCb(&fp);
+}
+
+void Wireless::setRecvCb(std::function<void(fullPacket *fp)> cb)
+{
+  recvCb = cb;
+}
+
+int Wireless::send(data_packet *p, u8_t *peer_addr)
+{
+  return send((u8_t *)p, sizeof(data_packet), peer_addr);
+}
+
+int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
+{
+  if (!setupDone)
+  {
+    Serial.println("ESP-NOW not initialized");
+    return -1;
+  }
+
+  esp_now_peer_info_t peerInfo = esp_now_peer_info_t();
+
+  memcpy(peerInfo.peer_addr, peer_addr, 6);
+  peerInfo.channel = ESP_NOW_CHANNEL;
+  peerInfo.encrypt = false;
+
+  if (esp_now_add_peer(&peerInfo) != ESP_OK)
+  {
+    Serial.println("Failed to add peer");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Peer added");
+#endif
+
+  if (esp_now_send(peerInfo.peer_addr, data, len) != ESP_OK)
+  {
+    Serial.println("Failed to send data");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Data sent");
+#endif
+
+  if (esp_now_del_peer(peer_addr) != ESP_OK)
+  {
+    Serial.println("Failed to delete peer");
+    return -1;
+  }
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Peer deleted");
+#endif
+
+  return 0;
+}
+
+int Wireless::send(fullPacket *fp)
+{
+  if (fp->direction == PacketDirection::SEND)
+  {
+    return send(&fp->p, fp->mac);
+  }
+  else
+  {
+    Serial.println("Cannot send a receive packet");
+    return -1;
+  }
+}
+
+Wireless wireless;
+
+can you find any issues with the code and fix them. find any were somthing could be improved and improve it. if you think there are some features missing add them. 
+
+one feature i want is to be able to do somthing like this
+
+
+
+//##############
+// synced struct feature
+//##############
+
+// the idea for this is to have a struct defined on 2 esp32s that will automatically sync with each other when data is changed
+// this will be useful for syncing data between 2 esp32s that are connected to each other
+
+
+
+// info about a synced struct defiened in the wireless class
+struct SyncedStruct
+{
+  uint8_t mac[6];
+  void *dataStruct;
+  size_t dataSize;
+  uint64_t lastSyncTime;
+  bool synced;
+};
+
+// esp1
+
+// define the struct
+struct ExampleData
+{
+  int exampleInt;
+  float exampleFloat;
+  char exampleString[20];
+};
+
+void exampleForEsp1()
+{
+
+  ExampleData exampleData;
+
+  // code to setup the synced struct
+
+  // this should seup the struct to auto sync with the other esp
+
+  uint8_t mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+  SyncedStruct syncInstance = wireless.registerSync(&exampleData, sizeof(ExampleData), mac);
+
+  // functions to control the sync
+  wireless.startSync(&syncInstance);
+  wireless.stopSync(&syncInstance);
+  wireless.syncNow(&syncInstance);
+
+  // i should be able to access the struct like this at any time
+
+  if (syncInstance.synced)
+  {
+    Serial.println(exampleData.exampleInt);
+    Serial.println(exampleData.exampleFloat);
+    Serial.println(exampleData.exampleString);
+  }
+
+  // there should me a syncInstance.justSynced flag that is set to true when the struct is synced
+  // this flag should be set to false after the struct is read
+
+  if (syncInstance.justSynced())
+  {
+    Serial.println("Just synced");
+  }
+}
+
+// esp2
+
+// define the struct
+struct ExampleData
+{
+  int exampleInt;
+  float exampleFloat;
+  char exampleString[20];
+};
+
+void exampleForEsp2()
+{
+
+  ExampleData exampleData;
+
+  // code to setup the synced struct
+
+  // this should seup the struct to auto sync with the other esp
+
+  uint8_t mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+  SyncedStruct syncInstance = wireless.registerSync(&exampleData, sizeof(ExampleData), mac);
+
+  // functions to control the sync
+  wireless.startSync(&syncInstance);
+  wireless.stopSync(&syncInstance);
+  wireless.syncNow(&syncInstance);
+
+  // i should be able to access the struct like this at any time
+
+  if (syncInstance.synced)
+  {
+    Serial.println(exampleData.exampleInt);
+    Serial.println(exampleData.exampleFloat);
+    Serial.println(exampleData.exampleString);
+  }
+
+  // there should me a syncInstance.justSynced flag that is set to true when the struct is synced
+  // this flag should be set to false after the struct is read
+
+  if (syncInstance.justSynced())
+  {
+    Serial.println("Just synced");
+  }
+}
+
+
+return all code commented
+
+2/2
+
+ChatGPT
+
+Thought about wireless data synchronization for 20 seconds
+Below is a fully-commented example that:
+
+Fixes/improves various potential issues in the original code.
+Adds the “synced struct” feature that you described.
+The code is split into Wireless.h and Wireless.cpp. The new feature usage is shown in example usage sections at the bottom of the files. Adapt or simplify as needed.
+
+Wireless.h
+cpp
+Copy code
+/*
+ * Wireless.h
+ *
+ * Description:
+ * ------------
+ * Header file for the Wireless class, which uses ESP-NOW to send and receive
+ * data packets on the ESP32. It also implements a "synced struct" mechanism
+ * that allows two ESP32s to keep a shared struct in sync automatically.
+ */
+
+#pragma once
+
+// Include necessary Arduino/ESP32 headers.
+// Make sure these are installed/available in your environment.
+#include <Arduino.h>
+#include <WiFi.h>
+#include <esp_now.h>
+#include <esp_wifi.h>
+#include <vector>
+#include <functional>
+#include <cstring>
+
+// A global config file could define constants such as ESP_NOW_CHANNEL, etc.
+// For demonstration, we define them here (adjust as needed).
+#ifndef ESP_NOW_CHANNEL
+#define ESP_NOW_CHANNEL 1
+#endif
+
+//---------------------------------------------------------------------------------
+// Data structures
+//---------------------------------------------------------------------------------
+
+/*
+ * data_packet
+ *
+ * Description:
+ * ------------
+ * A simple packed struct that carries a type, a length, and up to 200 bytes of data.
+ *
+ * Attributes:
+ *   - type : a user-defined type (e.g., to indicate message type).
+ *   - len  : the number of bytes in 'data' currently in use.
+ *   - data : raw data buffer (up to 200 bytes).
+ */
+struct __attribute__((packed)) data_packet {
+  uint8_t type;
+  uint8_t len;
+  uint8_t data[200];
+};
+
+/*
+ * PacketDirection
+ *
+ * Description:
+ * ------------
+ * An enum class to indicate whether a packet is being sent or received.
+ */
+enum class PacketDirection {
+  SEND,
+  RECV
+};
+
+/*
+ * fullPacket
+ *
+ * Description:
+ * ------------
+ * A composite that includes the sender's/receiver's MAC address,
+ * the direction (SEND or RECV), and the underlying data_packet.
+ *
+ * Attributes:
+ *   - mac       : the MAC address associated with this packet.
+ *   - direction : indicates if this packet is being sent or received.
+ *   - p         : the data packet itself.
+ */
+struct fullPacket {
+  uint8_t mac[6];
+  PacketDirection direction;
+  data_packet p;
+};
+
+//---------------------------------------------------------------------------------
+// Synced struct feature
+//---------------------------------------------------------------------------------
+
+/*
+ * SyncedStruct
+ *
+ * Description:
+ * ------------
+ * Represents a struct that will be kept in sync between two ESP32s.
+ * The user calls registerSync(...) to create one of these, specifying:
+ *   - a pointer to the local data structure
+ *   - the size of that structure
+ *   - the remote MAC address
+ *
+ * Then calls startSync(...) to begin auto-syncing, and so on.
+ *
+ * Attributes:
+ *   - mac         : MAC address of the remote ESP32 with which we sync.
+ *   - dataStruct  : pointer to the local data structure to keep in sync.
+ *   - dataSize    : size in bytes of that data structure.
+ *   - lastSyncTime: tracks last time this struct was synced, for scheduling.
+ *   - synced      : indicates if the local struct is believed to be fully synced.
+ *   - activeSync  : if true, we automatically sync on an interval (if desired).
+ *   - _justSynced : internal flag set true after a successful sync; user can query.
+ */
+struct SyncedStruct {
+  uint8_t mac[6];
+  void *dataStruct;   
+  size_t dataSize;    
+  uint64_t lastSyncTime;
+  bool synced;
+  bool activeSync;  
+  bool _justSynced; 
+
+  // Simple helper method to let user check if the struct was just synced.
+  // Once checked, we reset it to false so it doesn't stay "justSynced" forever.
+  bool justSynced() {
+    if (_justSynced) {
+      _justSynced = false;
+      return true;
+    }
+    return false;
+  }
+};
+
+//---------------------------------------------------------------------------------
+// Wireless Class
+//---------------------------------------------------------------------------------
+
+class Wireless {
+private:
+  // Whether setup() has been successfully called.
+  bool setupDone = false;
+
+  // Callback function invoked when a packet is received (if set).
+  std::function<void(fullPacket *fp)> recvCb;
+
+  // Keep track of any SyncedStruct objects we have registered.
+  // We can store them in a vector so multiple synced structs can be managed.
+  std::vector<SyncedStruct> syncedStructs;
+
+public:
+  // The last send status set by the send callback.
+  esp_now_send_status_t lastStatus = ESP_NOW_SEND_FAIL;
+
+  // Constructor / Destructor
+  Wireless();
+  ~Wireless() = default;
+
+  //---------------------------------------------------------------------------------
+  // Basic ESP-NOW lifecycle
+  //---------------------------------------------------------------------------------
+  void setup();
+  void unSetup();
+  void loop();  
+
+  // Check if we have finished setup
+  bool isSetupDone();
+
+  //---------------------------------------------------------------------------------
+  // Callbacks
+  //---------------------------------------------------------------------------------
+  void sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status);
+  void recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len);
+
+  //---------------------------------------------------------------------------------
+  // User-facing set/gets
+  //---------------------------------------------------------------------------------
+  void setRecvCb(std::function<void(fullPacket *fp)> cb);
+
+  //---------------------------------------------------------------------------------
+  // Sending data
+  //---------------------------------------------------------------------------------
+  int send(data_packet *p, uint8_t *peer_addr);
+  int send(uint8_t *data, size_t len, uint8_t *peer_addr);
+  int send(fullPacket *fp);
+
+  //---------------------------------------------------------------------------------
+  // Synced Struct Feature
+  //---------------------------------------------------------------------------------
+
+  /*
+   * registerSync
+   *
+   * Description:
+   * ------------
+   * Register a struct to be synced with a remote device. Returns a SyncedStruct
+   * that the user can store.
+   *
+   * Parameters:
+   *   - dataPtr : pointer to local data
+   *   - size    : size of the data struct in bytes
+   *   - mac     : MAC address of the remote device we want to sync with
+   *
+   * Returns:
+   *   - a SyncedStruct object that can be used with startSync, stopSync, etc.
+   */
+  SyncedStruct registerSync(void *dataPtr, size_t size, const uint8_t mac[6]);
+
+  /*
+   * startSync
+   *
+   * Description:
+   * ------------
+   * Enables auto-sync for the given SyncedStruct. 
+   * If the struct was previously registered, we mark it as active.
+   */
+  void startSync(SyncedStruct *syncedStruct);
+
+  /*
+   * stopSync
+   *
+   * Description:
+   * ------------
+   * Disables auto-sync for the given SyncedStruct.
+   */
+  void stopSync(SyncedStruct *syncedStruct);
+
+  /*
+   * syncNow
+   *
+   * Description:
+   * ------------
+   * Immediately sends the local data to the remote device associated with
+   * the given SyncedStruct.
+   */
+  void syncNow(SyncedStruct *syncedStruct);
+
+private:
+  /*
+   * handleSyncedStructs
+   *
+   * Description:
+   * ------------
+   * Internally called from loop() to handle any auto-sync logic (timers, etc.).
+   * This is where you'd expand if you want scheduled sync intervals.
+   */
+  void handleSyncedStructs();
+
+  /*
+   * findSyncedStructByMac
+   *
+   * Description:
+   * ------------
+   * Helper to locate a SyncedStruct in our vector by MAC address.
+   */
+  SyncedStruct* findSyncedStructByMac(const uint8_t mac[6]);
+};
+
+// Create a single global instance of the Wireless class.
+extern Wireless wireless;
+
+Wireless.cpp
+cpp
+Copy code
+/*
+ * Wireless.cpp
+ *
+ * Description:
+ * ------------
+ * Implementation file for the Wireless class, which uses ESP-NOW to send
+ * and receive data packets. Also implements the new synced struct feature.
+ */
+
+#include "Wireless.h"
+
+/*
+ * Global instance of the Wireless class. 
+ * This is declared extern in Wireless.h.
+ */
+Wireless wireless;
+
+//---------------------------------------------------------------------------------
+// Constructor
+//---------------------------------------------------------------------------------
+Wireless::Wireless() {
+  // Nothing special in constructor. Real setup is in setup().
+}
+
+//---------------------------------------------------------------------------------
+// setup
+//---------------------------------------------------------------------------------
+void Wireless::setup() {
+  // Start by putting the WiFi in STA mode so that ESP-NOW can function properly.
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
+
+  // Set the channel to our preferred ESP_NOW_CHANNEL. 
+  // We briefly enable promiscuous mode to force the channel setting.
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
+
+  delay(1);
+
+  // Initialize ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  // Register the send callback
+  esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status) {
+    wireless.sendCallback(mac_addr, status);
+  });
+
+  // Register the receive callback
+  esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len) {
+    wireless.recvCallback(mac_addr, data, len);
+  });
+
+  // If we reach here, we've successfully started ESP-NOW.
+  setupDone = true;
+  Serial.println("ESP-NOW initialized successfully.");
+}
+
+//---------------------------------------------------------------------------------
+// unSetup
+//---------------------------------------------------------------------------------
+void Wireless::unSetup() {
+  // Mark setup as not done
+  setupDone = false;
+
+  // Unregister callbacks
+  esp_now_unregister_recv_cb();
+  esp_now_unregister_send_cb();
+
+  // Deinitialize ESP-NOW
+  esp_now_deinit();
+
+  Serial.println("ESP-NOW deinitialized.");
+}
+
+//---------------------------------------------------------------------------------
+// loop
+//---------------------------------------------------------------------------------
+void Wireless::loop() {
+  if (!setupDone) {
+    return;
+  }
+  // Handle any "auto-sync" logic for synced structs here.
+  handleSyncedStructs();
+}
+
+//---------------------------------------------------------------------------------
+// isSetupDone
+//---------------------------------------------------------------------------------
+bool Wireless::isSetupDone() {
+  return setupDone;
+}
+
+//---------------------------------------------------------------------------------
+// sendCallback
+//---------------------------------------------------------------------------------
+void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  // Save the status for reference
+  lastStatus = status;
+
+#ifdef DEBUG_ESP_NOW
+  // Convert MAC to string for debugging.
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr),
+           "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac_addr[0], mac_addr[1], mac_addr[2],
+           mac_addr[3], mac_addr[4], mac_addr[5]);
+
+  Serial.println("########### Sent Packet ###########");
+  Serial.print("Sent to: ");
+  Serial.println(macStr);
+  Serial.print("Send Status: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  Serial.println("###################################");
+#endif
+}
+
+//---------------------------------------------------------------------------------
+// recvCallback
+//---------------------------------------------------------------------------------
+void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len) {
+  // Safety check
+  if (data == nullptr || len < (int)sizeof(data_packet)) {
+    Serial.println("Received invalid data or length.");
+    return;
+  }
+
+  // Copy the incoming data into a data_packet structure
+  data_packet *p = (data_packet *) data;
+
+#ifdef DEBUG_ESP_NOW
+  // Convert MAC to string for debugging
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr),
+           "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac_addr[0], mac_addr[1], mac_addr[2],
+           mac_addr[3], mac_addr[4], mac_addr[5]);
+
+  Serial.println("########### Received Packet ###########");
+  Serial.print("Recv from: ");
+  Serial.println(macStr);
+  Serial.print("Type: ");
+  Serial.println(p->type);
+  Serial.print("Len: ");
+  Serial.println(p->len);
+  Serial.print("Data: ");
+  for (int i = 0; i < p->len; i++) {
+    Serial.print(p->data[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+  Serial.println("#######################################");
+#endif
+
+  // If this might be a synced struct update, handle that first
+  // (For example, you could define a certain 'type' or custom logic 
+  //  that indicates "this is a synced struct" data. 
+  //  For demonstration, let's assume we use 'type==0x99' or something.)
+  if (p->type == 0x99) {
+    // We interpret p->data as a raw struct update
+    SyncedStruct* s = findSyncedStructByMac(mac_addr);
+    if (s) {
+      // Copy the payload into the local dataStruct if lengths match
+      if (p->len == s->dataSize) {
+        memcpy(s->dataStruct, p->data, s->dataSize);
+        s->synced = true;
+        s->_justSynced = true;
+        s->lastSyncTime = millis();
+      }
+    }
+    return; 
+  }
+
+  // Otherwise, it's a normal data packet -> pass it to user callback if set
+  fullPacket fp;
+  memcpy(fp.mac, mac_addr, 6);
+  fp.direction = PacketDirection::RECV;
+  memcpy(&fp.p, p, sizeof(data_packet));
+
+  if (recvCb) {
+    recvCb(&fp);
+  }
+}
+
+//---------------------------------------------------------------------------------
+// setRecvCb
+//---------------------------------------------------------------------------------
+void Wireless::setRecvCb(std::function<void(fullPacket *fp)> cb) {
+  recvCb = cb;
+}
+
+//---------------------------------------------------------------------------------
+// send(data_packet *p, uint8_t *peer_addr)
+//---------------------------------------------------------------------------------
+int Wireless::send(data_packet *p, uint8_t *peer_addr) {
+  // Just call our other send(...) using the raw pointer + size.
+  return send((uint8_t *)p, sizeof(data_packet), peer_addr);
+}
+
+//---------------------------------------------------------------------------------
+// send(uint8_t *data, size_t len, uint8_t *peer_addr)
+//---------------------------------------------------------------------------------
+int Wireless::send(uint8_t *data, size_t len, uint8_t *peer_addr) {
+  // If not initialized, fail
+  if (!setupDone) {
+    Serial.println("ESP-NOW not initialized");
+    return -1;
+  }
+
+  // Prepare a peer structure
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, peer_addr, 6);
+  peerInfo.channel = ESP_NOW_CHANNEL;
+  peerInfo.encrypt = false;
+
+  // Add the peer if it isn't already added
+  // (We can attempt to add every time. If it's already there, 
+  //  esp_now_add_peer() might fail with ESP_ERR_ESPNOW_FULL or ESP_ERR_ESPNOW_EXIST.
+  //  We can remove that error or handle it. For simplicity, let's ignore duplicates.)
+  esp_err_t addResult = esp_now_add_peer(&peerInfo);
+  if (addResult != ESP_OK && addResult != ESP_ERR_ESPNOW_EXIST) {
+    Serial.print("Failed to add peer, error code: ");
+    Serial.println(addResult);
+    return -1;
+  }
+
+  // Send data
+  esp_err_t sendResult = esp_now_send(peerInfo.peer_addr, data, len);
+  if (sendResult != ESP_OK) {
+    Serial.print("Failed to send data, error code: ");
+    Serial.println(sendResult);
+    return -1;
+  }
+
+#ifdef DEBUG_ESP_NOW
+  Serial.println("Data sent successfully.");
+#endif
+
+  // Optionally, remove the peer if we only do ephemeral sends
+  // But removing peer can break repeated sends. 
+  // If you want ephemeral connections, uncomment:
+  /*
+  if (esp_now_del_peer(peer_addr) != ESP_OK) {
+    Serial.println("Failed to delete peer");
+    return -1;
+  }
+  #ifdef DEBUG_ESP_NOW
+  Serial.println("Peer deleted");
+  #endif
+  */
+
+  return 0;
+}
+
+//---------------------------------------------------------------------------------
+// send(fullPacket *fp)
+//---------------------------------------------------------------------------------
+int Wireless::send(fullPacket *fp) {
+  // We only send if direction is SEND
+  if (fp->direction == PacketDirection::SEND) {
+    return send(&fp->p, fp->mac);
+  } else {
+    Serial.println("Cannot send a receive packet");
+    return -1;
+  }
+}
+
+//---------------------------------------------------------------------------------
+// Synced Struct Feature
+//---------------------------------------------------------------------------------
+
+/*
+ * registerSync
+ *
+ * This function returns a SyncedStruct object that the user can store.
+ * We also keep a copy in our internal vector for management.
+ */
+SyncedStruct Wireless::registerSync(void *dataPtr, size_t size, const uint8_t mac[6]) {
+  SyncedStruct s;
+  memcpy(s.mac, mac, 6);
+  s.dataStruct = dataPtr;
+  s.dataSize = size;
+  s.lastSyncTime = 0;
+  s.synced = false;
+  s.activeSync = false;
+  s._justSynced = false;
+
+  // Save in our vector for reference
+  syncedStructs.push_back(s);
+
+  return s;
+}
+
+/*
+ * startSync
+ *
+ * Mark the given struct as active for auto-syncing.
+ */
+void Wireless::startSync(SyncedStruct *syncedStruct) {
+  // Find the struct in the vector and set activeSync = true
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      it.activeSync = true;
+      Serial.println("startSync: SyncedStruct is now active");
+      return;
+    }
+  }
+  Serial.println("startSync: SyncedStruct not found in our list.");
+}
+
+/*
+ * stopSync
+ *
+ * Mark the given struct as no longer active for auto-syncing.
+ */
+void Wireless::stopSync(SyncedStruct *syncedStruct) {
+  // Find the struct in the vector and set activeSync = false
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      it.activeSync = false;
+      Serial.println("stopSync: SyncedStruct is now inactive");
+      return;
+    }
+  }
+  Serial.println("stopSync: SyncedStruct not found in our list.");
+}
+
+/*
+ * syncNow
+ *
+ * Immediately sends the local data to the remote side.
+ * We wrap it in a data_packet with p->type = 0x99 to indicate "synced struct".
+ */
+void Wireless::syncNow(SyncedStruct *syncedStruct) {
+  if (!setupDone) {
+    Serial.println("syncNow: Wireless not set up yet.");
+    return;
+  }
+
+  // Quick check: do we have a matching struct in our internal vector?
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      // Build a data_packet with the synced data
+      data_packet p;
+      p.type = 0x99; // Arbitrary type to indicate "synced struct"
+      p.len = (uint8_t)it.dataSize;
+      if (p.len > sizeof(p.data)) {
+        Serial.println("syncNow: dataSize is too large for data_packet!");
+        return;
+      }
+      memcpy(p.data, it.dataStruct, it.dataSize);
+
+      // Attempt to send it
+      int result = send(&p, it.mac);
+      if (result == 0) {
+        Serial.println("syncNow: Synced data sent successfully.");
+        // We can consider ourselves 'synced' from this side's perspective,
+        // though not guaranteed unless we get confirmation from remote.
+        // For now we set it to true for demonstration.
+        it.synced = true;
+      }
+      return;
+    }
+  }
+
+  Serial.println("syncNow: SyncedStruct not found in our list.");
+}
+
+/*
+ * handleSyncedStructs
+ *
+ * Called from loop() to handle auto-sync. If you want to regularly sync,
+ * you can check how long it's been since lastSyncTime, etc.
+ */
+void Wireless::handleSyncedStructs() {
+  // Example logic: if activeSync is true, and it's been more than 5 seconds
+  // since the last sync, we call syncNow. 
+  // Adjust the interval as needed. 
+  static const uint64_t SYNC_INTERVAL_MS = 5000;
+
+  uint64_t now = millis();
+  for (auto &it : syncedStructs) {
+    if (it.activeSync) {
+      // Check if enough time has passed to auto-sync again
+      if ((now - it.lastSyncTime) > SYNC_INTERVAL_MS) {
+        syncNow(&it);
+        it.lastSyncTime = now;  // update after we request sync
+      }
+    }
+  }
+}
+
+/*
+ * findSyncedStructByMac
+ *
+ * Locates a SyncedStruct in our vector by matching MAC address.
+ */
+SyncedStruct* Wireless::findSyncedStructByMac(const uint8_t mac[6]) {
+  for (auto &it : syncedStructs) {
+    if (memcmp(it.mac, mac, 6) == 0) {
+      return &it;
+    }
+  }
+  return nullptr;
+}
+Example Usage
+Below is a sketch (or code excerpt) showing how to use the synced struct feature from your code. These examples match your request. You would place them in your main .ino or somewhere else in your codebase.
+
+cpp
+Copy code
+//===========================================================
+// Example usage on ESP1
+//===========================================================
+struct ExampleData {
+  int exampleInt;
+  float exampleFloat;
+  char exampleString[20];
+};
+
+void exampleForEsp1() {
+  // Example local data
+  static ExampleData exampleData;
+
+  // (Set some initial data for demonstration)
+  exampleData.exampleInt = 42;
+  exampleData.exampleFloat = 3.1415f;
+  strncpy(exampleData.exampleString, "Hello ESP1", sizeof(exampleData.exampleString));
+
+  // Suppose this is the MAC of the remote ESP32:
+  uint8_t remoteMac[6] = {0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56};
+
+  // Register the local struct for syncing
+  SyncedStruct syncInstance = wireless.registerSync(
+    &exampleData, 
+    sizeof(ExampleData), 
+    remoteMac
+  );
+
+  // Start auto-sync
+  wireless.startSync(&syncInstance);
+
+  // Manually force a sync
+  wireless.syncNow(&syncInstance);
+
+  // Later, you can check if data has just been synced from remote:
+  if (syncInstance.justSynced()) {
+    Serial.println("Just synced with remote!");
+    // Access the updated data
+    Serial.print("exampleInt: ");
+    Serial.println(exampleData.exampleInt);
+    Serial.print("exampleFloat: ");
+    Serial.println(exampleData.exampleFloat);
+    Serial.print("exampleString: ");
+    Serial.println(exampleData.exampleString);
+  }
+
+  // If you ever want to stop auto-sync:
+  // wireless.stopSync(&syncInstance);
+}
+
+//===========================================================
+// Example usage on ESP2 (the receiving side)
+//===========================================================
+struct ExampleData2 {
+  int exampleInt;
+  float exampleFloat;
+  char exampleString[20];
+};
+
+void exampleForEsp2() {
+  // Example local data
+  static ExampleData2 exampleData;
+
+  // Suppose this is the MAC of the remote ESP32:
+  uint8_t remoteMac[6] = {0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56};
+
+  // Register the local struct for syncing
+  SyncedStruct syncInstance = wireless.registerSync(
+    &exampleData, 
+    sizeof(ExampleData2), 
+    remoteMac
+  );
+
+  // Start auto-sync
+  wireless.startSync(&syncInstance);
+
+  // Manually force a sync (send our local data to remote)
+  wireless.syncNow(&syncInstance);
+
+  // Check if we've just received new data
+  if (syncInstance.justSynced()) {
+    Serial.println("Just synced with remote!");
+    // Access the updated data
+    Serial.print("exampleInt: ");
+    Serial.println(exampleData.exampleInt);
+    Serial.print("exampleFloat: ");
+    Serial.println(exampleData.exampleFloat);
+    Serial.print("exampleString: ");
+    Serial.println(exampleData.exampleString);
+  }
+}
+Notable Improvements
+Safe Checking:
+
+We check for invalid data in recvCallback to avoid crashes if len is too small.
+We handle potential errors from esp_now_add_peer.
+Synced Struct Implementation:
+
+A vector (syncedStructs) holds all registered SyncedStruct objects.
+Each struct is identified by MAC address, so we can find it in recvCallback.
+We use a special packet type (0x99) to denote "synced struct" updates.
+A justSynced() helper is added to the SyncedStruct so you can detect newly updated data.
+Auto-Sync Logic:
+
+Example handleSyncedStructs() periodically calls syncNow() if activeSync is true and enough time has elapsed.
+You can customize the time interval (SYNC_INTERVAL_MS) or add more complex logic (like only syncing if data changed, etc.).
+Optional Peer Management:
+
+The code currently tries to add a peer before sending. Depending on your use case, you might remove the peer after each send or keep it added.
+In production, you might store known peers in a list and add them once at setup time to avoid repeated add/delete overhead.
+Extensibility:
+
+If you have more complex logic for determining which packets are "synced struct" packets, you can customize the check in recvCallback.
+The code is structured so you can easily expand or adapt for multiple synced structs to multiple MAC addresses.
+That’s all! With these changes, you have:
+
+A reliable base for sending and receiving packets using ESP-NOW.
+A synced struct mechanism that automatically keeps data in sync between two ESP32 devices.
+Commented code explaining each step.
+Feel free to tailor the code to your specific needs!
+
+
+
+
+You said:
+would it be possible to only send data if it has changed
+ChatGPT
+
+Thought about conditional data sending for 4 seconds
+Below is an example approach showing how you can only send data if it has actually changed. The key idea is to store a copy of the last known data in your SyncedStruct object (or a hash, if you prefer). Each time you are about to send data, compare the current data with that previous data. If they differ, then send; otherwise, skip.
+
+Below is a minimal modification to the synced struct code from the previous example. Note the added lastData field (or _hash alternative) in SyncedStruct and the comparison in syncNow().
+
+Wireless.h (Updated SyncedStruct with lastData)
+cpp
+Copy code
+/*
+ * Wireless.h
+ */
+
+#pragma once
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <esp_now.h>
+#include <esp_wifi.h>
+#include <vector>
+#include <functional>
+#include <cstring>
+
+#ifndef ESP_NOW_CHANNEL
+#define ESP_NOW_CHANNEL 1
+#endif
+
+// Simple data_packet struct
+struct __attribute__((packed)) data_packet {
+  uint8_t type;
+  uint8_t len;
+  uint8_t data[200];
+};
+
+enum class PacketDirection {
+  SEND,
+  RECV
+};
+
+struct fullPacket {
+  uint8_t mac[6];
+  PacketDirection direction;
+  data_packet p;
+};
+
+//----------------------------------------------------------
+// Synced Struct Feature
+//----------------------------------------------------------
+struct SyncedStruct {
+  uint8_t mac[6];         // Remote device MAC
+  void *dataStruct;       // Pointer to local data
+  size_t dataSize;        // Size of the struct in bytes
+  uint64_t lastSyncTime;  
+  bool synced;            // True if we consider it synced
+  bool activeSync;        // If true, we auto-sync on an interval
+  bool _justSynced;       // Internal flag set to true after a successful sync
+
+  /*
+   * lastData:
+   * ----------
+   * A buffer that stores the *previously-sent* data so that we can detect
+   * changes. This buffer is allocated to the same size as dataSize.
+   *
+   * Alternatively, you could store only a hash or CRC if you do not wish
+   * to store a full copy. 
+   */
+  uint8_t *lastData;      
+
+  bool justSynced() {
+    if (_justSynced) {
+      _justSynced = false;
+      return true;
+    }
+    return false;
+  }
+};
+
+class Wireless {
+private:
+  bool setupDone = false;
+  std::function<void(fullPacket *fp)> recvCb;
+  std::vector<SyncedStruct> syncedStructs;
+
+public:
+  esp_now_send_status_t lastStatus = ESP_NOW_SEND_FAIL;
+
+  Wireless();
+  ~Wireless() = default;
+
+  void setup();
+  void unSetup();
+  void loop();
+  bool isSetupDone();
+
+  void sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status);
+  void recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len);
+
+  void setRecvCb(std::function<void(fullPacket *fp)> cb);
+
+  int send(data_packet *p, uint8_t *peer_addr);
+  int send(uint8_t *data, size_t len, uint8_t *peer_addr);
+  int send(fullPacket *fp);
+
+  // Synced struct feature
+  SyncedStruct registerSync(void *dataPtr, size_t size, const uint8_t mac[6]);
+  void startSync(SyncedStruct *syncedStruct);
+  void stopSync(SyncedStruct *syncedStruct);
+  void syncNow(SyncedStruct *syncedStruct);
+
+private:
+  void handleSyncedStructs();
+  SyncedStruct* findSyncedStructByMac(const uint8_t mac[6]);
+};
+
+extern Wireless wireless;
+Wireless.cpp (Focus on syncNow Changes)
+cpp
+Copy code
+/*
+ * Wireless.cpp
+ */
+
+#include "Wireless.h"
+
+Wireless wireless;
+
+//----------------------------------------------------------
+// Constructor
+//----------------------------------------------------------
+Wireless::Wireless() {
+  // Nothing special here
+}
+
+//----------------------------------------------------------
+// setup
+//----------------------------------------------------------
+void Wireless::setup() {
+  WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
+
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_channel(ESP_NOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
+
+  delay(1);
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status) {
+    wireless.sendCallback(mac_addr, status);
+  });
+  esp_now_register_recv_cb([](const uint8_t *mac_addr, const uint8_t *data, int len) {
+    wireless.recvCallback(mac_addr, data, len);
+  });
+
+  setupDone = true;
+  Serial.println("ESP-NOW initialized successfully.");
+}
+
+//----------------------------------------------------------
+// unSetup
+//----------------------------------------------------------
+void Wireless::unSetup() {
+  setupDone = false;
+  esp_now_unregister_recv_cb();
+  esp_now_unregister_send_cb();
+  esp_now_deinit();
+  Serial.println("ESP-NOW deinitialized.");
+}
+
+//----------------------------------------------------------
+// loop
+//----------------------------------------------------------
+void Wireless::loop() {
+  if (!setupDone) return;
+  handleSyncedStructs();
+}
+
+//----------------------------------------------------------
+// isSetupDone
+//----------------------------------------------------------
+bool Wireless::isSetupDone() {
+  return setupDone;
+}
+
+//----------------------------------------------------------
+// sendCallback
+//----------------------------------------------------------
+void Wireless::sendCallback(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  lastStatus = status;
+}
+
+//----------------------------------------------------------
+// recvCallback
+//----------------------------------------------------------
+void Wireless::recvCallback(const uint8_t *mac_addr, const uint8_t *data, int len) {
+  if (!data || len < (int)sizeof(data_packet)) {
+    Serial.println("Received invalid data/length.");
+    return;
+  }
+
+  data_packet *p = (data_packet *)data;
+
+  // If it's a "synced struct" update (type == 0x99, for example)
+  if (p->type == 0x99) {
+    SyncedStruct* s = findSyncedStructByMac(mac_addr);
+    if (s && p->len == s->dataSize) {
+      memcpy(s->dataStruct, p->data, s->dataSize);
+      s->synced = true;
+      s->_justSynced = true;
+      s->lastSyncTime = millis();
+    }
+    return; 
+  }
+
+  // Otherwise, handle normal data
+  fullPacket fp;
+  memcpy(fp.mac, mac_addr, 6);
+  fp.direction = PacketDirection::RECV;
+  memcpy(&fp.p, p, sizeof(data_packet));
+  if (recvCb) {
+    recvCb(&fp);
+  }
+}
+
+//----------------------------------------------------------
+// setRecvCb
+//----------------------------------------------------------
+void Wireless::setRecvCb(std::function<void(fullPacket *fp)> cb) {
+  recvCb = cb;
+}
+
+//----------------------------------------------------------
+// send(data_packet*, uint8_t*)
+//----------------------------------------------------------
+int Wireless::send(data_packet *p, uint8_t *peer_addr) {
+  return send((uint8_t *)p, sizeof(data_packet), peer_addr);
+}
+
+//----------------------------------------------------------
+// send(uint8_t*, size_t, uint8_t*)
+//----------------------------------------------------------
+int Wireless::send(uint8_t *data, size_t len, uint8_t *peer_addr) {
+  if (!setupDone) {
+    Serial.println("ESP-NOW not initialized.");
+    return -1;
+  }
+
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, peer_addr, 6);
+  peerInfo.channel = ESP_NOW_CHANNEL;
+  peerInfo.encrypt = false;
+
+  // Attempt to add peer if not already added
+  esp_err_t addResult = esp_now_add_peer(&peerInfo);
+  if ((addResult != ESP_OK) && (addResult != ESP_ERR_ESPNOW_EXIST)) {
+    Serial.print("Failed to add peer, error: ");
+    Serial.println(addResult);
+    return -1;
+  }
+
+  // Send
+  esp_err_t result = esp_now_send(peerInfo.peer_addr, data, len);
+  if (result != ESP_OK) {
+    Serial.print("Failed to send data, error: ");
+    Serial.println(result);
+    return -1;
+  }
+
+  return 0;
+}
+
+//----------------------------------------------------------
+// send(fullPacket*)
+//----------------------------------------------------------
+int Wireless::send(fullPacket *fp) {
+  if (fp->direction == PacketDirection::SEND) {
+    return send(&fp->p, fp->mac);
+  } else {
+    Serial.println("Cannot send a receive packet");
+    return -1;
+  }
+}
+
+//----------------------------------------------------------
+// registerSync
+//----------------------------------------------------------
+SyncedStruct Wireless::registerSync(void *dataPtr, size_t size, const uint8_t mac[6]) {
+  SyncedStruct s;
+  memcpy(s.mac, mac, 6);
+  s.dataStruct = dataPtr;
+  s.dataSize = size;
+  s.lastSyncTime = 0;
+  s.synced = false;
+  s.activeSync = false;
+  s._justSynced = false;
+
+  // Allocate memory to store the "last known" data
+  s.lastData = new uint8_t[size];
+  memset(s.lastData, 0, size); // Start with zeros or copy the current data if desired
+
+  syncedStructs.push_back(s);
+  return syncedStructs.back();  
+}
+
+//----------------------------------------------------------
+// startSync
+//----------------------------------------------------------
+void Wireless::startSync(SyncedStruct *syncedStruct) {
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      it.activeSync = true;
+      Serial.println("startSync: SyncedStruct is now active");
+      return;
+    }
+  }
+  Serial.println("startSync: SyncedStruct not found.");
+}
+
+//----------------------------------------------------------
+// stopSync
+//----------------------------------------------------------
+void Wireless::stopSync(SyncedStruct *syncedStruct) {
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      it.activeSync = false;
+      Serial.println("stopSync: SyncedStruct is now inactive");
+      return;
+    }
+  }
+  Serial.println("stopSync: SyncedStruct not found.");
+}
+
+//----------------------------------------------------------
+// syncNow -- only send if data has changed
+//----------------------------------------------------------
+void Wireless::syncNow(SyncedStruct *syncedStruct) {
+  if (!setupDone) {
+    Serial.println("syncNow: Wireless not set up.");
+    return;
+  }
+
+  for (auto &it : syncedStructs) {
+    if (&it == syncedStruct) {
+      // Compare current data with "lastData"
+      if (memcmp(it.dataStruct, it.lastData, it.dataSize) == 0) {
+        // No difference => skip sending
+        // Optionally: Serial.println("syncNow: Data unchanged, skipping send.");
+        return;
+      }
+      // Otherwise, build packet and send
+      data_packet p;
+      p.type = 0x99;
+      p.len = (uint8_t)it.dataSize;
+      if (p.len > sizeof(p.data)) {
+        Serial.println("syncNow: dataSize too large for data_packet!");
+        return;
+      }
+      memcpy(p.data, it.dataStruct, it.dataSize);
+
+      int result = send(&p, it.mac);
+      if (result == 0) {
+        // Update lastData to this new version
+        memcpy(it.lastData, it.dataStruct, it.dataSize);
+        it.synced = true; 
+        // Note: we don't set _justSynced here unless the remote says it arrived
+        // In a simple scenario, you could set it here to say "we tried to sync."
+        // For demonstration, we'll set it to false for now, or you can leave as is.
+      }
+      return;
+    }
+  }
+  Serial.println("syncNow: SyncedStruct not found.");
+}
+
+//----------------------------------------------------------
+// handleSyncedStructs
+//----------------------------------------------------------
+void Wireless::handleSyncedStructs() {
+  static const uint64_t SYNC_INTERVAL_MS = 5000;
+  uint64_t now = millis();
+  for (auto &it : syncedStructs) {
+    if (it.activeSync) {
+      if ((now - it.lastSyncTime) > SYNC_INTERVAL_MS) {
+        syncNow(&it);
+        it.lastSyncTime = now;
+      }
+    }
+  }
+}
+
+//----------------------------------------------------------
+// findSyncedStructByMac
+//----------------------------------------------------------
+SyncedStruct* Wireless::findSyncedStructByMac(const uint8_t mac[6]) {
+  for (auto &it : syncedStructs) {
+    if (memcmp(it.mac, mac, 6) == 0) {
+      return &it;
+    }
+  }
+  return nullptr;
+}
+Explanation
+Added uint8_t* lastData;
+In SyncedStruct, we maintain a buffer (lastData) that holds the previously sent version of the data.
+
+Allocate lastData
+In registerSync(), once we know the dataSize, we allocate a buffer for lastData.
+
+cpp
+Copy code
+s.lastData = new uint8_t[size];
+memset(s.lastData, 0, size);
+You could also do memcpy(s.lastData, dataPtr, size); if you want the initial “last known” data to match the initial content.
+Compare in syncNow
+Before building a packet and calling send(...), we do:
+
+cpp
+Copy code
+if (memcmp(it.dataStruct, it.lastData, it.dataSize) == 0) {
+  // No difference => skip sending
+  return;
+}
+If the data is the same, we skip. Otherwise, we send the update and update it.lastData to the new version.
+
+Memory Management
+
+Shown for simplicity, but in production you might want to delete[] it.lastData when you remove the struct.
+If you use dynamic memory, ensure you have a cleanup path for removing a SyncedStruct from syncedStructs.
+Alternative
+Instead of storing a full copy of the data, you could store a hash or CRC of the data (less memory usage for large structs). Then compare the new data’s hash to the old one.
+
+Usage in Your Main Code
+Use exactly as before:
+
+cpp
+Copy code
+struct ExampleData {
+  int exampleInt;
+  float exampleFloat;
+  char exampleString[20];
+};
+
+void setup() {
+  Serial.begin(115200);
+
+  wireless.setup();
+
+  static ExampleData exampleData;
+  exampleData.exampleInt = 10;
+  exampleData.exampleFloat = 1.2345f;
+  strcpy(exampleData.exampleString, "Hello from ESP1");
+
+  // Suppose the remote MAC is known:
+  uint8_t remoteMac[6] = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};
+
+  // Register for syncing
+  SyncedStruct syncInst = wireless.registerSync(&exampleData, sizeof(ExampleData), remoteMac);
+
+  // Start auto-sync
+  wireless.startSync(&syncInst);
+
+  // Optionally do a manual sync
+  wireless.syncNow(&syncInst);
+}
+
+void loop() {
+  wireless.loop();
+
+  // Suppose at some point we change the data
+  static unsigned long lastChange = 0;
+  if (millis() - lastChange > 10000) {
+    lastChange = millis();
+    // Modify data
+    // Only if changed will syncNow() actually send
+  }
+}
+Now, data is only sent when the content of exampleData differs from lastData. This effectively reduces unnecessary transmissions if the data remains unchanged.
