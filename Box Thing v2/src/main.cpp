@@ -30,6 +30,7 @@
 // #include "Screens/Control/CarFlash.h"
 #include "Screens/Control/RemoteRelay.h"
 #include "Screens/Control/EncoderTransmiter.h"
+#include "Screens/Control/ServosControl.h"
 
 #include "Screens/Settings/GeneralSettings.h"
 #include "Screens/Settings/WiFiSettings.h"
@@ -56,6 +57,7 @@ EspnowSwitchScreen espnowSwitch("Espnow Switch");
 // CarFlashScreen carFlash("Car Flash");
 RemoteRelayScreen remoteRelay("Remote Relay");
 EncoderTransmiterScreen encoderTransmiter("Encoder Transmiter");
+ServoControlScreen servosControl("Servos Control");
 
 // #### /Settings
 GeneralSettingsScreen generalSettings("General Settings");
@@ -173,6 +175,8 @@ void setup()
   remoteRelay.setTopBarText("Relay");
   screenManager.addScreen(&encoderTransmiter);
   encoderTransmiter.setTopBarText("Encoder");
+  screenManager.addScreen(&servosControl);
+  servosControl.setTopBarText("Servos");
 
   ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(5);
   display.display();

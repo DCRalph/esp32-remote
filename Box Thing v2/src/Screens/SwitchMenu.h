@@ -22,6 +22,8 @@ public:
 
   MenuItemNavigate encoderTransmiterItem = MenuItemNavigate("Encoder", "Encoder Transmiter");
 
+  MenuItemNavigate servosControlItem = MenuItemNavigate("Servos", "Servos Control");
+
   void draw() override;
   void update() override;
 };
@@ -33,6 +35,7 @@ SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
   // menu.addMenuItem(&carItem);
   menu.addMenuItem(&remoteRelayItem);
   menu.addMenuItem(&encoderTransmiterItem);
+  menu.addMenuItem(&servosControlItem);
 }
 
 void SwitchMenuScreen::draw()

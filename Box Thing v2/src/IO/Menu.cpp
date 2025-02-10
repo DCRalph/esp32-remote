@@ -259,10 +259,10 @@ void MenuItemNumber<T>::increase()
 {
   if (value)
   {
-    T newValue = *value + step;
-    if (newValue <= max)
+    int64_t newValue = static_cast<int64_t>(*value) + static_cast<int64_t>(step);
+    if (newValue <= static_cast<int64_t>(max))
     {
-      *value = newValue;
+      *value = static_cast<T>(newValue);
     }
   }
 }
@@ -272,10 +272,10 @@ void MenuItemNumber<T>::decrease()
 {
   if (value)
   {
-    T newValue = *value - step;
-    if (newValue >= min)
+    int64_t newValue = static_cast<int64_t>(*value) - static_cast<int64_t>(step);
+    if (newValue >= static_cast<int64_t>(min))
     {
-      *value = newValue;
+      *value = static_cast<T>(newValue);
     }
   }
 }
