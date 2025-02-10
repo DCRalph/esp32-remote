@@ -81,24 +81,24 @@ void loop()
   // Check for incoming CAN data
   if (canInterupt())
   {
-    canSleep();
+    // canSleep();
     receivedFrames++;
     canFrame frame;
 
     canRead(&frame);
 
-    // savvyCanSend(&frame);
+    savvyCanSend(&frame);
 
     // Process the frame with the decoder manager
-    uint64_t startProcessingTime = micros();
-    bool res = decoderManager.process(&frame);
-    uint64_t endProcessingTime = micros();
+    // uint64_t startProcessingTime = micros();
+    // bool res = decoderManager.process(&frame);
+    // uint64_t endProcessingTime = micros();
 
-    if (!res)
-    {
-      canNormal();
-      return;
-    }
+    // if (!res)
+    // {
+    //   // canNormal();
+    //   return;
+    // }
 
     // Serial.print("Processing Time: ");
     // Serial.println(endProcessingTime - startProcessingTime);
@@ -107,35 +107,35 @@ void loop()
     // CRGB color = CRGB::Blue;
     // xQueueSend(xBlinkQueue, &color, 0);
 
-    Serial.print("RPM: ");
-    Serial.print(rpmDecoder.get());
+    // Serial.print("RPM: ");
+    // Serial.print(rpmDecoder.get());
 
-    Serial.print("\t");
+    // Serial.print("\t");
 
-    Serial.print("Headlights: ");
-    // Serial.print(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
-    Serial.print((int)headLightsDecoder.get());
+    // Serial.print("Headlights: ");
+    // // Serial.print(HeadLightsStateMap.at(headLightsDecoder.get()).c_str());
+    // Serial.print((int)headLightsDecoder.get());
 
-    Serial.print("\t");
+    // Serial.print("\t");
 
-    Serial.print("Gear: ");
-    // Serial.print(GearStateMap.at(gearDecoder.get()).c_str());
-    Serial.print((int)gearDecoder.get());
+    // Serial.print("Gear: ");
+    // // Serial.print(GearStateMap.at(gearDecoder.get()).c_str());
+    // Serial.print((int)gearDecoder.get());
 
-    Serial.print("\t");
+    // Serial.print("\t");
 
-    Serial.print("Shifter Position: ");
-    // Serial.print(ShifterStateMap.at(shifterPosDecoder.get()).c_str());
-    Serial.print((int)shifterPosDecoder.get());
+    // Serial.print("Shifter Position: ");
+    // // Serial.print(ShifterStateMap.at(shifterPosDecoder.get()).c_str());
+    // Serial.print((int)shifterPosDecoder.get());
 
-    Serial.println();
+    // Serial.println();
 
-    if (rpmDecoder.get() < 100)
-    {
-      frame.print();
-    }
+    // if (rpmDecoder.get() < 100)
+    // {
+    //   frame.print();
+    // }
 
-    canNormal();
+    // canNormal();
   }
 }
 
