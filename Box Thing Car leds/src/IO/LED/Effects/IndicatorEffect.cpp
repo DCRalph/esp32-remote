@@ -2,16 +2,15 @@
 #include <Arduino.h>
 #include <math.h>
 
-IndicatorEffect::IndicatorEffect(uint16_t numLEDs, Side side, uint8_t priority,
+IndicatorEffect::IndicatorEffect(LEDManager *_ledManager, Side side, uint8_t priority,
                                  bool transparent)
-    : LEDEffect(priority, transparent),
-      numLEDs(numLEDs),
+    : LEDEffect(_ledManager, priority, transparent),
       side(side),
       indicatorActive(false),
       fadeFactor(0.0f),
       // Default parameters – feel free to adjust.
-      blinkCycle(1200), 
-      fadeInTime(300),
+      blinkCycle(1200),
+      fadeInTime(250),
       baseR(255),
       baseG(120),
       baseB(0)
@@ -20,7 +19,14 @@ IndicatorEffect::IndicatorEffect(uint16_t numLEDs, Side side, uint8_t priority,
 
 void IndicatorEffect::setIndicatorActive(bool active)
 {
+  if (!indicatorActive && active)
+  {
+    // When activated, record the time.
+    activatedTime = millis();
+  }
+
   indicatorActive = active;
+
   if (!active)
   {
     // When deactivated, reset fade factor.
@@ -37,8 +43,9 @@ void IndicatorEffect::update()
     return;
   }
   // Compute where we are within the blink cycle.
-  unsigned long currentTime = millis();
-  unsigned long timeInCycle = currentTime % blinkCycle;
+  uint64_t currentTime = millis();
+  currentTime -= activatedTime;
+  uint64_t timeInCycle = currentTime % blinkCycle;
 
   // For this design, the indicator is "on" only during the fade-in period.
   if (timeInCycle < (blinkCycle / 2))
@@ -62,11 +69,11 @@ void IndicatorEffect::update()
 void IndicatorEffect::render(std::vector<Color> &buffer)
 {
   // Do nothing if the indicator is inactive or the fade factor is 0.
-  if (!indicatorActive || fadeFactor <= 0.0f)
+  if (!indicatorActive)
     return;
 
-  // Define the indicator region length as one quarter of the LED strip.
-  uint16_t regionLength = numLEDs / 5;
+  uint16_t regionLength = ledManager->getNumLEDs() / 5;
+  // regionLength += 1; 
 
   // For the left indicator, the region covers indices 0 to regionLength-1.
   // We want the "inner" edge (the side facing the vehicle) to light first.
@@ -85,7 +92,7 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
       // Here we use d directly as a threshold: the inner LED (d=0) lights up immediately,
       // while an outer LED (d close to 1) lights only when fadeFactor is nearly 1.
       float finalFactor = 0.0f;
-      if (fadeFactor > d)
+      if (fadeFactor >= d)
       {
         // Map fadeFactor onto [0,1] for this LED.
         finalFactor = (fadeFactor - d) / (1.0f - d);
@@ -105,8 +112,8 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
   {
     // For the right indicator, the region covers indices numLEDs - regionLength to numLEDs-1.
     // The inner edge is at index numLEDs - regionLength.
-    uint16_t start = numLEDs - regionLength;
-    for (uint16_t i = start; i < numLEDs; i++)
+    uint16_t start = ledManager->getNumLEDs() - regionLength;
+    for (uint16_t i = start; i < ledManager->getNumLEDs(); i++)
     {
       // Compute normalized distance from the inner edge.
       // For the right indicator, define:
@@ -115,7 +122,7 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
       float d = (float)(i - start) / (float)(regionLength - 1);
 
       float finalFactor = 0.0f;
-      if (fadeFactor > d)
+      if (fadeFactor >= d)
       {
         finalFactor = (fadeFactor - d) / (1.0f - d);
         if (finalFactor > 1.0f)

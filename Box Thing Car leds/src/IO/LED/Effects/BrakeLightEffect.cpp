@@ -1,10 +1,9 @@
 #include "BrakeLightEffect.h"
 #include <cmath>
 
-BrakeLightEffect::BrakeLightEffect(uint16_t numLEDs, uint8_t priority,
+BrakeLightEffect::BrakeLightEffect(LEDManager *_ledManager, uint8_t priority,
                                    bool transparent)
-    : LEDEffect(priority, transparent),
-      numLEDs(numLEDs),
+    : LEDEffect(_ledManager, priority, transparent),
       lastUpdate(0),
       brakeActive(false),
       brightness(0.0f),
@@ -26,12 +25,14 @@ void BrakeLightEffect::setBrakeActive(bool active)
   }
 }
 
-void BrakeLightEffect::update() {
+void BrakeLightEffect::update()
+{
   // Get the current time in milliseconds.
   unsigned long currentTime = millis();
 
   // Initialize lastUpdate on the very first call.
-  if (lastUpdate == 0) {
+  if (lastUpdate == 0)
+  {
     lastUpdate = currentTime;
     return;
   }
@@ -43,9 +44,10 @@ void BrakeLightEffect::update() {
 
   // Define the dimming rates.
   const float BRIGHTNESS_DIM_RATE = 1.0f; // brightness reduction per second
-  const float SIZE_DIM_RATE       = 0.9f; // reduction in lit area (from edges)
+  const float SIZE_DIM_RATE = 0.9f;       // reduction in lit area (from edges)
 
-  if (!brakeActive) {
+  if (!brakeActive)
+  {
     // When brakes are released, reduce brightness in a nonlinear fashion.
     // Multiplying by brightness causes the drop to slow as brightness nears 0.
     brightness -= BRIGHTNESS_DIM_RATE * pow(brightness, 0.5f) * dtSeconds;
@@ -57,33 +59,38 @@ void BrakeLightEffect::update() {
     if (size < 0.0f)
       size = 0.0f;
   }
-  else {
+  else
+  {
     // When brakes are pressed, restore full brightness and size.
     brightness = 1.0f;
-    size       = 1.0f;
+    size = 1.0f;
   }
 }
 
-void BrakeLightEffect::render(std::vector<Color> &buffer) {
-  uint16_t len = buffer.size();
+void BrakeLightEffect::render(std::vector<Color> &buffer)
+{
 
-  if (brakeActive) {
+  if (brakeActive)
+  {
     // With brakes active, show a solid red (full brightness) across all LEDs.
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint16_t i = 0; i < ledManager->getNumLEDs(); i++)
+    {
       buffer[i].r = 255;
       buffer[i].g = 0;
       buffer[i].b = 0;
     }
   }
-  else {
+  else if (brightness > 0.0f && size > 0.0f)
+  {
     // When brakes are released, show a gradient that fades out from the edges
     // toward the center as the 'size' value decreases.
     // The LEDs inside the cutoff (defined by 'size') remain at full brightness
     // (scaled by the overall 'brightness'), while those outside fade aggressively.
-    uint16_t mid = len / 2;
-    const float rollOffExponent = 3.0f;  // Higher values yield a steeper fade
+    uint16_t mid = ledManager->getNumLEDs() / 2;
+    const float rollOffExponent = 3.0f; // Higher values yield a steeper fade
 
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint16_t i = 0; i < ledManager->getNumLEDs(); i++)
+    {
       // Calculate a normalized distance from the center (0 at center, 1 at edges).
       float normDist = (mid > 0)
                            ? fabs((int)i - (int)mid) / static_cast<float>(mid)
@@ -92,7 +99,8 @@ void BrakeLightEffect::render(std::vector<Color> &buffer) {
       float localBrightness = brightness; // Base brightness for this LED.
 
       // if the led is bigger than the size, reduce the brightness
-      if (normDist > size) {
+      if (normDist > size)
+      {
         // Calculate the normalized distance beyond the cutoff.
         float distBeyond = (normDist - size) / (1.0f - size);
         // Apply a nonlinear roll-off to the brightness.

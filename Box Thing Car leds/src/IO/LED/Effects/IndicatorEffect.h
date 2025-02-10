@@ -13,7 +13,7 @@ public:
 
   // Constructs an indicator effect for a given LED strip.
   // All timing and color parameters are customizable.
-  IndicatorEffect(uint16_t numLEDs, Side side, uint8_t priority = 1,
+  IndicatorEffect(LEDManager *_ledManager, Side side, uint8_t priority = 1,
                   bool transparent = false);
 
   virtual void update() override;
@@ -31,9 +31,10 @@ public:
   uint8_t baseB;
 
 private:
-  uint16_t numLEDs;
   Side side;
   bool indicatorActive;
+
+  uint64_t activatedTime; // Time when the indicator was last activated.
 
   // Computed fade factor (0.0 to 1.0) for the current blink cycle.
   // It increases linearly during the fade in period and then resets.
