@@ -2,7 +2,10 @@
 #include <algorithm>
 
 LEDManager::LEDManager(uint16_t numLEDs)
-    : numLEDs(numLEDs), ledBuffer(numLEDs) {}
+    : numLEDs(numLEDs), ledBuffer(numLEDs)
+{
+  fps = 100;
+}
 
 LEDManager::~LEDManager()
 {

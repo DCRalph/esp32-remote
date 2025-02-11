@@ -9,7 +9,7 @@
 #include "IO/LED/Effects/RGBEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
-#define NUM_LEDS 100 // Example LED strip length
+#define NUM_LEDS 110 // Example LED strip length
 
 CRGB leds[NUM_LEDS];
 
@@ -39,11 +39,11 @@ RGBEffect *rgbEffect;
 StartupEffect *startupEffect;
 
 // Global simulation control flag
-bool simulateEffects = true;
+bool simulateEffects = false;
 
 // Other globals (already defined in your code)
 unsigned long lastSimTime = 0;
-unsigned long simInterval = 4000;
+unsigned long simInterval = 5000;
 bool brakePressed = false;
 bool leftIndicatorActive = false;
 bool rightIndicatorActive = false;
@@ -156,6 +156,7 @@ void setup()
   FastLED.show();
 
   ledManager = new CustomLEDManager(NUM_LEDS);
+  ledManager->setFPS(100);
 
   // Create the effect instances.
   brakeEffect = new BrakeLightEffect(ledManager, 5, false);
@@ -173,6 +174,8 @@ void setup()
   ledManager->addEffect(rgbEffect);
   ledManager->addEffect(startupEffect);
 
+  startupEffect->setActive(true);
+
   lastRecvTime = millis(); // Initialize last receive time
 
   led.On();
@@ -186,11 +189,11 @@ void loop()
   wireless.loop();
 
   // Check for wireless timeout
-  if (currentTime - lastRecvTime > WIRELESS_TIMEOUT_MS)
-  {
-    Serial.println("[WARNING] [WIRELESS] Connection lost!");
-    deactivateAllEffects();
-  }
+  // if (currentTime - lastRecvTime > WIRELESS_TIMEOUT_MS)
+  // {
+  //   Serial.println("[WARNING] [WIRELESS] Connection lost!");
+  //   deactivateAllEffects();
+  // }
 
   // If simulation mode is enabled, automatically toggle effect states every simInterval.
   if (simulateEffects && (currentTime - lastSimTime > simInterval))
