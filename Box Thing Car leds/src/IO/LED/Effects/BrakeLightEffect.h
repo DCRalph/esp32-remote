@@ -19,6 +19,8 @@ private:
   unsigned long lastUpdate;
 
   bool brakeActive;
-  float brightness; // Overall brightness (1.0 = full red)
-  float size;       // Size of the brake light effect.
+
+  float fadeProgress;
+  float baseBrightness;
+  float fadeDuration;
 };

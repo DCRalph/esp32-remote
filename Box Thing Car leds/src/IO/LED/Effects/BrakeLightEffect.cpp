@@ -1,69 +1,82 @@
+
 #include "BrakeLightEffect.h"
 #include <cmath>
+
+// Ease‑in quadratic: f(t) = t².
+// (Since fadeProgress changes from 1 to 0, this curve makes the brightness drop quickly at
+// the beginning; when fadeProgress reaches 0, the brightness is off.)
+static inline float easeInQuadratic(float t)
+{
+  return t * t;
+}
 
 BrakeLightEffect::BrakeLightEffect(LEDManager *_ledManager, uint8_t priority,
                                    bool transparent)
     : LEDEffect(_ledManager, priority, transparent),
       lastUpdate(0),
       brakeActive(false),
-      brightness(0.0f),
-      size(0.0f) {}
+      // When active, fadeProgress is 1. When brakes are released it counts down.
+      fadeProgress(1.0f),
+      // Full brightness when braking; when released this is immediately set to 0.3.
+      baseBrightness(0.0f),
+      // Fade-out duration in seconds (adjust as needed).
+      fadeDuration(1.0f)
+{
+}
 
+//
+// IMPORTANT: Only update state when the brake state actually changes.
+// If setBrakeActive(false) is called each frame, the fade will never progress!
+//
 void BrakeLightEffect::setBrakeActive(bool active)
 {
-  if (active)
+  // Only update if the state is changing.
+  if (active != brakeActive)
   {
-    // Immediately set full brightness when brakes are applied.
-    brakeActive = true;
-    brightness = 1.0f;
-    size = 1.0f;
-  }
-  else
-  {
-    brakeActive = false;
-    brightness = 0.3f;
+    brakeActive = active;
+    if (brakeActive)
+    {
+      // When brakes are pressed: full brightness.
+      baseBrightness = 1.0f;
+      fadeProgress = 1.0f;
+    }
+    else
+    {
+      // When brakes are released: drop base brightness immediately to 0.3
+      // and start the fade (fadeProgress counts down from 1 to 0).
+      baseBrightness = 0.3f;
+      fadeProgress = 1.0f;
+    }
   }
 }
 
 void BrakeLightEffect::update()
 {
-  // Get the current time in milliseconds.
   unsigned long currentTime = millis();
-
-  // Initialize lastUpdate on the very first call.
   if (lastUpdate == 0)
   {
     lastUpdate = currentTime;
     return;
   }
 
-  // Compute the elapsed time (dt) in seconds.
+  // Compute elapsed time in seconds.
   unsigned long dtMillis = currentTime - lastUpdate;
   float dtSeconds = dtMillis / 1000.0f;
   lastUpdate = currentTime;
 
-  // Define the dimming rates.
-  const float BRIGHTNESS_DIM_RATE = 1.0f; // brightness reduction per second
-  const float SIZE_DIM_RATE = 0.9f;       // reduction in lit area (from edges)
-
   if (!brakeActive)
   {
-    // When brakes are released, reduce brightness in a nonlinear fashion.
-    // Multiplying by brightness causes the drop to slow as brightness nears 0.
-    brightness -= BRIGHTNESS_DIM_RATE * pow(brightness, 0.5f) * dtSeconds;
-    if (brightness < 0.0f)
-      brightness = 0.0f;
-
-    // Reduce the size of the fully lit central region linearly.
-    size -= SIZE_DIM_RATE * dtSeconds;
-    if (size < 0.0f)
-      size = 0.0f;
+    // Decrease fadeProgress linearly over fadeDuration seconds.
+    fadeProgress -= dtSeconds / fadeDuration;
+    if (fadeProgress < 0.0f)
+    {
+      fadeProgress = 0.0f;
+    }
   }
   else
   {
-    // When brakes are pressed, restore full brightness and size.
-    brightness = 1.0f;
-    size = 1.0f;
+    // When brakes are pressed, keep fadeProgress at full.
+    fadeProgress = 1.0f;
   }
 }
 
@@ -72,46 +85,44 @@ void BrakeLightEffect::render(std::vector<Color> &buffer)
 
   if (brakeActive)
   {
-    // With brakes active, show a solid red (full brightness) across all LEDs.
     for (uint16_t i = 0; i < ledManager->getNumLEDs(); i++)
     {
       buffer[i].r = 255;
       buffer[i].g = 0;
       buffer[i].b = 0;
     }
+
+    return;
   }
-  else if (brightness > 0.0f && size > 0.0f)
+
+  uint16_t numLEDs = ledManager->getNumLEDs();
+  uint16_t mid = numLEDs / 2;
+
+  // Compute the fade factor using the ease‑in quadratic curve.
+  float fadeFactor = easeInQuadratic(fadeProgress);
+  // Overall brightness is the base brightness (1.0 when braking, 0.3 when released)
+  // scaled by the fade factor.
+  float overallBrightness = baseBrightness * fadeFactor;
+
+  // Spatial fading: LEDs farther from the center fade faster.
+  // Adjust spatialExponent to change how aggressively the fade is applied.
+  constexpr float spatialExponent = 1.0f;
+
+  for (uint16_t i = 0; i < numLEDs; i++)
   {
-    // When brakes are released, show a gradient that fades out from the edges
-    // toward the center as the 'size' value decreases.
-    // The LEDs inside the cutoff (defined by 'size') remain at full brightness
-    // (scaled by the overall 'brightness'), while those outside fade aggressively.
-    uint16_t mid = ledManager->getNumLEDs() / 2;
-    const float rollOffExponent = 3.0f; // Higher values yield a steeper fade
+    // Calculate the normalized distance from the center (0 at center, 1 at edge).
+    float normDist = (mid > 0)
+                         ? fabs(static_cast<float>(i) - mid) / mid
+                         : 0.0f;
+    // The spatial factor lowers brightness for LEDs farther from the center.
+    float spatialFactor = pow(1.0f - normDist, spatialExponent);
 
-    for (uint16_t i = 0; i < ledManager->getNumLEDs(); i++)
-    {
-      // Calculate a normalized distance from the center (0 at center, 1 at edges).
-      float normDist = (mid > 0)
-                           ? fabs((int)i - (int)mid) / static_cast<float>(mid)
-                           : 0.0f;
+    // Final LED brightness is the product of overall brightness and spatial factor.
+    float ledBrightness = overallBrightness * spatialFactor;
 
-      float localBrightness = brightness; // Base brightness for this LED.
-
-      // if the led is bigger than the size, reduce the brightness
-      if (normDist > size)
-      {
-        // Calculate the normalized distance beyond the cutoff.
-        float distBeyond = (normDist - size) / (1.0f - size);
-        // Apply a nonlinear roll-off to the brightness.
-        localBrightness *= pow(1.0f - distBeyond, rollOffExponent);
-      }
-
-      // Calculate the red channel intensity.
-      uint8_t redVal = static_cast<uint8_t>(255 * localBrightness);
-      buffer[i].r = redVal;
-      buffer[i].g = 0;
-      buffer[i].b = 0;
-    }
+    uint8_t redVal = static_cast<uint8_t>(255 * ledBrightness);
+    buffer[i].r = redVal;
+    buffer[i].g = 0;
+    buffer[i].b = 0;
   }
 }

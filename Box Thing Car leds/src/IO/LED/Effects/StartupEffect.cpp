@@ -17,8 +17,7 @@ StartupEffect::StartupEffect(LEDManager *ledManager, uint8_t priority, bool tran
       dash_length(15),
       edge_stop(15)
 {
-    num_leds = ledManager->getNumLEDs();
-    center = num_leds / 2.0f;
+    center = ledManager->getNumLEDs() / 2.0f;
     left_dash_pos = center;
     right_dash_pos = center;
     fill_progress = 0.0f;
@@ -34,7 +33,12 @@ void StartupEffect::setActive(bool a)
     if (active)
     {
         phase = 0;
-        phase_start = millis(); // Record the starting time (ms)
+        phase_start = millis(); // Record the starting time (ms)]
+
+        left_dash_pos = center;
+        right_dash_pos = center;
+        fill_progress = 0.0f;
+        split_progress = 0.0f;
     }
     else
     {
@@ -129,7 +133,7 @@ void StartupEffect::render(std::vector<Color> &buffer)
 {
     if (!active)
         return;
-    uint16_t num = num_leds;
+    uint16_t num = ledManager->getNumLEDs();
     // Phase 0: Red dot at center.
     if (phase == 0)
     {

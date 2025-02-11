@@ -34,7 +34,6 @@ private:
   uint16_t dash_length; // number of LEDs in each dash
   uint16_t edge_stop;   // final red region size at each strip end
 
-  uint16_t num_leds; // total number of LEDs
   float center;      // center of the LED strip (as a float)
 
   // Internal state variables

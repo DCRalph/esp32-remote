@@ -202,18 +202,18 @@ void loop()
     lastSimTime = currentTime;
 
     // Toggle indicator states.
-    leftIndicatorActive = !leftIndicatorActive;
-    rightIndicatorActive = !rightIndicatorActive;
-    leftIndicator->setIndicatorActive(leftIndicatorActive);
-    rightIndicator->setIndicatorActive(rightIndicatorActive);
+    // leftIndicatorActive = !leftIndicatorActive;
+    // rightIndicatorActive = !rightIndicatorActive;
+    // leftIndicator->setIndicatorActive(leftIndicatorActive);
+    // rightIndicator->setIndicatorActive(rightIndicatorActive);
   }
 
-  // brakeEffect->setBrakeActive(io0.read());
+  brakeEffect->setBrakeActive(io0.read());
   // leftIndicator->setIndicatorActive(io0.read());
   // rightIndicator->setIndicatorActive(io0.read());
   // reverseLight->setActive(io0.read());
   // rgbEffect->setActive(io0.read());
-  startupEffect->setActive(io0.read());
+  // startupEffect->setActive(io0.read());
 
   // Update and draw the LED effects.
   ledManager->updateEffects();
