@@ -17,4 +17,7 @@
 
 // PINS
 
-#define LED_PIN 21
+#define LED_PIN 15
+
+#define NUM_LEDS 100 // Example LED strip length
+#define LEDS_PIN 16

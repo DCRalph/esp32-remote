@@ -3,6 +3,7 @@
 
 class GpIO;
 
+extern GpIO io0;
 extern GpIO led;
 
 
@@ -21,9 +22,16 @@ private:
   PinMode mode;
   bool activeState;
 
+  bool debounceEnabled;
+  unsigned long debounceTime;
+  unsigned long lastDebounceTime;
+  bool lastStableValue;
+  bool lastReadValue;
+
   String PinModeString(PinMode mode);
 
 public:
+  GpIO();
   GpIO(uint8_t _pin, PinMode _mode);
   GpIO(uint8_t _pin, PinMode _mode, bool _activeState);
 
@@ -32,7 +40,7 @@ public:
   void SetMode(PinMode _mode);
   void SetActiveState(bool _activeState);
 
-  void Write(uint8_t _value);
+  void Write(bool _value);
   void PWM(uint8_t _value);
 
   bool read();
@@ -41,6 +49,8 @@ public:
   void Toggle();
   void On();
   void Off();
+
+  void enableDebounce(unsigned long debounceTime);
 
   uint8_t getPin();
   PinMode getMode();

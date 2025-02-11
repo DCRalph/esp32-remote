@@ -1,6 +1,67 @@
 #include "LEDManager.h"
 #include <algorithm>
 
+// Implementation of the Color structure.
+// range of h: [0, 360), s: [0, 1], v: [0, 1]
+// returns: RGB color with components in the range [0, 255].
+Color Color::hsv2rgb(float h, float s, float v)
+{
+  // Convert HSV to RGB color space.
+  float r, g, b;
+  int i;
+  float f, p, q, t;
+
+  if (s == 0)
+  {
+    // Achromatic (grey)
+    r = g = b = v;
+    return Color(r * 255, g * 255, b * 255);
+  }
+
+  h /= 60; // sector 0 to 5
+  i = floor(h);
+  f = h - i; // factorial part of h
+  p = v * (1 - s);
+  q = v * (1 - s * f);
+  t = v * (1 - s * (1 - f));
+
+  switch (i)
+  {
+  case 0:
+    r = v;
+    g = t;
+    b = p;
+    break;
+  case 1:
+    r = q;
+    g = v;
+    b = p;
+    break;
+  case 2:
+    r = p;
+    g = v;
+    b = t;
+    break;
+  case 3:
+    r = p;
+    g = q;
+    b = v;
+    break;
+  case 4:
+    r = t;
+    g = p;
+    b = v;
+    break;
+  default: // case 5:
+    r = v;
+    g = p;
+    b = q;
+    break;
+  }
+
+  return Color(r * 255, g * 255, b * 255);
+}
+
 LEDManager::LEDManager(uint16_t numLEDs)
     : numLEDs(numLEDs), ledBuffer(numLEDs)
 {

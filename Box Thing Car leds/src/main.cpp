@@ -9,7 +9,7 @@
 #include "IO/LED/Effects/RGBEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
-#define NUM_LEDS 110 // Example LED strip length
+
 
 CRGB leds[NUM_LEDS];
 
@@ -146,7 +146,7 @@ void setup()
   wireless.setup();
   wireless.setRecvCb(espNowRecvCb);
 
-  FastLED.addLeds<WS2812, 5, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812, LEDS_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(255);
 
   leds[0] = CRGB(255, 0, 0);
@@ -174,7 +174,8 @@ void setup()
   ledManager->addEffect(rgbEffect);
   ledManager->addEffect(startupEffect);
 
-  startupEffect->setActive(true);
+  // startupEffect->setActive(true);
+  // rgbEffect->setActive(true);
 
   lastRecvTime = millis(); // Initialize last receive time
 
@@ -206,6 +207,13 @@ void loop()
     leftIndicator->setIndicatorActive(leftIndicatorActive);
     rightIndicator->setIndicatorActive(rightIndicatorActive);
   }
+
+  // brakeEffect->setBrakeActive(io0.read());
+  // leftIndicator->setIndicatorActive(io0.read());
+  // rightIndicator->setIndicatorActive(io0.read());
+  // reverseLight->setActive(io0.read());
+  // rgbEffect->setActive(io0.read());
+  startupEffect->setActive(io0.read());
 
   // Update and draw the LED effects.
   ledManager->updateEffects();

@@ -1,5 +1,6 @@
 #include "GPIO.h"
 
+GpIO io0(0, InputPullup, LOW);
 GpIO led(LED_PIN, Output, HIGH);
 
 String GpIO::PinModeString(PinMode mode)
@@ -17,11 +18,24 @@ String GpIO::PinModeString(PinMode mode)
   }
 }
 
+GpIO::GpIO()
+{
+  pin = -1;
+  mode = Input;
+  activeState = HIGH;
+}
+
 GpIO::GpIO(uint8_t _pin, PinMode _mode)
 {
   pin = _pin;
   mode = _mode;
   activeState = HIGH;
+
+  debounceEnabled = false;
+  debounceTime = 0;
+  lastDebounceTime = 0;
+  lastStableValue = digitalRead(pin);
+  lastReadValue = lastStableValue;
 }
 
 GpIO::GpIO(uint8_t _pin, PinMode _mode, bool _activeState)
@@ -29,6 +43,12 @@ GpIO::GpIO(uint8_t _pin, PinMode _mode, bool _activeState)
   pin = _pin;
   mode = _mode;
   activeState = _activeState;
+
+  debounceEnabled = false;
+  debounceTime = 0;
+  lastDebounceTime = 0;
+  lastStableValue = digitalRead(pin);
+  lastReadValue = lastStableValue;
 }
 
 void GpIO::init()
@@ -53,11 +73,11 @@ void GpIO::SetActiveState(bool _activeState)
   activeState = _activeState;
 }
 
-void GpIO::Write(uint8_t _value)
+void GpIO::Write(bool _value)
 {
   if (mode == Input)
     return;
-  digitalWrite(pin, _value);
+  digitalWrite(pin, _value ^ !activeState);
 }
 
 void GpIO::PWM(uint8_t _value)
@@ -69,7 +89,29 @@ void GpIO::PWM(uint8_t _value)
 
 bool GpIO::read()
 {
-  return digitalRead(pin) == activeState;
+  if (debounceEnabled)
+  {
+    bool currentValue = digitalRead(pin);
+    if (currentValue != lastReadValue)
+    {
+      lastDebounceTime = millis();
+      lastReadValue = currentValue;
+    }
+
+    if ((millis() - lastDebounceTime) > debounceTime)
+    {
+      if (lastStableValue != lastReadValue)
+      {
+        lastStableValue = lastReadValue;
+      }
+    }
+
+    return lastStableValue == activeState;
+  }
+  else
+  {
+    return digitalRead(pin) == activeState;
+  }
 }
 
 int GpIO::analogRead()
@@ -98,6 +140,15 @@ void GpIO::Off()
   digitalWrite(pin, !activeState);
 }
 
+void GpIO::enableDebounce(unsigned long _debounceTime)
+{
+  debounceEnabled = true;
+  debounceTime = _debounceTime;
+  lastDebounceTime = millis();
+  lastStableValue = digitalRead(pin);
+  lastReadValue = lastStableValue;
+}
+
 uint8_t GpIO::getPin()
 {
   return pin;
@@ -111,6 +162,9 @@ PinMode GpIO::getMode()
 void GpIO::initIO()
 {
   Serial.println("\t[INFO] [IO] Configuring pins...");
+
+  io0.init();
+  io0.enableDebounce(50);
 
   led.init();
 

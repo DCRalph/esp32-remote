@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <vector>
 
-class RGBEffect : public LEDEffect {
+class RGBEffect : public LEDEffect
+{
 public:
   // Constructs the RGB (rainbow) effect. The effect will map the hue from the center to the edges.
   RGBEffect(LEDManager *_ledManager, uint8_t priority = 0, bool transparent = false);
@@ -35,10 +36,4 @@ private:
 
   // Last update time for animation calculation.
   unsigned long lastUpdateTime;
-
-  // Helper function to convert HSV to RGB.
-  // h: hue angle in degrees [0,360), s and v are in [0,1].
-  // The computed r,g,b values are in [0,255].
-  void HsvToRgb(float h, float s, float v,
-                uint8_t &outR, uint8_t &outG, uint8_t &outB);
 };

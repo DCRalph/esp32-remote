@@ -15,6 +15,8 @@ struct Color
   Color() : r(0), g(0), b(0) {}
   Color(uint8_t red, uint8_t green, uint8_t blue)
       : r(red), g(green), b(blue) {}
+
+  static Color hsv2rgb(float h, float s, float v);
 };
 
 class LEDEffect; // Forward declaration of effect class
