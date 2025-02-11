@@ -1,5 +1,5 @@
 
-#include "secrets.h"
+// #include "secrets.h"
 
 #include "config.h"
 
@@ -12,6 +12,7 @@
 #include "IO/LED/Effects/IndicatorEffect.h"
 #include "IO/LED/Effects/ReverseLightEffect.h"
 #include "IO/LED/Effects/RGBEffect.h"
+#include "IO/LED/Effects/StartupEffect.h"
 
 #define NUM_LEDS 60 // Example LED strip length
 
@@ -42,6 +43,7 @@ IndicatorEffect *leftIndicator;
 IndicatorEffect *rightIndicator;
 ReverseLightEffect *reverseLight;
 RGBEffect *rgbEffect;
+StartupEffect *startupEffect;
 
 
 // Global simulation control flag
@@ -55,6 +57,7 @@ bool leftIndicatorActive = false;
 bool rightIndicatorActive = false;
 bool reverseLightActive = false;
 bool rgbEffectActive = false;
+bool startupEffectActive = false;
 
 void espNowRecvCb(fullPacket *fp)
 {
@@ -88,6 +91,7 @@ void setup()
   rightIndicator = new IndicatorEffect(ledManager, IndicatorEffect::RIGHT, 10, true);
   reverseLight = new ReverseLightEffect(ledManager, 6, false);
   rgbEffect = new RGBEffect(ledManager, 0, false);
+  startupEffect = new StartupEffect(ledManager, 9, false);
 
   ledManager->setFPS(100); // Set the desired FPS for the LED manager.
 
@@ -97,8 +101,9 @@ void setup()
   ledManager->addEffect(rightIndicator);
   ledManager->addEffect(reverseLight);
   ledManager->addEffect(rgbEffect);
+  ledManager->addEffect(startupEffect);
 
-  rgbEffect->setActive(true);
+  // rgbEffect->setActive(true);
 
   led.On();
   delay(500);
