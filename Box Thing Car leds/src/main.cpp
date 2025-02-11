@@ -1,12 +1,7 @@
-
 // #include "secrets.h"
-
 #include "config.h"
-
 #include "IO/Wireless.h"
-
 #include "FastLED.h"
-
 #include "IO/LED/LEDManager.h"
 #include "IO/LED/Effects/BrakeLightEffect.h"
 #include "IO/LED/Effects/IndicatorEffect.h"
@@ -14,7 +9,7 @@
 #include "IO/LED/Effects/RGBEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
-#define NUM_LEDS 60 // Example LED strip length
+#define NUM_LEDS 100 // Example LED strip length
 
 CRGB leds[NUM_LEDS];
 
@@ -25,13 +20,11 @@ public:
 
   virtual void draw() override
   {
-    // Serial.print("LED Buffer: ");
     for (int i = 0; i < numLEDs; i++)
     {
       leds[i] = CRGB(ledBuffer[i].r, ledBuffer[i].g, ledBuffer[i].b);
     }
     FastLED.show();
-    // Serial.println();
   }
 };
 
@@ -44,7 +37,6 @@ IndicatorEffect *rightIndicator;
 ReverseLightEffect *reverseLight;
 RGBEffect *rgbEffect;
 StartupEffect *startupEffect;
-
 
 // Global simulation control flag
 bool simulateEffects = true;
@@ -59,8 +51,88 @@ bool reverseLightActive = false;
 bool rgbEffectActive = false;
 bool startupEffectActive = false;
 
+// Wireless timeout (ms)
+const unsigned long WIRELESS_TIMEOUT_MS = 5000;
+// Last time a wireless packet was received.
+unsigned long lastRecvTime = 0;
+
+// Packet types
+enum PacketType
+{
+  CAR_CONTROL_PACKET = 0,
+  EFFECT_CONTROL_PACKET = 1
+};
+
+// Structure for car control data
+struct CarControlData
+{
+  bool brake;
+  bool leftIndicator;
+  bool rightIndicator;
+  bool reverseLight;
+};
+
+// Structure for effect control data
+struct EffectControlData
+{
+  bool rgbEffect;
+  bool startupEffect;
+};
+
+// Function to deactivate all effects
+void deactivateAllEffects()
+{
+  brakeEffect->setBrakeActive(false);
+  leftIndicator->setIndicatorActive(false);
+  rightIndicator->setIndicatorActive(false);
+  reverseLight->setActive(false);
+  rgbEffect->setActive(false);
+  startupEffect->setActive(false);
+
+  brakePressed = false;
+  leftIndicatorActive = false;
+  rightIndicatorActive = false;
+  reverseLightActive = false;
+  rgbEffectActive = false;
+  startupEffectActive = false;
+}
+
+// ESP-NOW receive callback function
 void espNowRecvCb(fullPacket *fp)
 {
+  lastRecvTime = millis(); // Update last receive time
+
+  // Check packet type and length
+  if (fp->p.type == CAR_CONTROL_PACKET && fp->p.len == sizeof(CarControlData))
+  {
+    CarControlData carData;
+    memcpy(&carData, fp->p.data, sizeof(CarControlData));
+
+    brakeEffect->setBrakeActive(carData.brake);
+    leftIndicator->setIndicatorActive(carData.leftIndicator);
+    rightIndicator->setIndicatorActive(carData.rightIndicator);
+    reverseLight->setActive(carData.reverseLight);
+
+    brakePressed = carData.brake;
+    leftIndicatorActive = carData.leftIndicator;
+    rightIndicatorActive = carData.rightIndicator;
+    reverseLightActive = carData.reverseLight;
+  }
+  else if (fp->p.type == EFFECT_CONTROL_PACKET && fp->p.len == sizeof(EffectControlData))
+  {
+    EffectControlData effectData;
+    memcpy(&effectData, fp->p.data, sizeof(EffectControlData));
+
+    rgbEffect->setActive(effectData.rgbEffect);
+    startupEffect->setActive(effectData.startupEffect);
+
+    rgbEffectActive = effectData.rgbEffect;
+    startupEffectActive = effectData.startupEffect;
+  }
+  else
+  {
+    Serial.println("[ERROR] [WIRELESS] Invalid packet received!");
+  }
 }
 
 void setup()
@@ -93,8 +165,6 @@ void setup()
   rgbEffect = new RGBEffect(ledManager, 0, false);
   startupEffect = new StartupEffect(ledManager, 9, false);
 
-  ledManager->setFPS(100); // Set the desired FPS for the LED manager.
-
   // Add the effects to the LED manager.
   ledManager->addEffect(brakeEffect);
   ledManager->addEffect(leftIndicator);
@@ -103,49 +173,35 @@ void setup()
   ledManager->addEffect(rgbEffect);
   ledManager->addEffect(startupEffect);
 
-  // rgbEffect->setActive(true);
+  lastRecvTime = millis(); // Initialize last receive time
 
   led.On();
   delay(500);
   led.Off();
 }
+
 void loop()
 {
   unsigned long currentTime = millis();
+  wireless.loop();
+
+  // Check for wireless timeout
+  if (currentTime - lastRecvTime > WIRELESS_TIMEOUT_MS)
+  {
+    Serial.println("[WARNING] [WIRELESS] Connection lost!");
+    deactivateAllEffects();
+  }
 
   // If simulation mode is enabled, automatically toggle effect states every simInterval.
   if (simulateEffects && (currentTime - lastSimTime > simInterval))
   {
     lastSimTime = currentTime;
 
-    // Toggle brake state.
-    // brakePressed = !brakePressed;
-    // brakeEffect->setBrakeActive(brakePressed);
-    // Serial.print("Simulation - Brake Pressed: ");
-    // Serial.println(brakePressed ? "YES" : "NO");
-
     // Toggle indicator states.
     leftIndicatorActive = !leftIndicatorActive;
     rightIndicatorActive = !rightIndicatorActive;
     leftIndicator->setIndicatorActive(leftIndicatorActive);
     rightIndicator->setIndicatorActive(rightIndicatorActive);
-
-    // Serial.print("Simulation - Left Indicator: ");
-    // Serial.println(leftIndicatorActive ? "ON" : "OFF");
-    // Serial.print("Simulation - Right Indicator: ");
-    // Serial.println(rightIndicatorActive ? "ON" : "OFF");
-
-    // Toggle reverse light state.
-    // reverseLightActive = !reverseLightActive;
-    // reverseLight->setActive(reverseLightActive);
-    // Serial.print("Simulation - Reverse Light: ");
-    // Serial.println(reverseLightActive ? "ON" : "OFF");
-
-    // Toggle RGB effect state.
-    // rgbEffectActive = !rgbEffectActive;
-    // rgbEffect->setActive(rgbEffectActive);
-    // Serial.print("Simulation - RGB Effect: ");
-    // Serial.println(rgbEffectActive ? "ON" : "OFF");
   }
 
   // Update and draw the LED effects.
@@ -193,6 +249,10 @@ void loop()
       Serial.println(F("  l off    - Deactivate left indicator"));
       Serial.println(F("  r on    - Activate right indicator"));
       Serial.println(F("  r off   - Deactivate right indicator"));
+      Serial.println(F("  rev on  - Activate reverse light"));
+      Serial.println(F("  rev off - Deactivate reverse light"));
+      Serial.println(F("  rgb on  - Activate RGB effect"));
+      Serial.println(F("  rgb off - Deactivate RGB effect"));
       Serial.println(F("  sim on      - Enable simulation mode"));
       Serial.println(F("  sim off     - Disable simulation mode"));
       Serial.println(F("  status      - Display current effect states"));
@@ -233,6 +293,30 @@ void loop()
       rightIndicator->setIndicatorActive(false);
       Serial.println(F("Right indicator deactivated."));
     }
+    else if (input.equalsIgnoreCase("rev on"))
+    {
+      reverseLightActive = true;
+      reverseLight->setActive(true);
+      Serial.println(F("Reverse light activated."));
+    }
+    else if (input.equalsIgnoreCase("rev off"))
+    {
+      reverseLightActive = false;
+      reverseLight->setActive(false);
+      Serial.println(F("Reverse light deactivated."));
+    }
+    else if (input.equalsIgnoreCase("rgb on"))
+    {
+      rgbEffectActive = true;
+      rgbEffect->setActive(true);
+      Serial.println(F("RGB effect activated."));
+    }
+    else if (input.equalsIgnoreCase("rgb off"))
+    {
+      rgbEffectActive = false;
+      rgbEffect->setActive(false);
+      Serial.println(F("RGB effect deactivated."));
+    }
     else if (input.equalsIgnoreCase("sim on"))
     {
       simulateEffects = true;
@@ -251,6 +335,10 @@ void loop()
       Serial.println(leftIndicatorActive ? F("ON") : F("OFF"));
       Serial.print(F("Right Indicator: "));
       Serial.println(rightIndicatorActive ? F("ON") : F("OFF"));
+      Serial.print(F("Reverse Light: "));
+      Serial.println(reverseLightActive ? F("ON") : F("OFF"));
+      Serial.print(F("RGB Effect: "));
+      Serial.println(rgbEffectActive ? F("ON") : F("OFF"));
       Serial.print(F("Simulation: "));
       Serial.println(simulateEffects ? F("ENABLED") : F("DISABLED"));
     }
