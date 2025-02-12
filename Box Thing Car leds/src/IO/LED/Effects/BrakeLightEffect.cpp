@@ -20,7 +20,7 @@ BrakeLightEffect::BrakeLightEffect(LEDManager *_ledManager, uint8_t priority,
       // Full brightness when braking; when released this is immediately set to 0.3.
       baseBrightness(0.0f),
       // Fade-out duration in seconds (adjust as needed).
-      fadeDuration(1.0f)
+      fadeDuration(0.6f)
 {
 }
 
@@ -48,7 +48,7 @@ void BrakeLightEffect::setActive(bool active)
   {
     // When brakes are released: drop base brightness immediately to 0.3
     // and start the fade (fadeProgress counts down from 1 to 0).
-    baseBrightness = 0.3f;
+    baseBrightness = 0.4f;
     fadeProgress = 1.0f;
   }
 }
@@ -91,6 +91,27 @@ void BrakeLightEffect::update()
 void BrakeLightEffect::render(std::vector<Color> &buffer)
 {
 
+  if (isReversing)
+  {
+    if (brakeActive)
+    {
+      int numLeds = ledManager->getNumLEDs() / 5;
+
+      for (uint16_t i = 0; i < numLeds; i++)
+      {
+        buffer[i].r = 255;
+        buffer[i].g = 0;
+        buffer[i].b = 0;
+
+        buffer[ledManager->getNumLEDs() - i - 1].r = 255;
+        buffer[ledManager->getNumLEDs() - i - 1].g = 0;
+        buffer[ledManager->getNumLEDs() - i - 1].b = 0;
+      }
+    }
+
+    return;
+  }
+
   if (brakeActive)
   {
     for (uint16_t i = 0; i < ledManager->getNumLEDs(); i++)
@@ -103,6 +124,13 @@ void BrakeLightEffect::render(std::vector<Color> &buffer)
     return;
   }
 
+  if (fadeProgress <= 0.0f)
+  {
+    return;
+  }
+
+  // if reversing only light up the edges
+
   uint16_t numLEDs = ledManager->getNumLEDs();
   uint16_t mid = numLEDs / 2;
 
@@ -114,7 +142,7 @@ void BrakeLightEffect::render(std::vector<Color> &buffer)
 
   // Spatial fading: LEDs farther from the center fade faster.
   // Adjust spatialExponent to change how aggressively the fade is applied.
-  constexpr float spatialExponent = 1.0f;
+  constexpr float spatialExponent = 2.0f;
 
   for (uint16_t i = 0; i < numLEDs; i++)
   {
@@ -123,6 +151,7 @@ void BrakeLightEffect::render(std::vector<Color> &buffer)
                          ? fabs(static_cast<float>(i) - mid) / mid
                          : 0.0f;
     // The spatial factor lowers brightness for LEDs farther from the center.
+    // changing the exponent will change how aggressively the fade is applied for.
     float spatialFactor = pow(1.0f - normDist, spatialExponent);
 
     // Final LED brightness is the product of overall brightness and spatial factor.

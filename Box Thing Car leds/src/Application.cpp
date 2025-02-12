@@ -65,7 +65,7 @@ void Application::begin()
   ledManager->setDrawFunction(drawLEDs);
 
   // Set each effect's LED manager pointer.
-  brakeEffect = new BrakeLightEffect(ledManager, 5, false);
+  brakeEffect = new BrakeLightEffect(ledManager, 8, false);
   leftIndicatorEffect = new IndicatorEffect(ledManager, IndicatorEffect::LEFT,
                                             10, true);
   rightIndicatorEffect = new IndicatorEffect(ledManager, IndicatorEffect::RIGHT,
@@ -99,7 +99,15 @@ void Application::update()
     // (Optional) You could cycle effects in test mode here.
     // For this example we don't change effect states.
 
+    reverseLightEffect->setActive(true);
+    brakeEffect->setIsReversing(true);
+
     brakeEffect->setActive(io0.read());
+    leftIndicatorEffect->setActive(io0.read());
+    // rightIndicatorEffect->setActive(io0.read());
+    // reverseLightEffect->setActive(io0.read());
+    // rgbEffect->setActive(io0.read());
+    // startupEffect->setActive(io0.read());
   }
   else
   {
@@ -155,8 +163,8 @@ void Application::handleEffects()
 
     // When ACC is off, ignore other effects.
     brakeEffect->setActive(false);
-    leftIndicatorEffect->setIndicatorActive(false);
-    rightIndicatorEffect->setIndicatorActive(false);
+    leftIndicatorEffect->setActive(false);
+    rightIndicatorEffect->setActive(false);
     reverseLightEffect->setActive(false);
   }
   else
@@ -172,8 +180,8 @@ void Application::handleEffects()
     brakeEffect->setIsReversing(reverseState);
 
     // Indicator effects: each one on if its respective input is active.
-    leftIndicatorEffect->setIndicatorActive(leftIndicatorState);
-    rightIndicatorEffect->setIndicatorActive(rightIndicatorState);
+    leftIndicatorEffect->setActive(leftIndicatorState);
+    rightIndicatorEffect->setActive(rightIndicatorState);
 
     // Reverse light effect: active if reverse is on.
     reverseLightEffect->setActive(reverseState);

@@ -24,8 +24,8 @@ public:
   IndicatorEffect* getOtherIndicator() const;
 
   // Activate or deactivate the indicator.
-  void setIndicatorActive(bool active);
-  bool getIndicatorActive() const;
+  void setActive(bool active);
+  bool getActive() const;
 
   void syncWithOtherIndicator();
 

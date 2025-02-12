@@ -5,10 +5,10 @@
 #include "Effects.h"
 #include <Arduino.h>
 
-//####################################
-// Uncomment this line to use double buffering for more complex transparent effects.
-// #define USE_2_BUFFERS
-//####################################
+// ####################################
+//  Uncomment this line to use double buffering for more complex transparent effects.
+//  #define USE_2_BUFFERS
+// ####################################
 
 // A simple structure representing an RGB color.
 struct Color
@@ -22,6 +22,30 @@ struct Color
       : r(red), g(green), b(blue) {}
 
   static Color hsv2rgb(float h, float s, float v);
+
+  static const Color WHITE;
+  static const Color BLACK;
+  static const Color RED;
+  static const Color GREEN;
+  static const Color BLUE;
+  static const Color YELLOW;
+  static const Color CYAN;
+  static const Color MAGENTA;
+
+  bool operator==(const Color &other) const
+  {
+    return r == other.r && g == other.g && b == other.b;
+  }
+
+  bool operator!=(const Color &other) const
+  {
+    return !(*this == other);
+  }
+
+  Color operator*(float scalar) const
+  {
+    return Color(r * scalar, g * scalar, b * scalar);
+  }
 };
 
 class LEDEffect; // Forward declaration of effect class

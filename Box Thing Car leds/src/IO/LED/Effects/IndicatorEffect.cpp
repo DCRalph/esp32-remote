@@ -32,7 +32,7 @@ IndicatorEffect *IndicatorEffect::getOtherIndicator() const
   return otherIndicator;
 }
 
-void IndicatorEffect::setIndicatorActive(bool active)
+void IndicatorEffect::setActive(bool active)
 {
   // If state is unchanged, nothing to do.
   if (indicatorActive == active)
@@ -45,7 +45,7 @@ void IndicatorEffect::setIndicatorActive(bool active)
   if (active)
   {
     // If another indicator exists and is active, sync start times.
-    if (otherIndicator != nullptr && otherIndicator->getIndicatorActive())
+    if (otherIndicator != nullptr && otherIndicator->getActive())
     {
       syncWithOtherIndicator();
     }
@@ -70,7 +70,7 @@ void IndicatorEffect::setIndicatorActive(bool active)
   }
 }
 
-bool IndicatorEffect::getIndicatorActive() const
+bool IndicatorEffect::getActive() const
 {
   return indicatorActive;
 }
@@ -112,12 +112,7 @@ void IndicatorEffect::update()
   {
     // Fade factor increases linearly from 0 to 1 over fadeInTime.
     fadeFactor = (float)timeInCycle / fadeInTime;
-
-    if (fadeFactor > 1.0f)
-    {
-      // Ensure fade factor is exactly 1 at the end of the fade-in period.
-      fadeFactor = 1.0f;
-    }
+    fadeFactor = constrain(fadeFactor, 0.0f, 1.0f);
   }
   else
   {
@@ -133,7 +128,6 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
     return;
 
   uint16_t regionLength = ledManager->getNumLEDs() / 5;
-  // regionLength += 1;
 
   if (regionLength <= 1)
   {
@@ -144,62 +138,48 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
   // For the left indicator, the region covers indices 0 to regionLength-1.
   // We want the "inner" edge (the side facing the vehicle) to light first.
   // For the left indicator, that is index (regionLength-1).
-  if (side == LEFT)
+
+  for (uint16_t i = 0; i < regionLength; i++)
   {
-    for (uint16_t i = 0; i < regionLength; i++)
+    // Compute normalized distance from the inner edge.
+    // map i from [0, regionLength] to [0, 1]
+    float d = static_cast<float>(regionLength - i) / regionLength;
+
+    // Determine when LED i should begin lighting.
+    // Here we use d directly as a threshold: the inner LED (d=0) lights up immediately,
+    // while an outer LED (d close to 1) lights only when fadeFactor is nearly 1.
+    float finalFactor = 0.0f;
+    if (fadeFactor >= d)
     {
-      // Compute normalized distance from the inner edge.
-      // For left indicator, define:
-      //    d = (regionLength-1 - i) / (regionLength-1)
-      // So d = 0 at the inner edge (i = regionLength-1) and 1 at the outer edge (i = 0).
-      float d = (float)(regionLength - 1 - i) / (float)(regionLength - 1);
-
-      // Determine when LED i should begin lighting.
-      // Here we use d directly as a threshold: the inner LED (d=0) lights up immediately,
-      // while an outer LED (d close to 1) lights only when fadeFactor is nearly 1.
-      float finalFactor = 0.0f;
-      if (fadeFactor >= d)
-      {
-        // Map fadeFactor onto [0,1] for this LED.
+      // Check if the denominator is nearly zero to avoid division by zero.
+      if (fabs(1.0f - d) < 1e-6)
+        finalFactor = 1.0f;
+      else
         finalFactor = (fadeFactor - d) / (1.0f - d);
-        if (finalFactor > 1.0f)
-        {
-          finalFactor = 1.0f;
-        }
-      }
-
-      // Apply the final factor to the desired base color.
-      buffer[i].r = static_cast<uint8_t>(baseR * finalFactor);
-      buffer[i].g = static_cast<uint8_t>(baseG * finalFactor);
-      buffer[i].b = static_cast<uint8_t>(baseB * finalFactor);
     }
-  }
-  else
-  {
-    // For the right indicator, the region covers indices numLEDs - regionLength to numLEDs-1.
-    // The inner edge is at index numLEDs - regionLength.
-    uint16_t start = ledManager->getNumLEDs() - regionLength;
-    for (uint16_t i = start; i < ledManager->getNumLEDs(); i++)
+
+    finalFactor = constrain(finalFactor, 0.0f, 1.0f);
+
+    // Compute final color for this LED.
+    uint8_t r = baseR * finalFactor;
+    uint8_t g = baseG * finalFactor;
+    uint8_t b = baseB * finalFactor;
+
+    // if (i == 0) // Debugging
+    // {
+    //   Serial.println("fadeFactor: " + String(fadeFactor) + " d: " + String(d) + " finalFactor: " + String(finalFactor));
+    //   Serial.println("i: " + String(i) + " r: " + String(r) + " g: " + String(g) + " b: " + String(b));
+    // }
+
+    // Set the color in the buffer.
+    // should fade in from the center edge
+    if (side == LEFT)
     {
-      // Compute normalized distance from the inner edge.
-      // For the right indicator, define:
-      //    d = (i - start) / (regionLength - 1)
-      // So d = 0 at the inner edge (i = start) and 1 at the outer edge (i = numLEDs-1).
-      float d = (float)(i - start) / (float)(regionLength - 1);
-
-      float finalFactor = 0.0f;
-      if (fadeFactor >= d)
-      {
-        finalFactor = (fadeFactor - d) / (1.0f - d);
-        if (finalFactor > 1.0f)
-        {
-          finalFactor = 1.0f;
-        }
-      }
-
-      buffer[i].r = static_cast<uint8_t>(baseR * finalFactor);
-      buffer[i].g = static_cast<uint8_t>(baseG * finalFactor);
-      buffer[i].b = static_cast<uint8_t>(baseB * finalFactor);
+      buffer[i] = Color(r, g, b);
+    }
+    else
+    {
+      buffer[ledManager->getNumLEDs() - i - 1] = Color(r, g, b);
     }
   }
 }

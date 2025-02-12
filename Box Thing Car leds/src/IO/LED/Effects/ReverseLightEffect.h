@@ -20,8 +20,7 @@ public:
 
 private:
   bool active;
-  float animationSpeed; // in seconds for a full cycle (expand then contract)
-  bool started;
-  float progress; // from 0 to 1
   uint64_t startTime;
+  float animationSpeed; // in seconds for a full cycle (expand then contract)
+  float progress; // from 0 to 1
 };

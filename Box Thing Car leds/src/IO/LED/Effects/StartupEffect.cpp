@@ -138,6 +138,7 @@ void StartupEffect::render(std::vector<Color> &buffer)
 {
     if (!active)
         return;
+
     uint16_t num = ledManager->getNumLEDs();
     // Phase 0: Red dot at center.
     if (phase == 0)
