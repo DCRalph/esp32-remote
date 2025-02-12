@@ -5,8 +5,14 @@
 #include "Effects.h"
 #include <Arduino.h>
 
+//####################################
+// Uncomment this line to use double buffering for more complex transparent effects.
+// #define USE_2_BUFFERS
+//####################################
+
 // A simple structure representing an RGB color.
-struct Color {
+struct Color
+{
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -20,7 +26,8 @@ struct Color {
 
 class LEDEffect; // Forward declaration of effect class
 
-class LEDManager {
+class LEDManager
+{
 public:
   // Constructor that allocates an LED buffer based on the number of LEDs.
   LEDManager(uint16_t numLEDs);
@@ -78,4 +85,3 @@ protected:
   uint64_t lastUpdateDuration;
   uint64_t lastDrawDuration;
 };
-

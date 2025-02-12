@@ -95,8 +95,6 @@ void LEDManager::removeEffect(LEDEffect *effect)
                 effects.end());
 }
 
-// #define USE_2_BUFFERS
-
 void LEDManager::updateEffects()
 {
   // Record the total frame start time.
