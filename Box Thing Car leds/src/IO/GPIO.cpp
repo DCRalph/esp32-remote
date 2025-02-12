@@ -3,6 +3,13 @@
 GpIO io0(0, InputPullup, LOW);
 GpIO led(LED_PIN, Output, HIGH);
 
+GpIO input1(INPUT_1_PIN, Input);
+GpIO input2(INPUT_2_PIN, Input);
+GpIO input3(INPUT_3_PIN, Input);
+GpIO input4(INPUT_4_PIN, Input);
+GpIO input5(INPUT_5_PIN, Input);
+GpIO input6(INPUT_6_PIN, Input);
+
 String GpIO::PinModeString(PinMode mode)
 {
   switch (mode)
@@ -68,7 +75,7 @@ void GpIO::SetMode(PinMode _mode)
   pinMode(pin, mode);
 }
 
-void GpIO::SetActiveState(bool _activeState)
+void GpIO::setActive(bool _activeState)
 {
   activeState = _activeState;
 }
@@ -165,9 +172,14 @@ void GpIO::initIO()
 
   io0.init();
   io0.enableDebounce(50);
-
   led.init();
 
+  input1.init();
+  input2.init();
+  input3.init();
+  input4.init();
+  input5.init();
+  input6.init();
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();

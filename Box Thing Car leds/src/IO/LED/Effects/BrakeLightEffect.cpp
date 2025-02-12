@@ -26,28 +26,36 @@ BrakeLightEffect::BrakeLightEffect(LEDManager *_ledManager, uint8_t priority,
 
 //
 // IMPORTANT: Only update state when the brake state actually changes.
-// If setBrakeActive(false) is called each frame, the fade will never progress!
+// If setActive(false) is called each frame, the fade will never progress!
 //
-void BrakeLightEffect::setBrakeActive(bool active)
+void BrakeLightEffect::setActive(bool active)
 {
   // Only update if the state is changing.
-  if (active != brakeActive)
+  if (active == brakeActive)
   {
-    brakeActive = active;
-    if (brakeActive)
-    {
-      // When brakes are pressed: full brightness.
-      baseBrightness = 1.0f;
-      fadeProgress = 1.0f;
-    }
-    else
-    {
-      // When brakes are released: drop base brightness immediately to 0.3
-      // and start the fade (fadeProgress counts down from 1 to 0).
-      baseBrightness = 0.3f;
-      fadeProgress = 1.0f;
-    }
+    return;
   }
+
+  brakeActive = active;
+
+  if (brakeActive)
+  {
+    // When brakes are pressed: full brightness.
+    baseBrightness = 1.0f;
+    fadeProgress = 1.0f;
+  }
+  else
+  {
+    // When brakes are released: drop base brightness immediately to 0.3
+    // and start the fade (fadeProgress counts down from 1 to 0).
+    baseBrightness = 0.3f;
+    fadeProgress = 1.0f;
+  }
+}
+
+void BrakeLightEffect::setIsReversing(bool reversing)
+{
+  isReversing = reversing;
 }
 
 void BrakeLightEffect::update()

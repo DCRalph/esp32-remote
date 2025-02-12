@@ -5,6 +5,8 @@ ReverseLightEffect::ReverseLightEffect(LEDManager *_ledManager, uint8_t priority
     : LEDEffect(_ledManager, priority, transparent), active(false) {}
 
 void ReverseLightEffect::setActive(bool _active) {
+  if (active == _active)
+    return;
   active = _active;
 }
 

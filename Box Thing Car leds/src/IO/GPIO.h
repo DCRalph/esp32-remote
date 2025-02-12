@@ -6,7 +6,12 @@ class GpIO;
 extern GpIO io0;
 extern GpIO led;
 
-
+extern GpIO input1;
+extern GpIO input2;
+extern GpIO input3;
+extern GpIO input4;
+extern GpIO input5;
+extern GpIO input6;
 
 enum PinMode
 {
@@ -38,7 +43,7 @@ public:
   void init();
 
   void SetMode(PinMode _mode);
-  void SetActiveState(bool _activeState);
+  void setActive(bool _activeState);
 
   void Write(bool _value);
   void PWM(uint8_t _value);

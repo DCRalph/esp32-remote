@@ -47,6 +47,11 @@ void StartupEffect::setActive(bool a)
     }
 }
 
+bool StartupEffect::isActive()
+{
+    return active;
+}
+
 void StartupEffect::update()
 {
     if (!active)

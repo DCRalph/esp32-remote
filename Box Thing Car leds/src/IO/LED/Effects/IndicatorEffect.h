@@ -19,8 +19,15 @@ public:
   virtual void update() override;
   virtual void render(std::vector<Color>& buffer) override;
 
+
+  void setOtherIndicator(IndicatorEffect* otherIndicator);
+  IndicatorEffect* getOtherIndicator() const;
+
   // Activate or deactivate the indicator.
   void setIndicatorActive(bool active);
+  bool getIndicatorActive() const;
+
+  void syncWithOtherIndicator();
 
   // Customizable parameters:
   unsigned long blinkCycle;    // Total blink period in ms (default: 1000)
@@ -33,6 +40,9 @@ public:
 private:
   Side side;
   bool indicatorActive;
+
+  IndicatorEffect *otherIndicator; // Pointer to the other indicator effect.
+  bool synced; // Whether the indicator has been synced with the other indicator.
 
   uint64_t activatedTime; // Time when the indicator was last activated.
 

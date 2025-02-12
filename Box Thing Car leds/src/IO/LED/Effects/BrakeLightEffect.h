@@ -13,12 +13,14 @@ public:
   virtual void render(std::vector<Color> &buffer) override;
 
   // Set whether the brakes are active.
-  void setBrakeActive(bool active);
+  void setActive(bool active);
+  void setIsReversing(bool reversing);
 
 private:
   unsigned long lastUpdate;
 
   bool brakeActive;
+  bool isReversing;
 
   float fadeProgress;
   float baseBrightness;

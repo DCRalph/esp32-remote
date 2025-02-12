@@ -10,28 +10,88 @@ IndicatorEffect::IndicatorEffect(LEDManager *_ledManager, Side side, uint8_t pri
       fadeFactor(0.0f),
       // Default parameters – feel free to adjust.
       blinkCycle(1200),
-      fadeInTime(250),
-      baseR(255),
-      baseG(120),
-      baseB(0)
+      fadeInTime(250)
 {
+  activatedTime = 0;
+  otherIndicator = nullptr;
+  synced = false;
+
+  // Default color is amber/yellow.
+  baseR = 255;
+  baseG = 120;
+  baseB = 0;
+}
+
+void IndicatorEffect::setOtherIndicator(IndicatorEffect *otherIndicator)
+{
+  this->otherIndicator = otherIndicator;
+}
+
+IndicatorEffect *IndicatorEffect::getOtherIndicator() const
+{
+  return otherIndicator;
 }
 
 void IndicatorEffect::setIndicatorActive(bool active)
 {
-  if (!indicatorActive && active)
+  // If state is unchanged, nothing to do.
+  if (indicatorActive == active)
   {
-    // When activated, record the time.
-    activatedTime = millis();
+    return;
   }
 
   indicatorActive = active;
 
-  if (!active)
+  if (active)
   {
-    // When deactivated, reset fade factor.
-    fadeFactor = 0.0f;
+    // If another indicator exists and is active, sync start times.
+    if (otherIndicator != nullptr && otherIndicator->getIndicatorActive())
+    {
+      syncWithOtherIndicator();
+    }
+    else
+    {
+      // Otherwise, simply set this activatedTime.
+      activatedTime = millis();
+    }
   }
+  else
+  {
+    // Clear fade factor if the indicator is turned off.
+    fadeFactor = 0.0f;
+    activatedTime = 0;
+
+    if (synced == true)
+    {
+      synced = false;
+      if (otherIndicator != nullptr)
+        otherIndicator->synced = false;
+    }
+  }
+}
+
+bool IndicatorEffect::getIndicatorActive() const
+{
+  return indicatorActive;
+}
+
+void IndicatorEffect::syncWithOtherIndicator()
+{
+  if (otherIndicator == nullptr)
+  {
+    return;
+  }
+
+  // Both indicators are active. We'll sync by choosing the earlier
+  // activation time between the two.
+  unsigned long commonTime = (activatedTime < otherIndicator->activatedTime)
+                                 ? activatedTime
+                                 : otherIndicator->activatedTime;
+
+  activatedTime = commonTime;
+  otherIndicator->activatedTime = commonTime;
+  synced = true;
+  otherIndicator->synced = true;
 }
 
 void IndicatorEffect::update()
@@ -73,7 +133,13 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
     return;
 
   uint16_t regionLength = ledManager->getNumLEDs() / 5;
-  // regionLength += 1; 
+  // regionLength += 1;
+
+  if (regionLength <= 1)
+  {
+    // Handle error or simply return
+    return;
+  }
 
   // For the left indicator, the region covers indices 0 to regionLength-1.
   // We want the "inner" edge (the side facing the vehicle) to light first.
@@ -105,7 +171,7 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
       // Apply the final factor to the desired base color.
       buffer[i].r = static_cast<uint8_t>(baseR * finalFactor);
       buffer[i].g = static_cast<uint8_t>(baseG * finalFactor);
-      buffer[i].b = baseB;
+      buffer[i].b = static_cast<uint8_t>(baseB * finalFactor);
     }
   }
   else
@@ -133,7 +199,7 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
 
       buffer[i].r = static_cast<uint8_t>(baseR * finalFactor);
       buffer[i].g = static_cast<uint8_t>(baseG * finalFactor);
-      buffer[i].b = baseB;
+      buffer[i].b = static_cast<uint8_t>(baseB * finalFactor);
     }
   }
 }

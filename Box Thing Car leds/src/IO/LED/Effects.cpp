@@ -25,7 +25,7 @@ void LEDEffect::setTransparent(bool transp) { transparent = transp; }
 //       brightness(1.0f),
 //       dimStep(0.01f) {}
 
-// void BrakeLightEffect::setBrakeActive(bool active) {
+// void BrakeLightEffect::setActive(bool active) {
 //   if (active) {
 //     // When brakes are applied, ensure full red immediately.
 //     brakeActive = true;

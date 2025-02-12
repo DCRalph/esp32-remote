@@ -15,6 +15,7 @@ public:
   virtual void update() override;
   virtual void render(std::vector<Color> &buffer) override;
   void setActive(bool active);
+  bool isActive();
 
 private:
   bool active;               // Is the effect active?
