@@ -12,6 +12,7 @@ IndicatorEffect::IndicatorEffect(LEDManager *_ledManager, Side side, uint8_t pri
       blinkCycle(1200),
       fadeInTime(250)
 {
+  bigIndicator = true;
   activatedTime = 0;
   otherIndicator = nullptr;
   synced = false;
@@ -136,6 +137,11 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
 
   uint16_t regionLength = ledManager->getNumLEDs() / 5;
 
+  if (bigIndicator)
+  {
+    regionLength = (ledManager->getNumLEDs() / 2) - regionLength;
+  }
+
   if (regionLength <= 1)
   {
     // Handle error or simply return
@@ -180,13 +186,28 @@ void IndicatorEffect::render(std::vector<Color> &buffer)
 
     // Set the color in the buffer.
     // should fade in from the center edge
-    if (side == LEFT)
+    if (!bigIndicator)
     {
-      buffer[i] = Color(r, g, b);
+      if (side == LEFT)
+      {
+        buffer[i] = Color(r, g, b);
+      }
+      else
+      {
+        buffer[ledManager->getNumLEDs() - i - 1] = Color(r, g, b);
+      }
     }
     else
     {
-      buffer[ledManager->getNumLEDs() - i - 1] = Color(r, g, b);
+      uint32_t center = ledManager->getNumLEDs() / 2;
+      if (side == LEFT)
+      {
+        buffer[center - regionLength + i] = Color(r, g, b);
+      }
+      else
+      {
+        buffer[center + regionLength - i - 1] = Color(r, g, b);
+      }
     }
   }
 }

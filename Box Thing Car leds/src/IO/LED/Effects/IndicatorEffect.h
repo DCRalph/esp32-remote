@@ -40,6 +40,7 @@ public:
 private:
   Side side;
   bool indicatorActive;
+  bool bigIndicator; // Whether the indicator is the big mode
 
   IndicatorEffect *otherIndicator; // Pointer to the other indicator effect.
   bool synced; // Whether the indicator has been synced with the other indicator.
