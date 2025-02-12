@@ -99,15 +99,15 @@ void Application::update()
     // (Optional) You could cycle effects in test mode here.
     // For this example we don't change effect states.
 
-    reverseLightEffect->setActive(true);
-    brakeEffect->setIsReversing(true);
+    // reverseLightEffect->setActive(true);
+    // brakeEffect->setIsReversing(true);
 
-    brakeEffect->setActive(io0.read());
-    leftIndicatorEffect->setActive(io0.read());
+    // brakeEffect->setActive(io0.read());
+    // leftIndicatorEffect->setActive(io0.read());
     // rightIndicatorEffect->setActive(io0.read());
     // reverseLightEffect->setActive(io0.read());
     // rgbEffect->setActive(io0.read());
-    // startupEffect->setActive(io0.read());
+    startupEffect->setActive(io0.read());
   }
   else
   {
