@@ -1,13 +1,11 @@
 // main.cpp
 
-
 // #include "secrets.h"
 #include "config.h"
 #include "IO/Wireless.h"
 #include "Application.h"
 
-
-Application* app;
+Application *app;
 
 void setup()
 {
@@ -25,12 +23,19 @@ void setup()
     return;
   }
 
-
   app->begin();
+  app->setTestMode(true);
 
-  led.On();
-  delay(500);
-  led.Off();
+  xTaskCreatePinnedToCore(
+      [](void *pvParameters)
+      {
+        led.On();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        led.Off();
+
+        vTaskDelete(NULL);
+      },
+      "startup_blink", 10000, NULL, 1, NULL, 1);
 }
 
 void loop()
@@ -39,5 +44,4 @@ void loop()
   wireless.loop();
 
   app->update();
-
 }

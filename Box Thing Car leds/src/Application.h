@@ -11,15 +11,6 @@
 #include "IO/LED/Effects/RGBEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
-// Custom LED manager that abstracts LEDManager::draw()
-class CustomLEDManager : public LEDManager
-{
-public:
-  CustomLEDManager(uint16_t numLEDs) : LEDManager(numLEDs) {}
-
-  virtual void draw() override;
-};
-
 class Application
 {
 public:
@@ -40,7 +31,7 @@ public:
   // Global pointer to the custom LED manager.
   CRGB leds[NUM_LEDS];
 
-  CustomLEDManager *ledManager;
+  LEDManager *ledManager;
 
 private:
   int analogThreshold = 100;
@@ -63,7 +54,8 @@ private:
   // Test mode flag. When true, the code ignores physical inputs.
   bool testMode;
 
-
   // Internal method to handle effect selection based on inputs.
   void handleEffects();
+
+  static void drawLEDs();
 };

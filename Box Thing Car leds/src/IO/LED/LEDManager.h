@@ -6,8 +6,7 @@
 #include <Arduino.h>
 
 // A simple structure representing an RGB color.
-struct Color
-{
+struct Color {
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -21,8 +20,7 @@ struct Color
 
 class LEDEffect; // Forward declaration of effect class
 
-class LEDManager
-{
+class LEDManager {
 public:
   // Constructor that allocates an LED buffer based on the number of LEDs.
   LEDManager(uint16_t numLEDs);
@@ -32,15 +30,18 @@ public:
   // Effects with higher priority override lower-priority ones.
   void addEffect(LEDEffect *effect);
 
-  // Remove an effect
+  // Remove an effect.
   void removeEffect(LEDEffect *effect);
 
   // Update all effects (call update() and then render() for each effect)
   void updateEffects();
 
   // Output the current LED buffer to the physical LED strip.
-  // This function is a placeholder – you should override it with your LED library code.
+  // This function calls a user-specified callback if one has been set.
   virtual void draw();
+
+  // Define the callback for drawing.
+  void setDrawFunction(void (*drawFunction)());
 
   // Access the internal LED buffer.
   std::vector<Color> &getBuffer();
@@ -52,8 +53,16 @@ public:
   uint16_t getNumLEDs() const;
 
   void setFPS(uint16_t fps);
-
   uint16_t getFPS() const;
+
+  // Return the last frame's update duration (in microseconds).
+  uint64_t getLastUpdateDuration() const;
+
+  // Return the last frame's draw duration (in microseconds).
+  uint64_t getLastDrawDuration() const;
+
+  // Return combined frame duration (update + draw).
+  uint64_t getLastFrameTime() const;
 
 protected:
   uint16_t numLEDs;
@@ -61,4 +70,12 @@ protected:
   uint64_t lastUpdateTime;
   std::vector<Color> ledBuffer;
   std::vector<LEDEffect *> effects;
+
+  // Callback function pointer, set by the user.
+  void (*drawCallback)();
+
+  // Time (in microseconds) it took for the last update and draw calls.
+  uint64_t lastUpdateDuration;
+  uint64_t lastDrawDuration;
 };
+

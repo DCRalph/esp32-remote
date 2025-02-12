@@ -6,21 +6,6 @@
 #include "FastLED.h"
 
 //----------------------------------------------------------------------------
-/*
- * CustomLEDManager::draw()
- * Copy the led buffer to the FastLED object and show the changes.
- */
-void CustomLEDManager::draw()
-{
-  for (int i = 0; i < numLEDs; i++)
-  {
-    Application::getInstance()->leds[i] =
-        CRGB(ledBuffer[i].r, ledBuffer[i].g, ledBuffer[i].b);
-  }
-  FastLED.show();
-}
-
-//----------------------------------------------------------------------------
 
 Application *Application::getInstance()
 {
@@ -75,8 +60,9 @@ void Application::begin()
   FastLED.show();
 
   // Create and assign the custom LED manager.
-  ledManager = new CustomLEDManager(NUM_LEDS);
+  ledManager = new LEDManager(NUM_LEDS);
   ledManager->setFPS(100);
+  ledManager->setDrawFunction(drawLEDs);
 
   // Set each effect's LED manager pointer.
   brakeEffect = new BrakeLightEffect(ledManager, 5, false);
@@ -86,11 +72,10 @@ void Application::begin()
                                              10, true);
   reverseLightEffect = new ReverseLightEffect(ledManager, 6, false);
   rgbEffect = new RGBEffect(ledManager, 0, false);
-  startupEffect = new StartupEffect(ledManager, 9, false);
+  startupEffect = new StartupEffect(ledManager, 4, false);
 
   leftIndicatorEffect->setOtherIndicator(rightIndicatorEffect);
   rightIndicatorEffect->setOtherIndicator(leftIndicatorEffect);
-
 
   // Add effects to the LED manager.
   ledManager->addEffect(brakeEffect);
@@ -113,6 +98,8 @@ void Application::update()
   {
     // (Optional) You could cycle effects in test mode here.
     // For this example we don't change effect states.
+
+    brakeEffect->setActive(io0.read());
   }
   else
   {
@@ -191,4 +178,16 @@ void Application::handleEffects()
     // Reverse light effect: active if reverse is on.
     reverseLightEffect->setActive(reverseState);
   }
+}
+
+void Application::drawLEDs()
+{
+  auto buf = Application::getInstance()->ledManager->getBuffer();
+  uint16_t numLEDs = Application::getInstance()->ledManager->getNumLEDs();
+  for (int i = 0; i < numLEDs; i++)
+  {
+    Application::getInstance()->leds[i] =
+        CRGB(buf[i].r, buf[i].g, buf[i].b);
+  }
+  FastLED.show();
 }

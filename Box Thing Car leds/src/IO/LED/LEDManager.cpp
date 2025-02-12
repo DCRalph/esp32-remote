@@ -2,25 +2,23 @@
 #include <algorithm>
 
 // Implementation of the Color structure.
-// range of h: [0, 360), s: [0, 1], v: [0, 1]
-// returns: RGB color with components in the range [0, 255].
+// Range of h: [0, 360), s: [0, 1], v: [0, 1]
+// Returns: RGB color with components in the range [0, 255].
 Color Color::hsv2rgb(float h, float s, float v)
 {
-  // Convert HSV to RGB color space.
   float r, g, b;
   int i;
   float f, p, q, t;
 
   if (s == 0)
   {
-    // Achromatic (grey)
     r = g = b = v;
     return Color(r * 255, g * 255, b * 255);
   }
 
   h /= 60; // sector 0 to 5
   i = floor(h);
-  f = h - i; // factorial part of h
+  f = h - i;
   p = v * (1 - s);
   q = v * (1 - s * f);
   t = v * (1 - s * (1 - f));
@@ -63,14 +61,16 @@ Color Color::hsv2rgb(float h, float s, float v)
 }
 
 LEDManager::LEDManager(uint16_t numLEDs)
-    : numLEDs(numLEDs), ledBuffer(numLEDs)
-{
-  fps = 100;
-}
+    : numLEDs(numLEDs),
+      ledBuffer(numLEDs),
+      fps(100),
+      lastUpdateTime(0),
+      drawCallback(nullptr),
+      lastUpdateDuration(0),
+      lastDrawDuration(0) {}
 
 LEDManager::~LEDManager()
 {
-  // Clean up all effects – if dynamically allocated, delete them.
   for (auto effect : effects)
   {
     delete effect;
@@ -95,23 +95,23 @@ void LEDManager::removeEffect(LEDEffect *effect)
                 effects.end());
 }
 
+// #define USE_2_BUFFERS
+
 void LEDManager::updateEffects()
 {
+  // Record the total frame start time.
+  uint64_t frameStart = micros();
+
   if (lastUpdateTime == 0)
   {
     lastUpdateTime = millis();
   }
 
-  // Calculate the time since the last update.
   uint64_t currentTime = millis();
   uint64_t deltaTime = currentTime - lastUpdateTime;
+  uint64_t frameInterval = 1000 / fps;
 
-  // Calculate the time per frame in milliseconds.
-  uint64_t frameTime = 1000 / fps;
-
-  // If the time since the last update is greater than the frame time,
-  // update the effects and reset the last update time.
-  if (deltaTime >= frameTime)
+  if (deltaTime >= frameInterval)
   {
     lastUpdateTime = currentTime;
   }
@@ -120,22 +120,79 @@ void LEDManager::updateEffects()
     return;
   }
 
-  // Clear the buffer to black before applying effects.
+  // Clear the main LED buffer before applying effects.
   clearBuffer();
 
-  // Update and then render each effect. Effects are rendered sequentially;
-  // higher-priority effects can override the LED values.
+#ifdef USE_2_BUFFERS
+  // Create a temporary buffer with the same size as the main LED buffer.
+  // Using the default constructor for Color will initialize all pixels to black.
+  std::vector<Color> tempBuffer(ledBuffer.size());
+#endif
+
+  // --- Update and render each effect ---
   for (auto effect : effects)
   {
+    // Update the effect.
     effect->update();
+
+#ifdef USE_2_BUFFERS
+    // Clear temporary buffer to black before rendering this effect.
+    for (auto &c : tempBuffer)
+    {
+      c = Color(0, 0, 0);
+    }
+
+    // Render the current effect into tempBuffer.
+    effect->render(tempBuffer);
+#else
+    // Render the current effect directly into ledBuffer.
     effect->render(ledBuffer);
+#endif
+
+#ifdef USE_2_BUFFERS
+    // Merge the rendered result from tempBuffer into ledBuffer.
+    if (effect->isTransparent())
+    {
+      // For transparent effects, only copy pixels that are not black.
+      for (size_t i = 0; i < ledBuffer.size(); i++)
+      {
+        if (tempBuffer[i].r != 0 && tempBuffer[i].g != 0 && tempBuffer[i].b != 0)
+        {
+          ledBuffer[i] = tempBuffer[i];
+        }
+      }
+    }
+    else
+    {
+      // For opaque effects, overwrite the entire ledBuffer.
+      ledBuffer = tempBuffer;
+    }
+#endif
   }
+
+  // Measure update duration.
+  lastUpdateDuration = micros() - frameStart;
+
+  // Optionally, print the measured timings.
+  // Serial.print("Update time: ");
+  // Serial.print(lastUpdateDuration);
+  // Serial.print(" us, Draw time: ");
+  // Serial.print(lastDrawDuration);
+  // Serial.print(" us, Total frame: ");
+  // Serial.print(totalFrameTime);
+  // Serial.println(" us");
 }
 
 void LEDManager::draw()
 {
-  // Placeholder – integration with the actual LED library goes here.
-  // E.g., you could update a FastLED or Adafruit NeoPixel strip.
+  uint64_t drawStart = micros();
+
+  if (drawCallback != nullptr)
+  {
+    drawCallback();
+  }
+
+  lastDrawDuration = micros() - drawStart;
 }
 
 std::vector<Color> &LEDManager::getBuffer() { return ledBuffer; }
@@ -155,3 +212,17 @@ uint16_t LEDManager::getNumLEDs() const { return numLEDs; }
 void LEDManager::setFPS(uint16_t fps) { this->fps = fps; }
 
 uint16_t LEDManager::getFPS() const { return fps; }
+
+void LEDManager::setDrawFunction(void (*drawFunction)())
+{
+  drawCallback = drawFunction;
+}
+
+uint64_t LEDManager::getLastUpdateDuration() const { return lastUpdateDuration; }
+
+uint64_t LEDManager::getLastDrawDuration() const { return lastDrawDuration; }
+
+uint64_t LEDManager::getLastFrameTime() const
+{
+  return lastUpdateDuration + lastDrawDuration;
+}
