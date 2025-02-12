@@ -18,6 +18,8 @@ public:
   void setActive(bool active);
   bool isActive() const;
 
+  bool isAnimating() const;
+
 private:
   bool active;
   uint64_t startTime;

@@ -84,6 +84,36 @@ void Application::begin()
   ledManager->addEffect(reverseLightEffect);
   ledManager->addEffect(rgbEffect);
   ledManager->addEffect(startupEffect);
+
+  // Sequences
+  unlockSequence = new BothIndicatorsSequence(1);
+  lockSequence = new BothIndicatorsSequence(3);
+  flickSequence = new IndicatorFlickSequence();
+
+  unlockSequence->setActive(true);
+
+  unlockSequence->setCallback([this]()
+                              {
+                                startupEffect->setActive(true);
+                                unlockSequence->setActive(false);
+                                lockSequence->setActive(true);
+                                //
+                              });
+
+  lockSequence->setCallback([this]()
+                            {
+                              startupEffect->setActive(false);
+                              lockSequence->setActive(false);
+                              unlockSequence->setActive(true);
+                              //
+                            });
+
+  flickSequence->setActive(true);
+  flickSequence->setCallback([this]()
+                             {
+                               rgbEffect->setActive(!rgbEffect->isActive());
+                               //
+                             });
 }
 
 /*
@@ -92,12 +122,8 @@ void Application::begin()
  */
 void Application::update()
 {
-
-  // If in test mode, skip input handling and use defaults.
   if (testMode)
   {
-    // (Optional) You could cycle effects in test mode here.
-    // For this example we don't change effect states.
 
     // reverseLightEffect->setActive(true);
     // brakeEffect->setIsReversing(true);
@@ -143,25 +169,129 @@ void Application::setTestMode(bool mode)
  *     * Reverse on => Reverse light effect on.
  * - Other effects (e.g., RGB effect) can be handled via wireless commands.
  */
+
+static float accVolt;
+static float brakeVolt;
+static float leftVolt;
+static float rightVolt;
+static float reverseVolt;
+
 void Application::handleEffects()
 {
-  // Read physical inputs. Note: Assuming the read() method returns a bool.
-  bool accOnState = accOn->analogRead() > analogThreshold;
-  bool brakeState = brake->analogRead() > analogThreshold;
-  bool leftIndicatorState = leftIndicator->analogRead() > analogThreshold;
-  bool rightIndicatorState = rightIndicator->analogRead() > analogThreshold;
-  bool reverseState = reverse->analogRead() > analogThreshold;
+  // ADC conversion constants and threshold for digital "on".
+  const float ADC_MAX = 8192;
+  const float ADC_REF_VOLTAGE = 3.3;
+  const float DIVIDER_FACTOR = 10.0;
+  const float VOLTAGE_THRESHOLD = 3;
 
-  // When ACC is off.
+  // Timing constants.
+  // const unsigned long DEBOUNCE_MS = 50;         // debounce interval
+  // const unsigned long FLASH_RESET_MS = 10000UL; // reset counter if 10 seconds pass
+  // const int FLASHES_TO_ACTIVATE_STARTUP = 1;
+  // const int FLASHES_TO_DEACTIVATE_STARTUP = 3; // 3 additional flashes to cancel startup
+
+  // Static variables to persist between calls.
+  // static bool lastCombinedIndicatorState = false; // previous combined indicator state
+  // static unsigned long lastDebounceTime = 0;      // last debounce timestamp
+
+  // To track flash events.
+  // "firstFlashTime" marks the timestamp of the first flash event.
+  // "flashCounter" counts the flashes, including the first one.
+  // static unsigned long firstFlashTime = 0;
+  // static int flashCounter = 0;
+
+  // Update filtered voltages using a simple low-pass filter.
+  accVolt = (accVolt * 0.9f) +
+            (((float)accOn->analogRead() / ADC_MAX *
+              ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
+             0.1f);
+  brakeVolt = (brakeVolt * 0.9f) +
+              (((float)brake->analogRead() / ADC_MAX *
+                ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
+               0.1f);
+  leftVolt = (leftVolt * 0.9f) +
+             (((float)leftIndicator->analogRead() / ADC_MAX *
+               ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
+              0.1f);
+  rightVolt = (rightVolt * 0.9f) +
+              (((float)rightIndicator->analogRead() / ADC_MAX *
+                ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
+               0.1f);
+  reverseVolt = (reverseVolt * 0.9f) +
+                (((float)reverse->analogRead() / ADC_MAX *
+                  ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
+                 0.1f);
+
+  // Determine digital state for each input.
+  bool accOnState = accVolt > VOLTAGE_THRESHOLD;
+  bool brakeState = brakeVolt > VOLTAGE_THRESHOLD;
+  bool leftIndicatorState = leftVolt > VOLTAGE_THRESHOLD;
+  bool rightIndicatorState = rightVolt > VOLTAGE_THRESHOLD;
+  bool reverseState = reverseVolt > VOLTAGE_THRESHOLD;
+
+  // Combined indicator state: both indicators are “on” simultaneously.
+  // bool combinedIndicatorState = leftIndicatorState && rightIndicatorState;
+
+  unsigned long currentTime = millis();
+
+  unlockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+  lockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+  flickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+
+  unlockSequence->loop();
+  lockSequence->loop();
+  flickSequence->loop();
+
   if (!accOnState)
   {
-    // The startup effect is triggered if both indicators are active.
-    if (leftIndicatorState && rightIndicatorState)
-    {
-      startupEffect->setActive(true);
-    }
+    // ACC is off -> Process startup flash logic.
 
-    // When ACC is off, ignore other effects.
+    // // Check for a rising edge on the combined indicator state with debounce.
+    // if (combinedIndicatorState && !lastCombinedIndicatorState &&
+    //     ((currentTime - lastDebounceTime) >= DEBOUNCE_MS))
+    // {
+    //   // If this is the first flash, record the time.
+    //   if (firstFlashTime == 0)
+    //   {
+    //     firstFlashTime = currentTime;
+    //   }
+
+    //   // Count this flash.
+    //   flashCounter++;
+
+    //   // Reset debounce timer.
+    //   lastDebounceTime = currentTime;
+    // }
+
+    // // Update the previous state for the next call.
+    // lastCombinedIndicatorState = combinedIndicatorState;
+
+    // // If at least one flash has occurred, activate the startup effect.
+    // if (flashCounter >= FLASHES_TO_ACTIVATE_STARTUP && startupEffect->isActive() == false)
+    // {
+    //   startupEffect->setActive(true);
+    //   flashCounter = 0;
+    //   firstFlashTime = 0;
+    // }
+
+    // // If the startup effect is active and we've received three additional flashes,
+    // // then disable the startup effect.
+    // if (flashCounter >= FLASHES_TO_DEACTIVATE_STARTUP && startupEffect->isActive() == true)
+    // {
+    //   startupEffect->setActive(false);
+    //   flashCounter = 0;
+    //   firstFlashTime = 0;
+    // }
+
+    // // If it's been more than 10 seconds since the first detected flash,
+    // // reset the flash counter and firstFlashTime.
+    // if (firstFlashTime != 0 && (currentTime - firstFlashTime) > FLASH_RESET_MS)
+    // {
+    //   flashCounter = 0;
+    //   firstFlashTime = 0;
+    // }
+
+    // Since ACC is off, disable the other effects.
     brakeEffect->setActive(false);
     leftIndicatorEffect->setActive(false);
     rightIndicatorEffect->setActive(false);
@@ -169,21 +299,18 @@ void Application::handleEffects()
   }
   else
   {
-    // ACC is on, so disable the startup effect if it was active.
-    if (startupEffect->isActive())
-    {
-      startupEffect->setActive(false);
-    }
+    // When ACC is on, ensure the startup effect is turned off and reset flash tracking.
+    startupEffect->setActive(false);
+    // flashCounter = 0;
+    // firstFlashTime = 0;
+    // lastCombinedIndicatorState = false;
 
-    // Brake effect: activate only if brake is pressed.
+    // And process the other effects normally.
     brakeEffect->setActive(brakeState);
-    brakeEffect->setIsReversing(reverseState);
+    brakeEffect->setIsReversing(reverseState || reverseLightEffect->isAnimating());
 
-    // Indicator effects: each one on if its respective input is active.
     leftIndicatorEffect->setActive(leftIndicatorState);
     rightIndicatorEffect->setActive(rightIndicatorState);
-
-    // Reverse light effect: active if reverse is on.
     reverseLightEffect->setActive(reverseState);
   }
 }

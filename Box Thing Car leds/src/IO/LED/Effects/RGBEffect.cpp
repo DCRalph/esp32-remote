@@ -63,13 +63,13 @@ void RGBEffect::update()
   hueCenter = fmod(hueCenter, 360.0f);
   hueEdge = fmod(hueEdge, 360.0f);
 
-  // log the hue values to the serial monitor.
-  Serial.print("Hue Center: ");
-  Serial.print(hueCenter);
-  Serial.print(" Hue Edge: ");
-  Serial.print(hueEdge);
-  Serial.print(" Hue Offset: ");
-  Serial.println(hueOffset);
+  // // log the hue values to the serial monitor.
+  // Serial.print("Hue Center: ");
+  // Serial.print(hueCenter);
+  // Serial.print(" Hue Edge: ");
+  // Serial.print(hueEdge);
+  // Serial.print(" Hue Offset: ");
+  // Serial.println(hueOffset);
 }
 void RGBEffect::render(std::vector<Color> &buffer)
 {

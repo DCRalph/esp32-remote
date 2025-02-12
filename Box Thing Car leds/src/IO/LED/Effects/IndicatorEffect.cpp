@@ -44,16 +44,17 @@ void IndicatorEffect::setActive(bool active)
 
   if (active)
   {
+    blinkCycle = 3000;
     // If another indicator exists and is active, sync start times.
     if (otherIndicator != nullptr && otherIndicator->getActive())
     {
-      syncWithOtherIndicator();
+      // syncWithOtherIndicator();
     }
     else
     {
       // Otherwise, simply set this activatedTime.
-      activatedTime = millis();
     }
+    activatedTime = millis();
   }
   else
   {
@@ -82,14 +83,7 @@ void IndicatorEffect::syncWithOtherIndicator()
     return;
   }
 
-  // Both indicators are active. We'll sync by choosing the earlier
-  // activation time between the two.
-  unsigned long commonTime = (activatedTime < otherIndicator->activatedTime)
-                                 ? activatedTime
-                                 : otherIndicator->activatedTime;
-
-  activatedTime = commonTime;
-  otherIndicator->activatedTime = commonTime;
+  activatedTime = otherIndicator->activatedTime;
   synced = true;
   otherIndicator->synced = true;
 }
@@ -118,6 +112,19 @@ void IndicatorEffect::update()
   {
     // Turn indicator off for the remainder of the blink cycle.
     fadeFactor = 0.0f;
+    if (blinkCycle != 1200)
+    {
+      blinkCycle = 1200;
+
+      if (otherIndicator != nullptr && !synced && otherIndicator->getActive())
+      {
+        syncWithOtherIndicator();
+      }
+      else if (!synced)
+      {
+        activatedTime = millis() - 600;
+      }
+    }
   }
 }
 

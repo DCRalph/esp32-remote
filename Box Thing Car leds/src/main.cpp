@@ -24,7 +24,7 @@ void setup()
   }
 
   app->begin();
-  app->setTestMode(true);
+  // app->setTestMode(true);
 
   xTaskCreatePinnedToCore(
       [](void *pvParameters)

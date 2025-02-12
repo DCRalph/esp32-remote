@@ -11,6 +11,10 @@
 #include "IO/LED/Effects/RGBEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
+#include "Sequences/SequenceBase.h"
+#include "Sequences/BothIndicatorsSequence.h"
+#include "Sequences/IndicatorFlickSequence.h"
+
 class Application
 {
 public:
@@ -34,7 +38,6 @@ public:
   LEDManager *ledManager;
 
 private:
-  int analogThreshold = 100;
 
   // Input pointers.
   GpIO *accOn;          // 12v ACC
@@ -50,6 +53,12 @@ private:
   ReverseLightEffect *reverseLightEffect;
   RGBEffect *rgbEffect;
   StartupEffect *startupEffect;
+
+  // Sequences
+  BothIndicatorsSequence *unlockSequence;
+  BothIndicatorsSequence *lockSequence;
+  IndicatorFlickSequence *flickSequence;
+
 
   // Test mode flag. When true, the code ignores physical inputs.
   bool testMode;

@@ -41,6 +41,11 @@ bool ReverseLightEffect::isActive() const
   return active;
 }
 
+bool ReverseLightEffect::isAnimating() const
+{
+  return active || progress > 0.0f;
+}
+
 void ReverseLightEffect::update()
 {
   // Get the current time in milliseconds.
