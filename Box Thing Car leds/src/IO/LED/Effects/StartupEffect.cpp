@@ -99,9 +99,10 @@ void StartupEffect::update()
     }
     else if (phase == 3)
     {
-        // Phase 3: Fill sweep – from center outward fill red gradually.
+        // Phase 3: Fill sweep - from center outward fill red gradually.
         float progress = std::min(elapsed / T2, 1.0f);
         fill_progress = progress;
+
         if (progress >= 1.0f)
         {
             phase = 4;
@@ -182,6 +183,13 @@ void StartupEffect::render(std::vector<Color> &buffer)
     else if (phase == 3)
     {
         float p = fill_progress;
+
+        // apply ease in out curve to p
+        p = 3 * p * p - 2 * p * p * p;
+
+        // map p from [0, 1] to [(dash_length / ledManager->getNumLEDs()), 1]
+        p = (1 - ((float)dash_length / ledManager->getNumLEDs())) * p + ((float)dash_length / ledManager->getNumLEDs());
+
         for (int i = 0; i < num; i++)
         {
             if (i <= center)
