@@ -151,6 +151,79 @@ void Application::begin()
                                    enableNormalMode();
                                    //
                                  });
+
+  wireless.addOnReceiveFor(0xe0, [this](fullPacket *fp) // ping cmd
+                           {
+                             lastRemotePing = millis();
+                             //
+                           });
+
+  wireless.addOnReceiveFor(0xe1, [this](fullPacket *fp) // set mode cmd
+                           {
+                             uint8_t *data = fp->p.data;
+                             uint8_t mode = data[0];
+
+                             switch (mode)
+                             {
+                             case 0:
+                               enableNormalMode();
+                               break;
+                             case 1:
+                               enableTestMode();
+                               break;
+                             case 2:
+                               enableRemoteMode();
+                               break;
+                             case 3:
+                               enableOffMode();
+                               break;
+                             default:
+                               break;
+                             }
+                             //
+                           });
+
+  wireless.addOnReceiveFor(0xe2, [this](fullPacket *fp) // set effects cmd
+                           {
+                             uint8_t *data = fp->p.data;
+
+                             for (int i = 0; i < 6; i++)
+                             {
+                               bool firstBit = data[i] & 0x01;
+                               bool secondBit = data[i] & 0x02;
+                               bool thirdBit = data[i] & 0x04;
+
+                               switch (i)
+                               {
+                               case 0:
+                                 brakeEffect->setActive(firstBit);
+                                 brakeEffect->setIsReversing(secondBit);
+                                 break;
+                               case 1:
+                                 leftIndicatorEffect->setActive(firstBit);
+                                 break;
+                               case 2:
+                                 rightIndicatorEffect->setActive(firstBit);
+                                 break;
+                               case 3:
+                                 reverseLightEffect->setActive(firstBit);
+                                 break;
+                               case 4:
+                                 startupEffect->setActive(firstBit);
+                                 break;
+                               case 5:
+                                 rgbEffect->setActive(firstBit);
+                                 break;
+                               case 6:
+                                 nightriderEffect->setActive(firstBit);
+                                 break;
+
+                               default:
+                                 break;
+                               }
+                             }
+                             //
+                           });
 }
 
 static float accVolt;
@@ -205,7 +278,6 @@ void Application::updateInputs()
  */
 void Application::update()
 {
-
   // Update input states.
   updateInputs();
 
@@ -295,7 +367,6 @@ void Application::enableOffMode()
 
 void Application::handleNormalEffects()
 {
-
   unsigned long currentTime = millis();
 
   unlockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);

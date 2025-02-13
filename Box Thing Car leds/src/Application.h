@@ -95,5 +95,7 @@ private:
   void handleNormalEffects();
   void handleRemoteEffects();
 
+  uint64_t lastRemotePing;
+
   static void drawLEDs();
 };

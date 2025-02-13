@@ -206,7 +206,7 @@ void setup()
     InitOta();
   }
 
-  wireless.setRecvCb(espNowCb);
+  wireless.setOnReceiveOther(espNowCb);
 
   Serial.println("[INFO] [SETUP] Done");
   Serial.println();
