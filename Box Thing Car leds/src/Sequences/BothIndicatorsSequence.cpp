@@ -48,7 +48,7 @@ bool BothIndicatorsSequence::update()
   return false;
 }
 
-void BothIndicatorsSequence::reset()
+void BothIndicatorsSequence::VReset()
 {
   flashCounter = 0;
   firstFlashTime = 0;

@@ -26,7 +26,8 @@ public:
   bool isStarted();
 
   // Reset the sequence state.
-  virtual void reset() = 0;
+  void reset();
+  virtual void VReset() = 0;
 
   // Update the sequence state.
   // Return true if the sequence is complete.

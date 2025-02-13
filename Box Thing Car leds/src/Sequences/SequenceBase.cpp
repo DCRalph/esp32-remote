@@ -34,8 +34,6 @@ void SequenceBase::loop()
   else if (started && startTime != 0 && (millis() - startTime) > timeout)
   {
     reset();
-    started = false;
-    startTime = 0;
     Serial.println("Sequence timeout: " + name);
   }
 }
@@ -53,8 +51,6 @@ void SequenceBase::setTimeout(uint64_t _timeout)
 void SequenceBase::setActive(bool _active)
 {
   active = _active;
-  started = false;
-  startTime = 0;
   reset();
 
   if (active)
@@ -74,6 +70,14 @@ bool SequenceBase::isStarted()
 }
 
 void SequenceBase::reset()
+{
+  started = false;
+  startTime = 0;
+  VReset();
+  Serial.println("Sequence reset:" + name);
+}
+
+void SequenceBase::VReset()
 {
 }
 

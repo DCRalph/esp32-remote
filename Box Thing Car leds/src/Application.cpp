@@ -26,6 +26,8 @@ Application::Application()
   leftIndicator = &input3;
   rightIndicator = &input4;
   reverse = &input5;
+
+  lastAccOn = 0;
 }
 
 /*
@@ -38,6 +40,7 @@ Application::~Application()
   delete rightIndicatorEffect;
   delete reverseLightEffect;
   delete rgbEffect;
+  delete nightriderEffect;
   delete startupEffect;
 
   delete ledManager;
@@ -71,7 +74,8 @@ void Application::begin()
   rightIndicatorEffect = new IndicatorEffect(ledManager, IndicatorEffect::RIGHT,
                                              10, true);
   reverseLightEffect = new ReverseLightEffect(ledManager, 6, false);
-  rgbEffect = new RGBEffect(ledManager, 0, false);
+  rgbEffect = new RGBEffect(ledManager, 2, false);
+  nightriderEffect = new NightRiderEffect(ledManager, 2, false);
   startupEffect = new StartupEffect(ledManager, 4, false);
 
   leftIndicatorEffect->setOtherIndicator(rightIndicatorEffect);
@@ -83,12 +87,15 @@ void Application::begin()
   ledManager->addEffect(rightIndicatorEffect);
   ledManager->addEffect(reverseLightEffect);
   ledManager->addEffect(rgbEffect);
+  ledManager->addEffect(nightriderEffect);
   ledManager->addEffect(startupEffect);
 
   // Sequences
   unlockSequence = new BothIndicatorsSequence(1);
   lockSequence = new BothIndicatorsSequence(3);
-  flickSequence = new IndicatorFlickSequence();
+  RGBFlickSequence = new IndicatorFlickSequence(IndicatorSide::LEFT_SIDE);
+  nightRiderFlickSequence = new IndicatorFlickSequence(IndicatorSide::RIGHT_SIDE);
+  brakeTapSequence3 = new BrakeTapSequence(3);
 
   unlockSequence->setActive(true);
 
@@ -96,24 +103,46 @@ void Application::begin()
                               {
                                 startupEffect->setActive(true);
                                 unlockSequence->setActive(false);
-                                lockSequence->setActive(true);
                                 //
                               });
+
+  lockSequence->setActive(true);
 
   lockSequence->setCallback([this]()
                             {
                               startupEffect->setActive(false);
-                              lockSequence->setActive(false);
                               unlockSequence->setActive(true);
                               //
                             });
 
-  flickSequence->setActive(true);
-  flickSequence->setCallback([this]()
-                             {
-                               rgbEffect->setActive(!rgbEffect->isActive());
-                               //
-                             });
+  RGBFlickSequence->setActive(true);
+  RGBFlickSequence->setCallback([this]()
+                                {
+                                  rgbEffect->setActive(!rgbEffect->isActive());
+                                  nightRiderFlickSequence->reset();
+
+                                  nightriderEffect->setActive(false);
+                                  //
+                                });
+
+  nightRiderFlickSequence->setActive(true);
+  nightRiderFlickSequence->setCallback([this]()
+                                       {
+                                         nightriderEffect->setActive(!nightriderEffect->isActive());
+                                         RGBFlickSequence->reset();
+
+                                         rgbEffect->setActive(false);
+                                         //
+                                       });
+
+  brakeTapSequence3->setActive(true);
+  brakeTapSequence3->setCallback([this]()
+                                 {
+                                   // diable all special effects
+                                   rgbEffect->setActive(false);
+                                   nightriderEffect->setActive(false);
+                                   //
+                                 });
 }
 
 /*
@@ -200,27 +229,29 @@ void Application::handleEffects()
   // static unsigned long firstFlashTime = 0;
   // static int flashCounter = 0;
 
+  float smoothFactor = 0.5f;
+
   // Update filtered voltages using a simple low-pass filter.
-  accVolt = (accVolt * 0.9f) +
+  accVolt = (accVolt * smoothFactor) +
             (((float)accOn->analogRead() / ADC_MAX *
               ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
-             0.1f);
-  brakeVolt = (brakeVolt * 0.9f) +
+             (1 - smoothFactor));
+  brakeVolt = (brakeVolt * smoothFactor) +
               (((float)brake->analogRead() / ADC_MAX *
                 ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
-               0.1f);
-  leftVolt = (leftVolt * 0.9f) +
+               (1 - smoothFactor));
+  leftVolt = (leftVolt * smoothFactor) +
              (((float)leftIndicator->analogRead() / ADC_MAX *
                ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
-              0.1f);
-  rightVolt = (rightVolt * 0.9f) +
+              (1 - smoothFactor));
+  rightVolt = (rightVolt * smoothFactor) +
               (((float)rightIndicator->analogRead() / ADC_MAX *
                 ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
-               0.1f);
-  reverseVolt = (reverseVolt * 0.9f) +
+               (1 - smoothFactor));
+  reverseVolt = (reverseVolt * smoothFactor) +
                 (((float)reverse->analogRead() / ADC_MAX *
                   ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
-                 0.1f);
+                 (1 - smoothFactor));
 
   // Determine digital state for each input.
   bool accOnState = accVolt > VOLTAGE_THRESHOLD;
@@ -236,60 +267,32 @@ void Application::handleEffects()
 
   unlockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
   lockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
-  flickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+  RGBFlickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+  nightRiderFlickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
+  brakeTapSequence3->setInput(brakeState);
 
   unlockSequence->loop();
   lockSequence->loop();
-  flickSequence->loop();
+  RGBFlickSequence->loop();
+  nightRiderFlickSequence->loop();
+  brakeTapSequence3->loop();
+
+  if (lastAccOn != 0 && currentTime - lastAccOn > 1 * 60 * 1000)
+  {
+    lastAccOn = 0;
+    unlockSequence->setActive(true);
+
+    // turn off all effects
+    brakeEffect->setActive(false);
+    leftIndicatorEffect->setActive(false);
+    rightIndicatorEffect->setActive(false);
+    reverseLightEffect->setActive(false);
+    rgbEffect->setActive(false);
+    startupEffect->setActive(false);
+  }
 
   if (!accOnState)
   {
-    // ACC is off -> Process startup flash logic.
-
-    // // Check for a rising edge on the combined indicator state with debounce.
-    // if (combinedIndicatorState && !lastCombinedIndicatorState &&
-    //     ((currentTime - lastDebounceTime) >= DEBOUNCE_MS))
-    // {
-    //   // If this is the first flash, record the time.
-    //   if (firstFlashTime == 0)
-    //   {
-    //     firstFlashTime = currentTime;
-    //   }
-
-    //   // Count this flash.
-    //   flashCounter++;
-
-    //   // Reset debounce timer.
-    //   lastDebounceTime = currentTime;
-    // }
-
-    // // Update the previous state for the next call.
-    // lastCombinedIndicatorState = combinedIndicatorState;
-
-    // // If at least one flash has occurred, activate the startup effect.
-    // if (flashCounter >= FLASHES_TO_ACTIVATE_STARTUP && startupEffect->isActive() == false)
-    // {
-    //   startupEffect->setActive(true);
-    //   flashCounter = 0;
-    //   firstFlashTime = 0;
-    // }
-
-    // // If the startup effect is active and we've received three additional flashes,
-    // // then disable the startup effect.
-    // if (flashCounter >= FLASHES_TO_DEACTIVATE_STARTUP && startupEffect->isActive() == true)
-    // {
-    //   startupEffect->setActive(false);
-    //   flashCounter = 0;
-    //   firstFlashTime = 0;
-    // }
-
-    // // If it's been more than 10 seconds since the first detected flash,
-    // // reset the flash counter and firstFlashTime.
-    // if (firstFlashTime != 0 && (currentTime - firstFlashTime) > FLASH_RESET_MS)
-    // {
-    //   flashCounter = 0;
-    //   firstFlashTime = 0;
-    // }
 
     // Since ACC is off, disable the other effects.
     brakeEffect->setActive(false);

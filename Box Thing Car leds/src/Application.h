@@ -9,11 +9,13 @@
 #include "IO/LED/Effects/IndicatorEffect.h"
 #include "IO/LED/Effects/ReverseLightEffect.h"
 #include "IO/LED/Effects/RGBEffect.h"
+#include "IO/LED/Effects/NightRiderEffect.h"
 #include "IO/LED/Effects/StartupEffect.h"
 
 #include "Sequences/SequenceBase.h"
 #include "Sequences/BothIndicatorsSequence.h"
 #include "Sequences/IndicatorFlickSequence.h"
+#include "Sequences/BrakeTapSequence.h"
 
 class Application
 {
@@ -38,7 +40,6 @@ public:
   LEDManager *ledManager;
 
 private:
-
   // Input pointers.
   GpIO *accOn;          // 12v ACC
   GpIO *brake;          // Brake
@@ -46,18 +47,23 @@ private:
   GpIO *rightIndicator; // Right indicator
   GpIO *reverse;        // Reverse
 
+  uint64_t lastAccOn;
+
   // Effect instances.
   BrakeLightEffect *brakeEffect;
   IndicatorEffect *leftIndicatorEffect;
   IndicatorEffect *rightIndicatorEffect;
   ReverseLightEffect *reverseLightEffect;
   RGBEffect *rgbEffect;
+  NightRiderEffect *nightriderEffect;
   StartupEffect *startupEffect;
 
   // Sequences
   BothIndicatorsSequence *unlockSequence;
   BothIndicatorsSequence *lockSequence;
-  IndicatorFlickSequence *flickSequence;
+  IndicatorFlickSequence *RGBFlickSequence;
+  IndicatorFlickSequence *nightRiderFlickSequence;
+  BrakeTapSequence *brakeTapSequence3;
 
 
   // Test mode flag. When true, the code ignores physical inputs.

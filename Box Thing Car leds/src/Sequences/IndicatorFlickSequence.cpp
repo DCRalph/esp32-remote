@@ -1,7 +1,7 @@
 #include "IndicatorFlickSequence.h"
 
-IndicatorFlickSequence::IndicatorFlickSequence()
-    : SequenceBase("IndicatorFlickSequence", 2000),
+IndicatorFlickSequence::IndicatorFlickSequence(IndicatorSide startSide)
+    : SequenceBase("IndicatorFlickSequence" + String(startSide), 3000),
       currentIndex(0),
       firstFlashTime(0),
       debounceTime(50),
@@ -10,8 +10,23 @@ IndicatorFlickSequence::IndicatorFlickSequence()
       leftIndicatorState(false),
       rightIndicatorState(false),
       lastLeftState(false),
-      lastRightState(false)
+      lastRightState(false),
+      hazardStartTime(0)
 {
+  if (startSide == IndicatorSide::LEFT_SIDE)
+  {
+    expectedSequence[0] = IndicatorSide::LEFT_SIDE;
+    expectedSequence[1] = IndicatorSide::RIGHT_SIDE;
+    expectedSequence[2] = IndicatorSide::LEFT_SIDE;
+    expectedSequence[3] = IndicatorSide::RIGHT_SIDE;
+  }
+  else
+  {
+    expectedSequence[0] = IndicatorSide::RIGHT_SIDE;
+    expectedSequence[1] = IndicatorSide::LEFT_SIDE;
+    expectedSequence[2] = IndicatorSide::RIGHT_SIDE;
+    expectedSequence[3] = IndicatorSide::LEFT_SIDE;
+  }
 }
 
 bool IndicatorFlickSequence::update()
@@ -22,10 +37,24 @@ bool IndicatorFlickSequence::update()
   if (accOnState)
   {
 
-    if (leftIndicatorState && rightIndicatorState) // Both indicators are on. eg hazard lights
+    if (leftIndicatorState && rightIndicatorState)
     {
-      reset();
-      return false;
+      if (hazardStartTime == 0)
+      {
+        // Start tracking the time since both indicators turned on.
+        hazardStartTime = currentTime;
+      }
+      else if ((currentTime - hazardStartTime) >= 200)
+      {
+        reset();
+        Serial.println("IndicatorFlick-" + String(expectedSequence[0]) + " Both indicators are on for 200ms. Resetting sequence.");
+        return false;
+      }
+    }
+    else
+    {
+      // Reset hazard timer if either indicator is off.
+      hazardStartTime = 0;
     }
 
     // Check for rising edge for left indicator.
@@ -85,7 +114,7 @@ bool IndicatorFlickSequence::update()
   return false;
 }
 
-void IndicatorFlickSequence::reset()
+void IndicatorFlickSequence::VReset()
 {
   currentIndex = 0;
   firstFlashTime = 0;
@@ -102,4 +131,11 @@ void IndicatorFlickSequence::setInputs(bool accOnState,
   this->accOnState = accOnState;
   this->leftIndicatorState = leftIndicatorState;
   this->rightIndicatorState = rightIndicatorState;
+
+  // Serial.print("ACC: ");
+  // Serial.print(accOnState ? "ON " : "OFF");
+  // Serial.print(" Left: ");
+  // Serial.print(leftIndicatorState ? "ON " : "OFF");
+  // Serial.print(" Right: ");
+  // Serial.println(rightIndicatorState ? "ON " : "OFF");
 }

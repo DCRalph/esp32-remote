@@ -11,7 +11,7 @@ public:
   // Assumes that accOnState, leftIndicatorState and rightIndicatorState are updated globals.
   // For example, you could update these variables from Application::handleEffects().
   bool update() override;
-  void reset() override;
+  void VReset() override;
 
   void setInputs(bool accOnState, bool leftIndicatorState, bool rightIndicatorState);
 
