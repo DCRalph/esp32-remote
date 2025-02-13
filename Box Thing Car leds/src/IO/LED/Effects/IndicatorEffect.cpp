@@ -47,7 +47,7 @@ void IndicatorEffect::setActive(bool active)
   {
     blinkCycle = 3000;
     // If another indicator exists and is active, sync start times.
-    if (otherIndicator != nullptr && otherIndicator->getActive())
+    if (otherIndicator != nullptr && otherIndicator->isActive())
     {
       // syncWithOtherIndicator();
     }
@@ -72,7 +72,7 @@ void IndicatorEffect::setActive(bool active)
   }
 }
 
-bool IndicatorEffect::getActive() const
+bool IndicatorEffect::isActive() const
 {
   return indicatorActive;
 }
@@ -117,7 +117,7 @@ void IndicatorEffect::update()
     {
       blinkCycle = 1200;
 
-      if (otherIndicator != nullptr && !synced && otherIndicator->getActive())
+      if (otherIndicator != nullptr && !synced && otherIndicator->isActive())
       {
         syncWithOtherIndicator();
       }

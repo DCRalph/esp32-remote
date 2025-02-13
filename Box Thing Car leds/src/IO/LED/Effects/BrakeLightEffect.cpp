@@ -53,6 +53,11 @@ void BrakeLightEffect::setActive(bool active)
   }
 }
 
+bool BrakeLightEffect::isActive() const
+{
+  return brakeActive;
+}
+
 void BrakeLightEffect::setIsReversing(bool reversing)
 {
   isReversing = reversing;

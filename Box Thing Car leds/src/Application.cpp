@@ -155,11 +155,30 @@ void Application::begin()
   wireless.addOnReceiveFor(0xe0, [this](fullPacket *fp) // ping cmd
                            {
                              lastRemotePing = millis();
+
+                             data_packet pTX;
+                             pTX.type = 0xe0;
+                             pTX.len = 8;
+                             // sent current mode as uint8_t
+                             pTX.data[0] = static_cast<uint8_t>(mode);
+
+                             // sent current effects as uint8_t
+                             pTX.data[1] = brakeEffect->isActive();
+                             pTX.data[2] = leftIndicatorEffect->isActive();
+                             pTX.data[3] = rightIndicatorEffect->isActive();
+                             pTX.data[4] = reverseLightEffect->isActive();
+                             pTX.data[5] = startupEffect->isActive();
+                             pTX.data[6] = rgbEffect->isActive();
+                             pTX.data[7] = nightriderEffect->isActive();
+
+                             wireless.send(&pTX, fp->mac);
                              //
                            });
 
   wireless.addOnReceiveFor(0xe1, [this](fullPacket *fp) // set mode cmd
                            {
+                             lastRemotePing = millis();
+
                              uint8_t *data = fp->p.data;
                              uint8_t mode = data[0];
 
@@ -180,11 +199,21 @@ void Application::begin()
                              default:
                                break;
                              }
+
+                             data_packet pTX;
+                             pTX.type = 0xe1;
+                             pTX.len = 1;
+                             // sent current mode as uint8_t
+                             pTX.data[0] = static_cast<uint8_t>(mode);
+
+                             wireless.send(&pTX, fp->mac);
                              //
                            });
 
   wireless.addOnReceiveFor(0xe2, [this](fullPacket *fp) // set effects cmd
                            {
+                             lastRemotePing = millis();
+
                              uint8_t *data = fp->p.data;
 
                              for (int i = 0; i < 6; i++)
@@ -222,6 +251,7 @@ void Application::begin()
                                  break;
                                }
                              }
+
                              //
                            });
 }

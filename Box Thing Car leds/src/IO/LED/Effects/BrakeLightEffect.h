@@ -14,6 +14,7 @@ public:
 
   // Set whether the brakes are active.
   void setActive(bool active);
+  bool isActive() const;
   void setIsReversing(bool reversing);
 
 private:
