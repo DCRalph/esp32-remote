@@ -18,7 +18,6 @@ Application *Application::getInstance()
  * Application constructor. Initialize pointers and set defaults.
  */
 Application::Application()
-    : testMode(false)
 {
   // Initialize input pointers.
   accOn = &input1;
@@ -26,6 +25,13 @@ Application::Application()
   leftIndicator = &input3;
   rightIndicator = &input4;
   reverse = &input5;
+
+  // Set default states.
+  accOnState = false;
+  brakeState = false;
+  leftIndicatorState = false;
+  rightIndicatorState = false;
+  reverseState = false;
 
   lastAccOn = 0;
 }
@@ -141,63 +147,11 @@ void Application::begin()
                                    // diable all special effects
                                    rgbEffect->setActive(false);
                                    nightriderEffect->setActive(false);
+
+                                   enableNormalMode();
                                    //
                                  });
 }
-
-/*
- * update():
- * Main loop update.
- */
-void Application::update()
-{
-  if (testMode)
-  {
-
-    // reverseLightEffect->setActive(true);
-    // brakeEffect->setIsReversing(true);
-
-    // brakeEffect->setActive(io0.read());
-    // leftIndicatorEffect->setActive(io0.read());
-    // rightIndicatorEffect->setActive(io0.read());
-    // reverseLightEffect->setActive(io0.read());
-    // rgbEffect->setActive(io0.read());
-    startupEffect->setActive(io0.read());
-  }
-  else
-  {
-    // Read inputs and decide which effects should be active.
-    handleEffects();
-  }
-
-  // Update and draw LED effects.
-  ledManager->updateEffects();
-  ledManager->draw();
-}
-
-/*
- * setTestMode():
- * Allows external code to enable or disable test mode.
- */
-void Application::setTestMode(bool mode)
-{
-  testMode = mode;
-}
-
-/*
- * handleEffects():
- * Reads the current inputs and sets effects accordingly.
- *
- * Features:
- * - If ACC is off and both indicator inputs are active, enable the
- *   startup effect until ACC is turned on.
- * - If ACC is on:
- *     * Brake pressed => Brake effect on.
- *     * Left indicator on => Left indicator effect on.
- *     * Right indicator on => Right indicator effect on.
- *     * Reverse on => Reverse light effect on.
- * - Other effects (e.g., RGB effect) can be handled via wireless commands.
- */
 
 static float accVolt;
 static float brakeVolt;
@@ -205,29 +159,13 @@ static float leftVolt;
 static float rightVolt;
 static float reverseVolt;
 
-void Application::handleEffects()
+void Application::updateInputs()
 {
   // ADC conversion constants and threshold for digital "on".
   const float ADC_MAX = 8192;
   const float ADC_REF_VOLTAGE = 3.3;
   const float DIVIDER_FACTOR = 10.0;
   const float VOLTAGE_THRESHOLD = 3;
-
-  // Timing constants.
-  // const unsigned long DEBOUNCE_MS = 50;         // debounce interval
-  // const unsigned long FLASH_RESET_MS = 10000UL; // reset counter if 10 seconds pass
-  // const int FLASHES_TO_ACTIVATE_STARTUP = 1;
-  // const int FLASHES_TO_DEACTIVATE_STARTUP = 3; // 3 additional flashes to cancel startup
-
-  // Static variables to persist between calls.
-  // static bool lastCombinedIndicatorState = false; // previous combined indicator state
-  // static unsigned long lastDebounceTime = 0;      // last debounce timestamp
-
-  // To track flash events.
-  // "firstFlashTime" marks the timestamp of the first flash event.
-  // "flashCounter" counts the flashes, including the first one.
-  // static unsigned long firstFlashTime = 0;
-  // static int flashCounter = 0;
 
   float smoothFactor = 0.5f;
 
@@ -254,14 +192,109 @@ void Application::handleEffects()
                  (1 - smoothFactor));
 
   // Determine digital state for each input.
-  bool accOnState = accVolt > VOLTAGE_THRESHOLD;
-  bool brakeState = brakeVolt > VOLTAGE_THRESHOLD;
-  bool leftIndicatorState = leftVolt > VOLTAGE_THRESHOLD;
-  bool rightIndicatorState = rightVolt > VOLTAGE_THRESHOLD;
-  bool reverseState = reverseVolt > VOLTAGE_THRESHOLD;
+  accOnState = accVolt > VOLTAGE_THRESHOLD;
+  brakeState = brakeVolt > VOLTAGE_THRESHOLD;
+  leftIndicatorState = leftVolt > VOLTAGE_THRESHOLD;
+  rightIndicatorState = rightVolt > VOLTAGE_THRESHOLD;
+  reverseState = reverseVolt > VOLTAGE_THRESHOLD;
+}
 
-  // Combined indicator state: both indicators are “on” simultaneously.
-  // bool combinedIndicatorState = leftIndicatorState && rightIndicatorState;
+/*
+ * update():
+ * Main loop update.
+ */
+void Application::update()
+{
+
+  // Update input states.
+  updateInputs();
+
+  brakeTapSequence3->setInput(brakeState);
+  brakeTapSequence3->loop();
+
+  switch (mode)
+  {
+  case ApplicationMode::NORMAL:
+    handleNormalEffects();
+    break;
+
+  case ApplicationMode::TEST:
+  {
+    // reverseLightEffect->setActive(true);
+    // brakeEffect->setIsReversing(true);
+
+    // brakeEffect->setActive(io0.read());
+    // leftIndicatorEffect->setActive(io0.read());
+    // rightIndicatorEffect->setActive(io0.read());
+    // reverseLightEffect->setActive(io0.read());
+    // rgbEffect->setActive(io0.read());
+    startupEffect->setActive(io0.read());
+  }
+  break;
+
+  case ApplicationMode::REMOTE:
+    handleRemoteEffects();
+    break;
+
+  case ApplicationMode::OFF:
+  {
+    // turn off all effects
+    brakeEffect->setActive(false);
+    leftIndicatorEffect->setActive(false);
+    rightIndicatorEffect->setActive(false);
+    reverseLightEffect->setActive(false);
+    rgbEffect->setActive(false);
+    startupEffect->setActive(false);
+  }
+  break;
+  }
+
+  // Update and draw LED effects.
+  ledManager->updateEffects();
+  ledManager->draw();
+}
+
+/*
+ * setTestMode():
+ * Allows external code to enable or disable test mode.
+ */
+void Application::enableNormalMode()
+{
+  mode = ApplicationMode::NORMAL;
+}
+
+void Application::enableTestMode()
+{
+  mode = ApplicationMode::TEST;
+}
+
+void Application::enableRemoteMode()
+{
+  mode = ApplicationMode::REMOTE;
+}
+
+void Application::enableOffMode()
+{
+  mode = ApplicationMode::OFF;
+}
+
+/*
+ * handleNormalEffects():
+ * Reads the current inputs and sets effects accordingly.
+ *
+ * Features:
+ * - If ACC is off and both indicator inputs are active, enable the
+ *   startup effect until ACC is turned on.
+ * - If ACC is on:
+ *     * Brake pressed => Brake effect on.
+ *     * Left indicator on => Left indicator effect on.
+ *     * Right indicator on => Right indicator effect on.
+ *     * Reverse on => Reverse light effect on.
+ * - Other effects (e.g., RGB effect) can be handled via wireless commands.
+ */
+
+void Application::handleNormalEffects()
+{
 
   unsigned long currentTime = millis();
 
@@ -269,13 +302,11 @@ void Application::handleEffects()
   lockSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
   RGBFlickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
   nightRiderFlickSequence->setInputs(accOnState, leftIndicatorState, rightIndicatorState);
-  brakeTapSequence3->setInput(brakeState);
 
   unlockSequence->loop();
   lockSequence->loop();
   RGBFlickSequence->loop();
   nightRiderFlickSequence->loop();
-  brakeTapSequence3->loop();
 
   if (lastAccOn != 0 && currentTime - lastAccOn > 1 * 60 * 1000)
   {
@@ -291,9 +322,18 @@ void Application::handleEffects()
     startupEffect->setActive(false);
   }
 
+  if (lastAccOnState != accOnState)
+  {
+    lastAccOnState = accOnState;
+
+    if (accOnState == false)
+    {
+      startupEffect->setActive(true);
+    }
+  }
+
   if (!accOnState)
   {
-
     // Since ACC is off, disable the other effects.
     brakeEffect->setActive(false);
     leftIndicatorEffect->setActive(false);
@@ -316,6 +356,10 @@ void Application::handleEffects()
     rightIndicatorEffect->setActive(rightIndicatorState);
     reverseLightEffect->setActive(reverseState);
   }
+}
+
+void Application::handleRemoteEffects()
+{
 }
 
 void Application::drawLEDs()

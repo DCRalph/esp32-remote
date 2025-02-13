@@ -2,6 +2,8 @@
 
 // #include "secrets.h"
 #include "config.h"
+
+#include "IO/GPIO.h"
 #include "IO/Wireless.h"
 #include "Application.h"
 
@@ -14,6 +16,8 @@ void setup()
   WiFi.mode(WIFI_AP_STA);
 
   GpIO::initIO();
+
+  wireless.setup();
 
   app = Application::getInstance();
 

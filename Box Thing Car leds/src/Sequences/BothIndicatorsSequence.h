@@ -9,7 +9,7 @@ public:
 
   // Call this in the main loop.
   // Assumes that accOnState, leftIndicatorState and rightIndicatorState are updated globals.
-  // For example, you could update these variables from Application::handleEffects().
+  // For example, you could update these variables from Application::handleNormalEffects().
   bool update() override;
   void VReset() override;
 

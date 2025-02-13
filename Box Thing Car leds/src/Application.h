@@ -17,6 +17,17 @@
 #include "Sequences/IndicatorFlickSequence.h"
 #include "Sequences/BrakeTapSequence.h"
 
+#include "IO/GPIO.h"
+#include "IO/Wireless.h"
+
+enum class ApplicationMode
+{
+  NORMAL,
+  TEST,
+  REMOTE,
+  OFF
+};
+
 class Application
 {
 public:
@@ -32,7 +43,10 @@ public:
   void update();
 
   // Set testMode externally.
-  void setTestMode(bool mode);
+  void enableNormalMode();
+  void enableTestMode();
+  void enableRemoteMode();
+  void enableOffMode();
 
   // Global pointer to the custom LED manager.
   CRGB leds[NUM_LEDS];
@@ -46,6 +60,15 @@ private:
   GpIO *leftIndicator;  // Left indicator
   GpIO *rightIndicator; // Right indicator
   GpIO *reverse;        // Reverse
+
+  bool accOnState;
+  bool lastAccOnState;
+  bool brakeState;
+  bool leftIndicatorState;
+  bool rightIndicatorState;
+  bool reverseState;
+
+  void updateInputs();
 
   uint64_t lastAccOn;
 
@@ -65,12 +88,12 @@ private:
   IndicatorFlickSequence *nightRiderFlickSequence;
   BrakeTapSequence *brakeTapSequence3;
 
-
-  // Test mode flag. When true, the code ignores physical inputs.
-  bool testMode;
+  // Application Mode
+  ApplicationMode mode;
 
   // Internal method to handle effect selection based on inputs.
-  void handleEffects();
+  void handleNormalEffects();
+  void handleRemoteEffects();
 
   static void drawLEDs();
 };
