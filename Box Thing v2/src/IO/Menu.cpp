@@ -329,6 +329,14 @@ String MenuItemSelect::getSelectedOption() const
   return options[currentIndex];
 }
 
+void MenuItemSelect::setCurrentIndex(int _index)
+{
+  if (_index >= 0 && _index < (int)options.size())
+  {
+    currentIndex = _index;
+  }
+}
+
 int MenuItemSelect::getCurrentIndex() const
 {
   return currentIndex;

@@ -26,7 +26,7 @@
 #include "Screens/Settings.h"
 
 #include "Screens/Control/EspnowSwitch.h"
-// #include "Screens/Control/Car.h"
+#include "Screens/Control/Car.h"
 // #include "Screens/Control/CarFlash.h"
 #include "Screens/Control/RemoteRelay.h"
 #include "Screens/Control/EncoderTransmiter.h"
@@ -53,7 +53,7 @@ SettingsScreen settings("Settings");
 
 // #### /Control
 EspnowSwitchScreen espnowSwitch("Espnow Switch");
-// CarControlScreen carControl("Car Control");
+CarControlScreen carControl("Car Control");
 // CarFlashScreen carFlash("Car Flash");
 RemoteRelayScreen remoteRelay("Remote Relay");
 EncoderTransmiterScreen encoderTransmiter("Encoder Transmiter");
@@ -167,8 +167,8 @@ void setup()
   // #### /Control
   screenManager.addScreen(&espnowSwitch);
   espnowSwitch.setTopBarText("ESPNOW");
-  // screenManager.addScreen(&carControl);
-  // carControl.setTopBarText("Car");
+  screenManager.addScreen(&carControl);
+  carControl.setTopBarText("Car");
   // screenManager.addScreen(&carFlash);
   // carFlash.setTopBarText("Flash");
   screenManager.addScreen(&remoteRelay);

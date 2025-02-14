@@ -354,7 +354,6 @@ template class MenuItemNumber<uint8_t>;
 template class MenuItemNumber<uint32_t>;
 template class MenuItemNumber<uint64_t>;
 
-
 // ##############################
 // New MenuItemSelect declaration
 // ##############################
@@ -376,7 +375,7 @@ public:
    * @param _options A vector of available option strings.
    * @param initialIndex The initially selected index in _options.
    */
-  MenuItemSelect(String _name, const std::vector<String>& _options, int initialIndex = 0);
+  MenuItemSelect(String _name, const std::vector<String> &_options, int initialIndex = 0);
 
   /// Cycle to the next option in the list.
   void nextOption();
@@ -387,6 +386,7 @@ public:
   /// Returns the currently selected option.
   String getSelectedOption() const;
 
+  void setCurrentIndex(int _index);
   int getCurrentIndex() const;
 
   /// Set a callback to be notified when the selection changes.
@@ -403,34 +403,6 @@ public:
 
   /// Draw the selection item. It draws the name and the currently selected option.
   virtual void draw(uint8_t _x, uint8_t _y, bool _active) override;
-};
-
-// ###### Menu ######
-class Menu
-{
-private:
-  uint8_t active;
-  uint8_t maxItemsPerPage = 3;
-  uint8_t numItems;
-  uint8_t numItemsPerPage;
-  uint8_t offsetFromTop;
-
-public:
-  std::vector<MenuItem *> items;
-  Menu();
-
-  void setItemsPerPage(uint8_t _itemsPerPage);
-  uint8_t getItemsPerPage();
-
-  void setActive(uint8_t _active);
-  uint8_t getActive();
-
-  void nextItem();
-  void prevItem();
-
-  void addMenuItem(MenuItem *_item);
-  void draw();
-  void update();
 };
 
 // ###### Menu ######

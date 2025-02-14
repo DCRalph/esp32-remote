@@ -42,7 +42,7 @@ public:
 
   MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
 
-  MenuItem modeItem = MenuItem("Mode");
+  // MenuItem modeItem = MenuItem("Mode");
 
   // MenuItemAction modeNormalItem = MenuItemAction("Normal", 1, [&]()
   //                                               {
@@ -66,7 +66,7 @@ public:
   //                                                 wireless.send(&fp);
   //                                               });
 
-  std::vector<String> modeItems = {"Red", "Green", "Blue", "Orange"};
+  std::vector<String> modeItems = {"Norm", "Test", "Rem", "Off"};
   MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
 
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
@@ -89,7 +89,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
 
   menu.addMenuItem(&connectionItem);
-  menu.addMenuItem(&modeItem);
+  // menu.addMenuItem(&modeItem);
 
   menu.addMenuItem(&modeSelectItem);
 
@@ -103,41 +103,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&startupEffectItem);
   menu.addMenuItem(&rgbEffectItem);
   menu.addMenuItem(&nightriderEffectItem);
-
-  wireless.addOnReceiveFor(0xe0, [&](fullPacket *fp) // ping cmd
-                           {
-                             lastConfirmedPing = millis();
-
-                             mode = static_cast<ApplicationMode>(fp->p.data[0]);
-
-                             brakeEffectActive = fp->p.data[1];
-                             leftIndicatorEffectActive = fp->p.data[2];
-                             rightIndicatorEffectActive = fp->p.data[3];
-                             reverseLightEffectActive = fp->p.data[4];
-                             startupEffectActive = fp->p.data[5];
-                             rgbEffectActive = fp->p.data[6];
-                             nightriderEffectActive = fp->p.data[7]; });
-
-  wireless.addOnReceiveFor(0xe1, [&](fullPacket *fp) // set mode
-                           {
-                             lastConfirmedPing = millis();
-
-                             mode = static_cast<ApplicationMode>(fp->p.data[0]); //
-                           });
-
-  wireless.addOnReceiveFor(0xe2, [&](fullPacket *fp) // set effects
-                           {
-                             lastConfirmedPing = millis();
-
-                             brakeEffectActive = fp->p.data[0];
-                             leftIndicatorEffectActive = fp->p.data[1];
-                             rightIndicatorEffectActive = fp->p.data[2];
-                             reverseLightEffectActive = fp->p.data[3];
-                             startupEffectActive = fp->p.data[4];
-                             rgbEffectActive = fp->p.data[5];
-                             nightriderEffectActive = fp->p.data[6];
-                             //
-                           });
 
   modeSelectItem.setOnChange([&]()
                              {
@@ -191,10 +156,11 @@ void CarControlScreen::update()
     if (!connected)
     {
       mode = ApplicationMode::OFF;
+      modeSelectItem.setCurrentIndex((uint8_t)mode);
     }
   }
 
-  if (millis() - lastPing > 200)
+  if (millis() - lastPing > 500)
   {
     lastPing = millis();
 
@@ -210,6 +176,49 @@ void CarControlScreen::update()
 
 void CarControlScreen::onEnter()
 {
+
+  wireless.addOnReceiveFor(0xe0, [&](fullPacket *fp) // ping cmd
+                           {
+                             lastConfirmedPing = millis();
+
+                             mode = static_cast<ApplicationMode>(fp->p.data[0]);
+                             modeSelectItem.setCurrentIndex((uint8_t)mode);
+
+                             brakeEffectActive = fp->p.data[1];
+                             leftIndicatorEffectActive = fp->p.data[2];
+                             rightIndicatorEffectActive = fp->p.data[3];
+                             reverseLightEffectActive = fp->p.data[4];
+                             startupEffectActive = fp->p.data[5];
+                             rgbEffectActive = fp->p.data[6];
+                             nightriderEffectActive = fp->p.data[7];
+                             //
+                           });
+
+  wireless.addOnReceiveFor(0xe1, [&](fullPacket *fp) // set mode
+                           {
+                             lastConfirmedPing = millis();
+
+                             mode = static_cast<ApplicationMode>(fp->p.data[0]);
+                             modeSelectItem.setCurrentIndex((uint8_t)mode);
+                             //
+                           });
+
+  wireless.addOnReceiveFor(0xe2, [&](fullPacket *fp) // set effects
+                           {
+                             lastConfirmedPing = millis();
+
+                             brakeEffectActive = fp->p.data[0];
+                             leftIndicatorEffectActive = fp->p.data[1];
+                             rightIndicatorEffectActive = fp->p.data[2];
+                             reverseLightEffectActive = fp->p.data[3];
+                             startupEffectActive = fp->p.data[4];
+                             rgbEffectActive = fp->p.data[5];
+                             nightriderEffectActive = fp->p.data[6];
+                             //
+                           });
+
+  connected = false;
+  mode = ApplicationMode::OFF;
 }
 
 void CarControlScreen::sentEffects()

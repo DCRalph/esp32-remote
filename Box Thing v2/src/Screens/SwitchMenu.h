@@ -16,7 +16,7 @@ public:
 
   // MenuItemNavigate espnowSwitchItem = MenuItemNavigate("ESP SW", "Espnow Switch");
 
-  // MenuItemNavigate carItem = MenuItemNavigate("Car", "Car Control");
+  MenuItemNavigate carItem = MenuItemNavigate("Car", "Car Control");
 
   MenuItemNavigate remoteRelayItem = MenuItemNavigate("Relay", "Remote Relay");
 
@@ -32,7 +32,7 @@ SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
   // menu.addMenuItem(&espnowSwitchItem);
-  // menu.addMenuItem(&carItem);
+  menu.addMenuItem(&carItem);
   menu.addMenuItem(&remoteRelayItem);
   menu.addMenuItem(&encoderTransmiterItem);
   menu.addMenuItem(&servosControlItem);
