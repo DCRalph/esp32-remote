@@ -76,6 +76,51 @@ void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
   }
 }
 
+// ###### MenuItemSelect ######
+
+void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
+{
+  // Draw similar to other items.
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  String dispText = getName();
+  String optionText = getSelectedOption();
+
+  if (_active && selected)
+  {
+    // Editing mode: draw a frame around the option.
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+    display.u8g2.drawStr(
+        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+        _y + 15,
+        optionText.c_str());
+  }
+  else if (_active)
+  {
+    // Active but not editing: draw with a filled background.
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+    display.u8g2.drawStr(
+        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+        _y + 15,
+        optionText.c_str());
+  }
+  else
+  {
+    // Inactive: normal drawing.
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+    display.u8g2.drawStr(
+        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+        _y + 15,
+        optionText.c_str());
+  }
+}
+
 // ###### Menu ######
 
 void Menu::draw()
@@ -146,7 +191,6 @@ void Menu::update()
   {
     if (ClickButtonEnc.clicks == 1)
       screenManager.back();
-
     return;
   }
 
@@ -155,43 +199,63 @@ void Menu::update()
     ESP_LOGI(TAG, "Clicks: %d", ClickButtonEnc.clicks);
     items[active]->run();
   }
+  
   MenuItem *currentItem = items[active];
 
   if (encoderGetCount() > 0)
   {
-
-    // ESP_LOGI(TAG, "Encoder Up");
-    if (currentItem->getType() == MenuItemType::Number)
+    // Check if the current item is a Number or a Select and is in edit mode.
+    if ((currentItem->getType() == MenuItemType::Number) ||
+        (currentItem->getType() == MenuItemType::Select))
     {
-      // ESP_LOGI(TAG, "Type: Number");
-
-      auto numberItem = (MenuItemNumberBase *)currentItem;
-
-      if (numberItem && numberItem->isSelected())
-        numberItem->increase();
-      else
-        nextItem();
+      // Try casting to MenuItemNumberBase or MenuItemSelect.
+      if (currentItem->getType() == MenuItemType::Select)
+      {
+        auto selectItem = dynamic_cast<MenuItemSelect *>(currentItem);
+        if (selectItem && selectItem->isSelected())
+          selectItem->nextOption();
+        else
+          nextItem();
+      }
+      else // Number type
+      {
+        auto numberItem = (MenuItemNumberBase *)currentItem;
+        if (numberItem && numberItem->isSelected())
+          numberItem->increase();
+        else
+          nextItem();
+      }
     }
     else
       nextItem();
+
     encoderClearCount();
   }
   else if (encoderGetCount() < 0)
   {
-    // ESP_LOGI(TAG, "Encoder Down");
-    if (items[active]->getType() == MenuItemType::Number)
+    if ((currentItem->getType() == MenuItemType::Number) ||
+        (currentItem->getType() == MenuItemType::Select))
     {
-      // ESP_LOGI(TAG, "Type: Number");
-
-      auto numberItem = (MenuItemNumberBase *)currentItem;
-
-      if (numberItem && numberItem->isSelected())
-        numberItem->decrease();
+      if (currentItem->getType() == MenuItemType::Select)
+      {
+        auto selectItem = dynamic_cast<MenuItemSelect *>(currentItem);
+        if (selectItem && selectItem->isSelected())
+          selectItem->prevOption();
+        else
+          prevItem();
+      }
       else
-        prevItem();
+      {
+        auto numberItem = (MenuItemNumberBase *)currentItem;
+        if (numberItem && numberItem->isSelected())
+          numberItem->decrease();
+        else
+          prevItem();
+      }
     }
     else
       prevItem();
+
     encoderClearCount();
   }
 }

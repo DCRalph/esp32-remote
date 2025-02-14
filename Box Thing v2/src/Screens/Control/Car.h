@@ -44,27 +44,29 @@ public:
 
   MenuItem modeItem = MenuItem("Mode");
 
-  MenuItemAction modeNormalItem = MenuItemAction("Normal", 1, [&]()
-                                                {
-                                                  fullPacket fp;
-                                                  fp.direction = PacketDirection::SEND;
-                                                  memcpy(fp.mac, car_addr, 6);
-                                                  fp.p.type = 0xe1;
-                                                  fp.p.len = 1;
-                                                  fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::NORMAL);
-                                                  wireless.send(&fp);
-                                                });
-                                              
-  MenuItemAction modeRemoteItem = MenuItemAction("Remote", 1, [&]()
-                                                {
-                                                  fullPacket fp;
-                                                  fp.direction = PacketDirection::SEND;
-                                                  memcpy(fp.mac, car_addr, 6);
-                                                  fp.p.type = 0xe1;
-                                                  fp.p.len = 1;
-                                                  fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::REMOTE);
-                                                  wireless.send(&fp);
-                                                });
+  // MenuItemAction modeNormalItem = MenuItemAction("Normal", 1, [&]()
+  //                                               {
+  //                                                 fullPacket fp;
+  //                                                 fp.direction = PacketDirection::SEND;
+  //                                                 memcpy(fp.mac, car_addr, 6);
+  //                                                 fp.p.type = 0xe1;
+  //                                                 fp.p.len = 1;
+  //                                                 fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::NORMAL);
+  //                                                 wireless.send(&fp);
+  //                                               });
+
+  // MenuItemAction modeRemoteItem = MenuItemAction("Remote", 1, [&]()
+  //                                               {
+  //                                                 fullPacket fp;
+  //                                                 fp.direction = PacketDirection::SEND;
+  //                                                 memcpy(fp.mac, car_addr, 6);
+  //                                                 fp.p.type = 0xe1;
+  //                                                 fp.p.len = 1;
+  //                                                 fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::REMOTE);
+  //                                                 wireless.send(&fp);
+  //                                               });
+
+  MenuItemSelect modeSelectItem = MenuItemSelect("Mode", {"Norm", "Test", "Rem", "Off"}, 0);
 
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
@@ -87,6 +89,12 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   menu.addMenuItem(&connectionItem);
   menu.addMenuItem(&modeItem);
+
+  menu.addMenuItem(&modeSelectItem);
+
+  // menu.addMenuItem(&modeNormalItem);
+  // menu.addMenuItem(&modeRemoteItem);
+
   menu.addMenuItem(&brakeEffectItem);
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
@@ -129,6 +137,18 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
                              nightriderEffectActive = fp->p.data[6];
                              //
                            });
+
+  modeSelectItem.setOnChange([&]()
+                             {
+                               fullPacket fp;
+                               fp.direction = PacketDirection::SEND;
+                               memcpy(fp.mac, car_addr, 6);
+                               fp.p.type = 0xe1;
+                               fp.p.len = 1;
+                               fp.p.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
+                               wireless.send(&fp);
+                               //
+                             });
 
   brakeEffectItem.setOnChange([&]()
                               { sentEffects(); });

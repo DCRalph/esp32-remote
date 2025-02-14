@@ -280,6 +280,87 @@ void MenuItemNumber<T>::decrease()
   }
 }
 
+// ##############################
+// Implementation for MenuItemSelect
+// ##############################
+
+MenuItemSelect::MenuItemSelect(String _name,
+                               const std::vector<String> &_options,
+                               int initialIndex)
+    : MenuItem(_name), options(_options)
+{
+  type = MenuItemType::Select;
+  if (initialIndex >= 0 && initialIndex < (int)options.size())
+  {
+    currentIndex = initialIndex;
+  }
+  else
+  {
+    currentIndex = 0;
+  }
+
+  // When pressed, toggle selection mode.
+  addFunc(MENU_DEFUALT_CLICKS, [this]()
+          { toggleSelected(); });
+}
+
+void MenuItemSelect::nextOption()
+{
+  if (options.empty())
+    return;
+  currentIndex = (currentIndex + 1) % options.size();
+  if (onChange)
+    onChange();
+}
+
+void MenuItemSelect::prevOption()
+{
+  if (options.empty())
+    return;
+  currentIndex = (currentIndex - 1 + options.size()) % options.size();
+  if (onChange)
+    onChange();
+}
+
+String MenuItemSelect::getSelectedOption() const
+{
+  if (options.empty())
+    return "";
+  return options[currentIndex];
+}
+
+int MenuItemSelect::getCurrentIndex() const
+{
+  return currentIndex;
+}
+
+void MenuItemSelect::setOnChange(std::function<void()> callback)
+{
+  onChange = callback;
+}
+
+void MenuItemSelect::toggleSelected()
+{
+  if (options.empty())
+    return;
+  selected = !selected;
+
+  if (!selected && onChange)
+    onChange();
+}
+
+bool MenuItemSelect::isSelected() const
+{
+  return selected;
+}
+
+void MenuItemSelect::run()
+{
+  // When the item is clicked, we simply toggle editing mode.
+  // (The encoder events should now change the option if selected.)
+  toggleSelected();
+}
+
 // ###### Menu ######
 
 Menu::Menu()
