@@ -157,7 +157,7 @@ void CarControlScreen::update()
 
     fullPacket fp;
     fp.direction = PacketDirection::SEND;
-    memcpy(fp.mac, remote_addr, 6);
+    memcpy(fp.mac, car_addr, 6);
     fp.p.type = 0xe0;
     fp.p.len = 0;
 
@@ -173,7 +173,7 @@ void CarControlScreen::sentEffects()
 {
   fullPacket fp;
   fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, remote_addr, 6);
+  memcpy(fp.mac, car_addr, 6);
   fp.p.type = 0xe2;
   fp.p.len = 7;
 

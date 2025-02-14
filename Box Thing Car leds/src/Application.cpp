@@ -38,6 +38,7 @@ Application::Application()
 
 /*
  * Application destructor. Clean up dynamic allocations.
+ * This is not necessary for this project, but is good practice.
  */
 Application::~Application()
 {
@@ -48,6 +49,11 @@ Application::~Application()
   delete rgbEffect;
   delete nightriderEffect;
   delete startupEffect;
+
+  delete unlockSequence;
+  delete lockSequence;
+  delete RGBFlickSequence;
+  delete nightRiderFlickSequence;
 
   delete ledManager;
   ledManager = nullptr;
@@ -180,9 +186,9 @@ void Application::begin()
                              lastRemotePing = millis();
 
                              uint8_t *data = fp->p.data;
-                             uint8_t mode = data[0];
+                             uint8_t rxMode = data[0];
 
-                             switch (mode)
+                             switch (rxMode)
                              {
                              case 0:
                                enableNormalMode();
@@ -216,7 +222,7 @@ void Application::begin()
 
                              uint8_t *data = fp->p.data;
 
-                             for (int i = 0; i < 6; i++)
+                             for (int i = 0; i < 7; i++)
                              {
                                bool firstBit = data[i] & 0x01;
                                bool secondBit = data[i] & 0x02;
@@ -256,11 +262,11 @@ void Application::begin()
                            });
 }
 
-static float accVolt;
-static float brakeVolt;
-static float leftVolt;
-static float rightVolt;
-static float reverseVolt;
+static float accVolt = 0;
+static float brakeVolt = 0;
+static float leftVolt = 0;
+static float rightVolt = 0;
+static float reverseVolt = 0;
 
 void Application::updateInputs()
 {
@@ -443,11 +449,10 @@ void Application::handleNormalEffects()
   }
   else
   {
+    lastAccOn = currentTime;
+
     // When ACC is on, ensure the startup effect is turned off and reset flash tracking.
     startupEffect->setActive(false);
-    // flashCounter = 0;
-    // firstFlashTime = 0;
-    // lastCombinedIndicatorState = false;
 
     // And process the other effects normally.
     brakeEffect->setActive(brakeState);
