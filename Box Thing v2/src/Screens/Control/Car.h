@@ -66,7 +66,8 @@ public:
   //                                                 wireless.send(&fp);
   //                                               });
 
-  MenuItemSelect modeSelectItem = MenuItemSelect("Mode", {"Norm", "Test", "Rem", "Off"}, 0);
+  std::vector<String> modeItems = {"Red", "Green", "Blue", "Orange"};
+  MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
 
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
