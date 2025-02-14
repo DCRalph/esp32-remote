@@ -157,10 +157,32 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
     return -1;
   }
 
+  Serial.println("here0");
+  delay(200);
+
   esp_now_peer_info_t peerInfo = esp_now_peer_info_t();
   memcpy(peerInfo.peer_addr, peer_addr, 6);
   peerInfo.channel = ESP_NOW_CHANNEL;
   peerInfo.encrypt = false;
+
+  #ifdef DEBUG_ESP_NOW
+  Serial.println("######################");
+  Serial.print("Peer info: ");
+  for (int i = 0; i < 6; i++)
+  {
+    Serial.print(peerInfo.peer_addr[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+  Serial.print("Channel: ");
+  Serial.println(peerInfo.channel);
+  Serial.print("Encrypt: ");
+  Serial.println(peerInfo.encrypt);
+  Serial.println("######################");
+#endif
+
+  Serial.println("here1");
+  delay(200);
 
   if (esp_now_add_peer(&peerInfo) != ESP_OK)
   {
@@ -172,6 +194,9 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
   Serial.println("Peer added");
 #endif
 
+Serial.println("here2");
+delay(200);
+
   if (esp_now_send(peerInfo.peer_addr, data, len) != ESP_OK)
   {
     Serial.println("Failed to send data");
@@ -180,6 +205,9 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
 #ifdef DEBUG_ESP_NOW
   Serial.println("Data sent");
 #endif
+
+Serial.println("here3");
+delay(200);
 
   if (esp_now_del_peer(peer_addr) != ESP_OK)
   {
@@ -190,6 +218,9 @@ int Wireless::send(u8_t *data, size_t len, u8_t *peer_addr)
   Serial.println("Peer deleted");
   Serial.println("######################");
 #endif
+
+Serial.println("here4");
+delay(200);
 
   return 0;
 }

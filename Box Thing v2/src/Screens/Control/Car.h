@@ -6,7 +6,8 @@
 #include "IO/Wireless.h"
 #include "IO/Menu.h"
 
-static uint8_t car_addr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// 80:65:99:4b:3a:d0
+static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0};
 
 enum class ApplicationMode
 {
