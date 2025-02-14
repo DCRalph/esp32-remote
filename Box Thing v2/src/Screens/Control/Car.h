@@ -44,6 +44,28 @@ public:
 
   MenuItem modeItem = MenuItem("Mode");
 
+  MenuItemAction modeNormalItem = MenuItemAction("Normal", 1, [&]()
+                                                {
+                                                  fullPacket fp;
+                                                  fp.direction = PacketDirection::SEND;
+                                                  memcpy(fp.mac, car_addr, 6);
+                                                  fp.p.type = 0xe1;
+                                                  fp.p.len = 1;
+                                                  fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::NORMAL);
+                                                  wireless.send(&fp);
+                                                });
+                                              
+  MenuItemAction modeRemoteItem = MenuItemAction("Remote", 1, [&]()
+                                                {
+                                                  fullPacket fp;
+                                                  fp.direction = PacketDirection::SEND;
+                                                  memcpy(fp.mac, car_addr, 6);
+                                                  fp.p.type = 0xe1;
+                                                  fp.p.len = 1;
+                                                  fp.p.data[0] = static_cast<uint8_t>(ApplicationMode::REMOTE);
+                                                  wireless.send(&fp);
+                                                });
+
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
