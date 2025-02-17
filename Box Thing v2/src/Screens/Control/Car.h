@@ -235,6 +235,7 @@ void CarControlScreen::sentEffects()
   fp.p.len = 7;
 
   fp.p.data[0] = brakeEffectActive;
+  fp.p.data[0] |= reverseLightEffectActive << 1;
   fp.p.data[1] = leftIndicatorEffectActive;
   fp.p.data[2] = rightIndicatorEffectActive;
   fp.p.data[3] = reverseLightEffectActive;

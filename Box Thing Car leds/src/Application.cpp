@@ -356,6 +356,23 @@ void Application::update()
   brakeTapSequence3->setInput(brakeState);
   brakeTapSequence3->loop();
 
+  if (lastRemotePing != 0 && millis() - lastRemotePing > 2000)
+  {
+    if (mode == ApplicationMode::TEST || mode == ApplicationMode::REMOTE)
+    {
+      lastRemotePing = 0;
+      mode = ApplicationMode::NORMAL;
+      // disable all effects
+      brakeEffect->setActive(false);
+      leftIndicatorEffect->setActive(false);
+      rightIndicatorEffect->setActive(false);
+      reverseLightEffect->setActive(false);
+      rgbEffect->setActive(false);
+      nightriderEffect->setActive(false);
+      startupEffect->setActive(false);
+    }
+  }
+
   switch (mode)
   {
   case ApplicationMode::NORMAL:
@@ -388,6 +405,7 @@ void Application::update()
     rightIndicatorEffect->setActive(false);
     reverseLightEffect->setActive(false);
     rgbEffect->setActive(false);
+    nightriderEffect->setActive(false);
     startupEffect->setActive(false);
   }
   break;
@@ -451,6 +469,7 @@ void Application::handleNormalEffects()
     rightIndicatorEffect->setActive(false);
     reverseLightEffect->setActive(false);
     rgbEffect->setActive(false);
+    nightriderEffect->setActive(false);
     startupEffect->setActive(false);
   }
 

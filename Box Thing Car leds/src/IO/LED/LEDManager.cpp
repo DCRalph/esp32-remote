@@ -233,3 +233,9 @@ uint64_t LEDManager::getLastFrameTime() const
 {
   return lastUpdateDuration + lastDrawDuration;
 }
+
+void LEDManager::disableALlEffects(){
+  // for(auto e : effects){
+    
+  // }
+}

@@ -95,6 +95,8 @@ public:
   // Return combined frame duration (update + draw).
   uint64_t getLastFrameTime() const;
 
+  void disableALlEffects();
+
 protected:
   uint16_t numLEDs;
   uint16_t fps;
