@@ -109,7 +109,10 @@ bool IndicatorFlickSequence::update()
   else
   {
     // When ACC is off, reset the sequence.
-    reset();
+    if(currentIndex > 0 || started)
+    {
+      reset();
+    }
   }
   return false;
 }

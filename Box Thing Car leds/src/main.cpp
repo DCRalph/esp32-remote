@@ -17,6 +17,14 @@ void setup()
 
   GpIO::initIO();
 
+  preferences.begin("esp", false);
+
+  long bootCount = preferences.getLong("bootCount", 0);
+  bootCount++;
+  preferences.putLong("bootCount", bootCount);
+
+  Serial.println("[INFO] [CONFIG] Boot count: " + String(bootCount));
+
   wireless.setup();
 
   app = Application::getInstance();

@@ -19,12 +19,14 @@ Application *Application::getInstance()
  */
 Application::Application()
 {
-  // Initialize input pointers.
+// Initialize input pointers.
+#ifdef ENABLE_HV_INPUTS
   accOn = &input1;
   brake = &input2;
   leftIndicator = &input3;
   rightIndicator = &input4;
   reverse = &input5;
+#endif
 
   // Set default states.
   accOnState = false;
@@ -73,6 +75,8 @@ void Application::begin()
   delay(500);
   leds[0] = CRGB(0, 0, 0);
   FastLED.show();
+
+  mode = static_cast<ApplicationMode>(preferences.getUInt("mode", 0));
 
   // Create and assign the custom LED manager.
   ledManager = new LEDManager(NUM_LEDS);
@@ -166,24 +170,24 @@ void Application::begin()
                              pTX.type = 0xe0;
                              pTX.len = 8;
                              // sent current mode as uint8_t
-                            //  pTX.data[0] = static_cast<uint8_t>(mode);
-                            switch (mode)
-                            {
-                            case ApplicationMode::NORMAL:
-                              pTX.data[0] = 0;
-                              break;
-                            case ApplicationMode::TEST:
-                              pTX.data[0] = 1;
-                              break;
-                            case ApplicationMode::REMOTE:
-                              pTX.data[0] = 2;
-                              break;
-                            case ApplicationMode::OFF:
-                              pTX.data[0] = 3;
-                              break;
-                            default:
-                              break;
-                            }
+                             //  pTX.data[0] = static_cast<uint8_t>(mode);
+                             switch (mode)
+                             {
+                             case ApplicationMode::NORMAL:
+                               pTX.data[0] = 0;
+                               break;
+                             case ApplicationMode::TEST:
+                               pTX.data[0] = 1;
+                               break;
+                             case ApplicationMode::REMOTE:
+                               pTX.data[0] = 2;
+                               break;
+                             case ApplicationMode::OFF:
+                               pTX.data[0] = 3;
+                               break;
+                             default:
+                               break;
+                             }
 
                              // sent current effects as uint8_t
                              pTX.data[1] = brakeEffect->isActive();
@@ -198,85 +202,90 @@ void Application::begin()
                              //
                            });
 
-  // wireless.addOnReceiveFor(0xe1, [this](fullPacket *fp) // set mode cmd
-  //                          {
-  //                            lastRemotePing = millis();
+  wireless.addOnReceiveFor(0xe1, [&](fullPacket *fp) // set mode cmd
+                           {
+                             lastRemotePing = millis();
 
-  //                            uint8_t *data = fp->p.data;
-  //                            uint8_t rxMode = data[0];
+                             uint8_t *data = fp->p.data;
+                             uint8_t rxMode = data[0];
 
-  //                            switch (rxMode)
-  //                            {
-  //                            case 0:
-  //                              enableNormalMode();
-  //                              break;
-  //                            case 1:
-  //                              enableTestMode();
-  //                              break;
-  //                            case 2:
-  //                              enableRemoteMode();
-  //                              break;
-  //                            case 3:
-  //                              enableOffMode();
-  //                              break;
-  //                            default:
-  //                              break;
-  //                            }
+                             switch (rxMode)
+                             {
+                             case 0:
+                               enableNormalMode();
+                               break;
+                             case 1:
+                               enableTestMode();
+                               break;
+                             case 2:
+                               enableRemoteMode();
+                               break;
+                             case 3:
+                               enableOffMode();
+                               break;
+                             default:
+                               break;
+                             }
 
-  //                            data_packet pTX;
-  //                            pTX.type = 0xe1;
-  //                            pTX.len = 1;
-  //                            // sent current mode as uint8_t
-  //                            pTX.data[0] = static_cast<uint8_t>(mode);
+                             data_packet pTX;
+                             pTX.type = 0xe1;
+                             pTX.len = 1;
+                             // sent current mode as uint8_t
+                             pTX.data[0] = static_cast<uint8_t>(mode);
 
-  //                            wireless.send(&pTX, fp->mac);
-  //                            //
-  //                          });
+                             wireless.send(&pTX, fp->mac);
+                             //
+                           });
 
-  // wireless.addOnReceiveFor(0xe2, [this](fullPacket *fp) // set effects cmd
-  //                          {
-  //                            lastRemotePing = millis();
+  wireless.addOnReceiveFor(0xe2, [&](fullPacket *fp) // set effects cmd
+                           {
+                             lastRemotePing = millis();
 
-  //                            uint8_t *data = fp->p.data;
+                             uint8_t *data = fp->p.data;
 
-  //                            for (int i = 0; i < 7; i++)
-  //                            {
-  //                              bool firstBit = data[i] & 0x01;
-  //                              bool secondBit = data[i] & 0x02;
-  //                              bool thirdBit = data[i] & 0x04;
+                             for (int i = 0; i < 7; i++)
+                             {
+                               bool firstBit = data[i] & 0x01;
+                               bool secondBit = data[i] & 0x02;
+                               bool thirdBit = data[i] & 0x04;
 
-  //                              switch (i)
-  //                              {
-  //                              case 0:
-  //                                brakeEffect->setActive(firstBit);
-  //                                brakeEffect->setIsReversing(secondBit);
-  //                                break;
-  //                              case 1:
-  //                                leftIndicatorEffect->setActive(firstBit);
-  //                                break;
-  //                              case 2:
-  //                                rightIndicatorEffect->setActive(firstBit);
-  //                                break;
-  //                              case 3:
-  //                                reverseLightEffect->setActive(firstBit);
-  //                                break;
-  //                              case 4:
-  //                                startupEffect->setActive(firstBit);
-  //                                break;
-  //                              case 5:
-  //                                rgbEffect->setActive(firstBit);
-  //                                break;
-  //                              case 6:
-  //                                nightriderEffect->setActive(firstBit);
-  //                                break;
+                               switch (i)
+                               {
+                               case 0:
+                                 brakeEffect->setActive(firstBit);
+                                 brakeEffect->setIsReversing(secondBit);
+                                 break;
+                               case 1:
+                                 leftIndicatorEffect->setActive(firstBit);
+                                 break;
+                               case 2:
+                                 rightIndicatorEffect->setActive(firstBit);
+                                 break;
+                               case 3:
+                                 reverseLightEffect->setActive(firstBit);
+                                 break;
+                               case 4:
+                                 startupEffect->setActive(firstBit);
+                                 break;
+                               case 5:
+                                 rgbEffect->setActive(firstBit);
+                                 break;
+                               case 6:
+                                 nightriderEffect->setActive(firstBit);
+                                 break;
 
-  //                              default:
-  //                                break;
-  //                              }
-  //                            }
+                               default:
+                                 break;
+                               }
+                             }
 
-  //                            //
-  //                          });
+                             //
+                           });
+
+#ifndef ENABLE_HV_INPUTS
+  enableTestMode();
+  rgbEffect->setActive(true);
+#endif
 }
 
 static float accVolt = 0;
@@ -295,7 +304,8 @@ void Application::updateInputs()
 
   float smoothFactor = 0.5f;
 
-  // Update filtered voltages using a simple low-pass filter.
+// Update filtered voltages using a simple low-pass filter.
+#ifdef ENABLE_HV_INPUTS
   accVolt = (accVolt * smoothFactor) +
             (((float)accOn->analogRead() / ADC_MAX *
               ADC_REF_VOLTAGE * DIVIDER_FACTOR) *
@@ -323,6 +333,15 @@ void Application::updateInputs()
   leftIndicatorState = leftVolt > VOLTAGE_THRESHOLD;
   rightIndicatorState = rightVolt > VOLTAGE_THRESHOLD;
   reverseState = reverseVolt > VOLTAGE_THRESHOLD;
+
+#else
+
+  accOnState = false;
+  brakeState = false;
+  leftIndicatorState = false;
+  rightIndicatorState = false;
+  reverseState = false;
+#endif
 }
 
 /*
@@ -386,37 +405,26 @@ void Application::update()
 void Application::enableNormalMode()
 {
   mode = ApplicationMode::NORMAL;
+  preferences.putUInt("mode", static_cast<uint8_t>(mode));
 }
 
 void Application::enableTestMode()
 {
   mode = ApplicationMode::TEST;
+  preferences.putUInt("mode", static_cast<uint8_t>(mode));
 }
 
 void Application::enableRemoteMode()
 {
   mode = ApplicationMode::REMOTE;
+  preferences.putUInt("mode", static_cast<uint8_t>(mode));
 }
 
 void Application::enableOffMode()
 {
   mode = ApplicationMode::OFF;
+  preferences.putUInt("mode", static_cast<uint8_t>(mode));
 }
-
-/*
- * handleNormalEffects():
- * Reads the current inputs and sets effects accordingly.
- *
- * Features:
- * - If ACC is off and both indicator inputs are active, enable the
- *   startup effect until ACC is turned on.
- * - If ACC is on:
- *     * Brake pressed => Brake effect on.
- *     * Left indicator on => Left indicator effect on.
- *     * Right indicator on => Right indicator effect on.
- *     * Reverse on => Reverse light effect on.
- * - Other effects (e.g., RGB effect) can be handled via wireless commands.
- */
 
 void Application::handleNormalEffects()
 {

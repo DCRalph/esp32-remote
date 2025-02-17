@@ -3,12 +3,14 @@
 GpIO io0(0, InputPullup, LOW);
 GpIO led(LED_PIN, Output, HIGH);
 
+#ifdef ENABLE_HV_INPUTS
 GpIO input1(INPUT_1_PIN, Input);
 GpIO input2(INPUT_2_PIN, Input);
 GpIO input3(INPUT_3_PIN, Input);
 GpIO input4(INPUT_4_PIN, Input);
 GpIO input5(INPUT_5_PIN, Input);
 GpIO input6(INPUT_6_PIN, Input);
+#endif
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -174,12 +176,14 @@ void GpIO::initIO()
   io0.enableDebounce(50);
   led.init();
 
+#ifdef ENABLE_HV_INPUTS
   input1.init();
   input2.init();
   input3.init();
   input4.init();
   input5.init();
   input6.init();
+#endif
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();

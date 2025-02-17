@@ -55,11 +55,14 @@ public:
 
 private:
   // Input pointers.
+
+#ifdef ENABLE_HV_INPUTS
   GpIO *accOn;          // 12v ACC
   GpIO *brake;          // Brake
   GpIO *leftIndicator;  // Left indicator
   GpIO *rightIndicator; // Right indicator
   GpIO *reverse;        // Reverse
+#endif
 
   bool accOnState;
   bool lastAccOnState;
