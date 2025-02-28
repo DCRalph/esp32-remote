@@ -1,21 +1,7 @@
 #include "config.h"
 
 Preferences preferences;
-WiFiManager wm;
 
-uint64_t lastInteract;
-int autoOffMin;
-
-uint32_t fps = 0;
-uint32_t lastFps = 0;
-uint32_t frameTime = 0;
-uint32_t lastFrameTime = 0;
-
-uint64_t clearBufferTime = 0;
-uint64_t screenManagerDrawTime = 0;
-uint64_t drawTopBarTime = 0;
-uint64_t sendBufferTime = 0;
-uint64_t screenUpdateDrawTime = 0;
 
 void initConfig()
 {
@@ -33,5 +19,4 @@ void initConfig()
 
   autoOffMin = preferences.getInt("autoOffMin", 5);
 
-  lastInteract = millis();
 }
