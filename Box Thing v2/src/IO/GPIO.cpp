@@ -160,7 +160,7 @@ void GpIO::initIO()
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
   encoder.clearCount();
 
-  Serial.println("\t[Encoder] Initialized");
+    Serial.println("\t[Encoder] Initialized");
 }
 
 int64_t encoderGetCount()

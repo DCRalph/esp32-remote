@@ -12,6 +12,7 @@
 #include "IO/ScreenManager.h"
 #include "IO/Wireless.h"
 #include "IO/Battery.h"
+#include "IO/Haptic.h"
 
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
@@ -106,7 +107,8 @@ void setupWiFi()
 
 void espNowCb(fullPacket *fp)
 {
-  if(fp->p.type == CMD_PING){
+  if (fp->p.type == CMD_PING)
+  {
     remoteRelay.lastConfirmedPing = millis();
   }
 }
@@ -135,6 +137,7 @@ void setup()
   Serial.println("[INFO] [SETUP] Starting...");
   Serial.println("[INFO] [SETUP] IOInit...");
   GpIO::initIO();
+  haptic.init();
 
   ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(1);
   display.display();
@@ -226,8 +229,13 @@ void setup()
   } while (ClickButtonEnc.depressed);
 
   if (((StartUpScreen *)screenManager.getCurrentScreen())->getState() != StartUpState::ApStarted)
+  {
     screenManager.setScreen("Home");
+    haptic.playEffect(37);
+  }
 }
+
+int64_t lastEncoderValue = 0;
 
 void loop()
 {
@@ -255,9 +263,6 @@ void loop()
     Serial.println("Auto off Timer");
     screenManager.setScreen("Shutdown");
   }
-
-  if (ClickButtonEnc.clicks != 0)
-    lastInteract = millis();
 
   if (ClickButtonEnc.clicks == -3)
     screenManager.setScreen("Shutdown");

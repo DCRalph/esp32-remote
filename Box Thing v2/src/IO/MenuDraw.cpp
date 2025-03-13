@@ -1,4 +1,5 @@
 #include "Menu.h"
+#include "Haptic.h"
 
 static const char *TAG = "Menu";
 
@@ -190,7 +191,11 @@ void Menu::update()
   if (numItems < 1)
   {
     if (ClickButtonEnc.clicks == 1)
+    {
       screenManager.back();
+      haptic.playEffect(40);
+    }
+
     return;
   }
 
@@ -198,35 +203,15 @@ void Menu::update()
   {
     ESP_LOGI(TAG, "Clicks: %d", ClickButtonEnc.clicks);
     items[active]->run();
+    haptic.playEffect(40);
   }
 
   MenuItem *currentItem = items[active];
 
   if (encoderGetCount() > 0)
   {
-    // Check if the current item is a Number or a Select and is in edit mode.
-    // if ((currentItem->getType() == MenuItemType::Number) ||
-    //     (currentItem->getType() == MenuItemType::Select))
-    // {
-    //   // Try casting to MenuItemNumberBase or MenuItemSelect.
-    //   if (currentItem->getType() == MenuItemType::Select)
-    //   {
-    //     auto selectItem = (MenuItemSelect *)currentItem;
-    //     if (selectItem && selectItem->isSelected())
-    //       selectItem->nextOption();
-    //     else
-    //       nextItem();
-    //   }
-    //   else // Number type
-    //   {
-    //     auto numberItem = (MenuItemNumberBase *)currentItem;
-    //     if (numberItem && numberItem->isSelected())
-    //       numberItem->increase();
-    //     else
-    //       nextItem();
-    //   }
-    // }
-    // else
+
+    haptic.playEffect(4);
 
     switch (currentItem->getType())
     {
@@ -263,27 +248,8 @@ void Menu::update()
   }
   else if (encoderGetCount() < 0)
   {
-    // if ((currentItem->getType() == MenuItemType::Number) ||
-    //     (currentItem->getType() == MenuItemType::Select))
-    // {
-    //   if (currentItem->getType() == MenuItemType::Select)
-    //   {
-    //     auto selectItem = (MenuItemSelect *)currentItem;
-    //     if (selectItem && selectItem->isSelected())
-    //       selectItem->prevOption();
-    //     else
-    //       prevItem();
-    //   }
-    //   else
-    //   {
-    //     auto numberItem = (MenuItemNumberBase *)currentItem;
-    //     if (numberItem && numberItem->isSelected())
-    //       numberItem->decrease();
-    //     else
-    //       prevItem();
-    //   }
-    // }
-    // else
+
+    haptic.playEffect(4);
 
     switch (currentItem->getType())
     {
@@ -306,7 +272,7 @@ void Menu::update()
         numberItem->decrease();
       else
         prevItem();
-    } 
+    }
     break;
 
     default:
