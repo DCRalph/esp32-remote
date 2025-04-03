@@ -9,6 +9,11 @@
 #include <WiFiManager.h>
 #include <Preferences.h>
 
+#define setBit(x, y, z) (x |= (z << y)) // Set a bit to a value
+#define clearBit(x, y) (x &= ~(1 << y)) // Clear a bit
+#define toggleBit(x, y) (x ^= (1 << y)) // Toggle a bit (0 -> 1, 1 -> 0) and return the new value
+#define checkBit(x, y) ((x >> y) & 1)   // Check a bit and return 1 or 0
+
 extern Preferences preferences;
 extern WiFiManager wm;
 
