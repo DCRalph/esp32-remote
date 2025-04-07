@@ -12,12 +12,52 @@ static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}; // s2 car
 // 30:30:f9:2a:05:20
 // static uint8_t car_addr[6] = {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}; // s3 dev
 
+// Command constants
+constexpr uint8_t CAR_CMD_PING = 0xe0;
+constexpr uint8_t CAR_CMD_SET_MODE = 0xe1;
+constexpr uint8_t CAR_CMD_SET_EFFECTS = 0xe2;
+constexpr uint8_t CAR_CMD_GET_EFFECTS = 0xe3;
+
 enum class ApplicationMode
 {
   NORMAL,
   TEST,
   REMOTE,
   OFF
+};
+
+// Struct definitions for wireless communication
+struct PingCmd
+{
+  ApplicationMode mode;
+  bool headlight;
+  bool taillight;
+  bool underglow;
+  bool interior;
+};
+
+struct SetModeCmd
+{
+  ApplicationMode mode;
+};
+
+struct EffectsCmd
+{
+  bool leftIndicator;
+  bool rightIndicator;
+
+  bool headlight;
+  bool headlightSplit;
+  bool headlightR;
+  bool headlightG;
+  bool headlightB;
+
+  bool brake;
+  bool reverse;
+
+  bool rgb;
+  bool nightrider;
+  bool startup;
 };
 
 class CarControlScreen : public Screen
@@ -40,8 +80,6 @@ public:
   bool rgbEffectActive = false;
   bool nightriderEffectActive = false;
 
-  // bool highBeamEffectActive = false;
-  // bool lowBeamEffectActive = false;
   bool headLightEffectActive = false;
   bool headLightSplit = false;
   bool headLightR = false;
@@ -53,7 +91,10 @@ public:
 
   ApplicationMode mode = ApplicationMode::NORMAL;
 
-  uint8_t lightMode = 0; // 0 unk, 1 headlights, 2 taillights
+  bool isHeadlightEnabled = false;
+  bool isTaillightEnabled = false;
+  bool isUnderglowEnabled = false;
+  bool isInteriorEnabled = false;
 
   MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
 
@@ -68,8 +109,6 @@ public:
   MenuItemToggle rgbEffectItem = MenuItemToggle("RGB", &rgbEffectActive, true);
   MenuItemToggle nightriderEffectItem = MenuItemToggle("Nrider", &nightriderEffectActive, true);
 
-  // MenuItemToggle highBeamEffectItem = MenuItemToggle("High", &highBeamEffectActive, true);
-  // MenuItemToggle lowBeamEffectItem = MenuItemToggle("Low", &lowBeamEffectActive, true);
   MenuItemToggle headLightEffectItem = MenuItemToggle("Headlight", &headLightEffectActive, true);
   MenuItemToggle headLightSplitItem = MenuItemToggle("Split", &headLightSplit, true);
   MenuItemToggle headLightRItem = MenuItemToggle("R", &headLightR, true);
@@ -84,6 +123,7 @@ public:
   void onEnter() override;
 
   void sentEffects();
+  void getEffects();
 };
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
@@ -91,7 +131,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&backItem);
 
   menu.addMenuItem(&connectionItem);
-  // menu.addMenuItem(&modeItem);
 
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
@@ -102,8 +141,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&rgbEffectItem);
   menu.addMenuItem(&nightriderEffectItem);
 
-  // menu.addMenuItem(&highBeamEffectItem);
-  // menu.addMenuItem(&lowBeamEffectItem);
   menu.addMenuItem(&headLightEffectItem);
   menu.addMenuItem(&headLightSplitItem);
   menu.addMenuItem(&headLightRItem);
@@ -120,12 +157,10 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
                                fp.direction = PacketDirection::SEND;
                                memcpy(fp.mac, car_addr, 6);
-                               fp.p.type = 0xe1;
+                               fp.p.type = CAR_CMD_SET_MODE;
                                fp.p.len = 1;
                                fp.p.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
-                               wireless.send(&fp);
-                               //
-                             });
+                               wireless.send(&fp); });
 
   leftIndicatorEffectItem.setOnChange([&]()
                                       { sentEffects(); });
@@ -141,12 +176,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   nightriderEffectItem.setOnChange([&]()
                                    { sentEffects(); });
-
-  // highBeamEffectItem.setOnChange([&]()
-  //                                { sentEffects(); });
-
-  // lowBeamEffectItem.setOnChange([&]()
-  //                               { sentEffects(); });
 
   headLightEffectItem.setOnChange([&]()
                                   { sentEffects(); });
@@ -173,45 +202,30 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 void CarControlScreen::draw()
 {
 
-  if (lightMode == 0)
-  {
-    lightModeItem.setName("Light Mode: UNK");
-    // highBeamEffectItem.setHidden(true);
-    // lowBeamEffectItem.setHidden(true);
-    headLightEffectItem.setHidden(true);
-    headLightSplitItem.setHidden(true);
-    headLightRItem.setHidden(true);
-    headLightGItem.setHidden(true);
-    headLightBItem.setHidden(true);
-    brakeEffectItem.setHidden(true);
-    reverseLightEffectItem.setHidden(true);
-  }
-  else if (lightMode == 1)
-  {
-    lightModeItem.setName("Headlights");
-    // highBeamEffectItem.setHidden(false);
-    // lowBeamEffectItem.setHidden(false);
-    headLightEffectItem.setHidden(false);
-    headLightSplitItem.setHidden(false);
-    headLightRItem.setHidden(false);
-    headLightGItem.setHidden(false);
-    headLightBItem.setHidden(false);
-    brakeEffectItem.setHidden(true);
-    reverseLightEffectItem.setHidden(true);
-  }
-  else if (lightMode == 2)
-  {
-    lightModeItem.setName("Taillights");
-    // highBeamEffectItem.setHidden(true);
-    // lowBeamEffectItem.setHidden(true);
-    headLightEffectItem.setHidden(false);
-    headLightSplitItem.setHidden(false);
-    headLightRItem.setHidden(false);
-    headLightGItem.setHidden(false);
-    headLightBItem.setHidden(false);
-    brakeEffectItem.setHidden(false);
-    reverseLightEffectItem.setHidden(false);
-  }
+  String lightModeText = "";
+
+  if (isHeadlightEnabled)
+    lightModeText += "H";
+  if (isTaillightEnabled)
+    lightModeText += "T";
+  if (isUnderglowEnabled)
+    lightModeText += "U";
+  if (isInteriorEnabled)
+    lightModeText += "I";
+
+  if (lightModeText.length() == 0)
+    lightModeText = "None";
+
+  lightModeItem.setName("Lights: " + lightModeText);
+
+  headLightEffectItem.setHidden(!isHeadlightEnabled);
+  headLightSplitItem.setHidden(!isHeadlightEnabled);
+  headLightRItem.setHidden(!isHeadlightEnabled);
+  headLightGItem.setHidden(!isHeadlightEnabled);
+  headLightBItem.setHidden(!isHeadlightEnabled);
+
+  brakeEffectItem.setHidden(!isTaillightEnabled);
+  reverseLightEffectItem.setHidden(!isTaillightEnabled);
 
   menu.draw();
 }
@@ -230,6 +244,11 @@ void CarControlScreen::update()
     {
       mode = ApplicationMode::OFF;
       modeSelectItem.setCurrentIndex((uint8_t)mode);
+
+      isHeadlightEnabled = false;
+      isTaillightEnabled = false;
+      isUnderglowEnabled = false;
+      isInteriorEnabled = false;
     }
   }
 
@@ -241,7 +260,7 @@ void CarControlScreen::update()
     memset(&fp, 0, sizeof(fullPacket));
     fp.direction = PacketDirection::SEND;
     memcpy(fp.mac, car_addr, 6);
-    fp.p.type = 0xe0;
+    fp.p.type = CAR_CMD_PING;
     fp.p.len = 0;
 
     wireless.send(&fp);
@@ -250,76 +269,59 @@ void CarControlScreen::update()
 
 void CarControlScreen::onEnter()
 {
-
-  wireless.addOnReceiveFor(0xe0, [&](fullPacket *fp) // ping cmd
+  // Ping response handler
+  wireless.addOnReceiveFor(CAR_CMD_PING, [&](fullPacket *fp)
                            {
                              lastConfirmedPing = millis();
 
-                             /*
-                              * 0: mode
-                              * 1: headlight/taillight mode
-                              * 2.0: left indicator
-                              * 3.0: right indicator
-                              * 4.0: startup
-                              * 5.0: rgb
-                              * 6.0: nightrider
-                              * 7.0: headlight / brake
-                              * 7.1: split
-                              * 7.2: red
-                              * 7.3: green
-                              * 7.4: blue
-                              * 8.0: brake
-                              * 8.1: reverse
-                              */
+                             PingCmd pCmd;
+                             memcpy(&pCmd, fp->p.data, sizeof(PingCmd));
 
-                             mode = static_cast<ApplicationMode>(fp->p.data[0]);
+                             mode = pCmd.mode;
                              modeSelectItem.setCurrentIndex((uint8_t)mode);
 
-                             lightMode = fp->p.data[1];
+                             isHeadlightEnabled = pCmd.headlight;
+                             isTaillightEnabled = pCmd.taillight;
+                             isUnderglowEnabled = pCmd.underglow;
+                             isInteriorEnabled = pCmd.interior;
 
-                             leftIndicatorEffectActive = fp->p.data[2];
-                             rightIndicatorEffectActive = fp->p.data[3];
-                             startupEffectActive = fp->p.data[4];
-                             rgbEffectActive = fp->p.data[5];
-                             nightriderEffectActive = fp->p.data[6];
-
-                             if (lightMode == 1)
-                             {
-                               //  highBeamEffectActive = fp->p.data[7];
-                               //  lowBeamEffectActive = fp->p.data[8];
-
-                               headLightEffectActive = checkBit(fp->p.data[7], 0);
-                               headLightSplit = checkBit(fp->p.data[7], 1);
-                               headLightR = checkBit(fp->p.data[7], 2);
-                               headLightG = checkBit(fp->p.data[7], 3);
-                               headLightB = checkBit(fp->p.data[7], 4);
-
-                               brakeEffectActive = false;
-                               reverseLightEffectActive = false;
-                             }
-                             else if (lightMode == 2)
-                             {
-                               //  highBeamEffectActive = false;
-                               //  lowBeamEffectActive = false;
-
-                               headLightEffectActive = false;
-                               headLightSplit = false;
-                               headLightR = false;
-                               headLightG = false;
-                               headLightB = false;
-
-                               brakeEffectActive = fp->p.data[7];
-                               reverseLightEffectActive = fp->p.data[8];
-                             }
+                             // Request current effects
+                             getEffects();
                              //
                            });
 
-  wireless.addOnReceiveFor(0xe1, [&](fullPacket *fp) // set mode
+  // Set mode response handler
+  wireless.addOnReceiveFor(CAR_CMD_SET_MODE, [&](fullPacket *fp)
                            {
                              lastConfirmedPing = millis();
 
                              mode = static_cast<ApplicationMode>(fp->p.data[0]);
                              modeSelectItem.setCurrentIndex((uint8_t)mode);
+                             //
+                           });
+
+  // Get effects response handler
+  wireless.addOnReceiveFor(CAR_CMD_GET_EFFECTS, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+
+                             EffectsCmd eCmd;
+                             memcpy(&eCmd, fp->p.data, sizeof(EffectsCmd));
+
+                             leftIndicatorEffectActive = eCmd.leftIndicator;
+                             rightIndicatorEffectActive = eCmd.rightIndicator;
+                             startupEffectActive = eCmd.startup;
+                             rgbEffectActive = eCmd.rgb;
+                             nightriderEffectActive = eCmd.nightrider;
+
+                             headLightEffectActive = eCmd.headlight;
+                             headLightSplit = eCmd.headlightSplit;
+                             headLightR = eCmd.headlightR;
+                             headLightG = eCmd.headlightG;
+                             headLightB = eCmd.headlightB;
+
+                             brakeEffectActive = eCmd.brake;
+                             reverseLightEffectActive = eCmd.reverse;
                              //
                            });
 
@@ -333,34 +335,36 @@ void CarControlScreen::sentEffects()
   memset(&fp, 0, sizeof(fullPacket));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, car_addr, 6);
-  fp.p.type = 0xe2;
-  fp.p.len = 7;
+  fp.p.type = CAR_CMD_SET_EFFECTS;
 
-  fp.p.data[0] = leftIndicatorEffectActive;
-  fp.p.data[1] = rightIndicatorEffectActive;
-  fp.p.data[2] = startupEffectActive;
-  fp.p.data[3] = rgbEffectActive;
-  fp.p.data[4] = nightriderEffectActive;
+  EffectsCmd eCmd = {0};
+  eCmd.leftIndicator = leftIndicatorEffectActive;
+  eCmd.rightIndicator = rightIndicatorEffectActive;
+  eCmd.startup = startupEffectActive;
+  eCmd.rgb = rgbEffectActive;
+  eCmd.nightrider = nightriderEffectActive;
+  eCmd.headlight = headLightEffectActive;
+  eCmd.headlightSplit = headLightSplit;
+  eCmd.headlightR = headLightR;
+  eCmd.headlightG = headLightG;
+  eCmd.headlightB = headLightB;
+  eCmd.brake = brakeEffectActive;
+  eCmd.reverse = reverseLightEffectActive;
 
-  if (lightMode == 1)
-  {
-    // fp.p.data[5] = highBeamEffectActive;
-    // fp.p.data[6] = lowBeamEffectActive;
+  fp.p.len = sizeof(eCmd);
+  memcpy(fp.p.data, &eCmd, sizeof(eCmd));
 
-    fp.p.data[5] = headLightEffectActive;
-    fp.p.data[5] |= headLightSplit << 1;
-    fp.p.data[5] |= headLightR << 2;
-    fp.p.data[5] |= headLightG << 3;
-    fp.p.data[5] |= headLightB << 4;
+  wireless.send(&fp);
+}
 
-    fp.p.data[6] = 0;
-  }
-  else if (lightMode == 2)
-  {
-    fp.p.data[5] = brakeEffectActive;
-    fp.p.data[5] |= reverseLightEffectActive << 1;
-    fp.p.data[6] = reverseLightEffectActive;
-  }
+void CarControlScreen::getEffects()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, car_addr, 6);
+  fp.p.type = CAR_CMD_GET_EFFECTS;
+  fp.p.len = 0;
 
   wireless.send(&fp);
 }

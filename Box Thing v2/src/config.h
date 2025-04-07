@@ -40,7 +40,7 @@ extern uint64_t screenUpdateDrawTime;
 #define AP_SSID "ESP32-Box-Thing"
 
 #define ESP_NOW_CHANNEL 1
-// #define DEBUG_ESP_NOW
+#define DEBUG_ESP_NOW
 // Display
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64

@@ -163,8 +163,8 @@ void Menu::draw()
 
   display.u8g2.setDrawColor(1);
 
-  uint8_t scrollBarPosition = (DISPLAY_HEIGHT - 13) / (numItems < 1 ? 1 : numItems) * active;
-  uint8_t scrollBarHeight = (numItems < 1 ? 1 : numItems) - 1 == active ? DISPLAY_HEIGHT - 12 - scrollBarPosition : (DISPLAY_HEIGHT - 13) / (numItems < 1 ? 1 : numItems);
+  uint8_t scrollBarPosition = (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible) * active;
+  uint8_t scrollBarHeight = (numItemsVisible < 1 ? 1 : numItemsVisible) - 1 == active ? DISPLAY_HEIGHT - 12 - scrollBarPosition : (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible);
 
   display.u8g2.drawLine(DISPLAY_WIDTH - 2, 12, DISPLAY_WIDTH - 2, DISPLAY_HEIGHT - 1);
   display.u8g2.drawBox(DISPLAY_WIDTH - 3, 12 + scrollBarPosition, 3, scrollBarHeight);

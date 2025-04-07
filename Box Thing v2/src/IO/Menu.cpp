@@ -401,9 +401,16 @@ void Menu::nextItem()
 {
   if (active < numItems - 1)
   {
+    uint8_t startPosition = active;
     do
     {
       active++;
+      // If we've checked all items and come back to where we started, break to prevent infinite loop
+      if (active >= numItems)
+      {
+        active = startPosition; // Reset to original position
+        break;
+      }
     } while (items[active]->isHidden());
   }
 }
@@ -412,9 +419,16 @@ void Menu::prevItem()
 {
   if (active > 0)
   {
+    uint8_t startPosition = active;
     do
     {
       active--;
+      // If we've checked all items and come back to where we started, break to prevent infinite loop
+      if (active >= numItems)
+      {                         // This condition handles underflow when active becomes 255
+        active = startPosition; // Reset to original position
+        break;
+      }
     } while (items[active]->isHidden());
   }
 }
