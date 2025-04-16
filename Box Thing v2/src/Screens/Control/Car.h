@@ -7,10 +7,19 @@
 #include "IO/Menu.h"
 
 // 80:65:99:4b:3a:d0
-static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}; // s2 car
+// static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}; // s2 car
 
 // 30:30:f9:2a:05:20
 // static uint8_t car_addr[6] = {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}; // s3 dev
+
+static uint8_t led_controller_addrs[2][8] = {
+    {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev
+    {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}  // s2 car
+};
+
+static std::vector<String> led_controller_names = {"Dev", "Car"};
+
+static uint8_t led_controller_addr_index = 0;
 
 // Command constants
 constexpr uint8_t CAR_CMD_PING = 0xe0;
@@ -41,6 +50,11 @@ struct SetModeCmd
   ApplicationMode mode;
 };
 
+enum class PoliceMode
+{
+  SLOW,
+  FAST
+};
 struct EffectsCmd
 {
   bool leftIndicator;
@@ -58,6 +72,8 @@ struct EffectsCmd
   bool rgb;
   bool nightrider;
   bool startup;
+  bool police;
+  PoliceMode policeMode;
 };
 
 class CarControlScreen : public Screen
@@ -79,6 +95,8 @@ public:
   bool startupEffectActive = false;
   bool rgbEffectActive = false;
   bool nightriderEffectActive = false;
+  bool policeEffectActive = false;
+  PoliceMode policeMode = PoliceMode::SLOW;
 
   bool headLightEffectActive = false;
   bool headLightSplit = false;
@@ -96,18 +114,23 @@ public:
   bool isUnderglowEnabled = false;
   bool isInteriorEnabled = false;
 
+  MenuItemSelect ledControllerSelectItem = MenuItemSelect("Ctr", led_controller_names, 0);
+
   MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
 
   std::vector<String> modeItems = {"Norm", "Test", "Rem", "Off"};
   MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
 
-  MenuItem lightModeItem = MenuItem("Light Mode");
+  MenuItem lightModeItem = MenuItem("Light M");
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
   MenuItemToggle startupEffectItem = MenuItemToggle("Start", &startupEffectActive, true);
   MenuItemToggle rgbEffectItem = MenuItemToggle("RGB", &rgbEffectActive, true);
   MenuItemToggle nightriderEffectItem = MenuItemToggle("Nrider", &nightriderEffectActive, true);
+  MenuItemToggle policeEffectItem = MenuItemToggle("Police", &policeEffectActive, true);
+  std::vector<String> policeModeItems = {"Slow", "Fast"};
+  MenuItemSelect policeModeItem = MenuItemSelect("Mode", policeModeItems, 0);
 
   MenuItemToggle headLightEffectItem = MenuItemToggle("Headlight", &headLightEffectActive, true);
   MenuItemToggle headLightSplitItem = MenuItemToggle("Split", &headLightSplit, true);
@@ -130,6 +153,8 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 {
   menu.addMenuItem(&backItem);
 
+  menu.addMenuItem(&ledControllerSelectItem);
+
   menu.addMenuItem(&connectionItem);
 
   menu.addMenuItem(&modeSelectItem);
@@ -140,6 +165,8 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&startupEffectItem);
   menu.addMenuItem(&rgbEffectItem);
   menu.addMenuItem(&nightriderEffectItem);
+  menu.addMenuItem(&policeEffectItem);
+  menu.addMenuItem(&policeModeItem);
 
   menu.addMenuItem(&headLightEffectItem);
   menu.addMenuItem(&headLightSplitItem);
@@ -150,13 +177,20 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&brakeEffectItem);
   menu.addMenuItem(&reverseLightEffectItem);
 
+  ledControllerSelectItem.setOnChange([&]()
+                                      {
+                                        led_controller_addr_index = ledControllerSelectItem.getCurrentIndex();
+                                        preferences.putUInt("ctrlr_addr_idx", led_controller_addr_index);
+                                        //
+                                      });
+
   modeSelectItem.setOnChange([&]()
                              {
                                fullPacket fp;
                                memset(&fp, 0, sizeof(fullPacket));
 
                                fp.direction = PacketDirection::SEND;
-                               memcpy(fp.mac, car_addr, 6);
+                               memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
                                fp.p.type = CAR_CMD_SET_MODE;
                                fp.p.len = 1;
                                fp.p.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
@@ -176,6 +210,16 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   nightriderEffectItem.setOnChange([&]()
                                    { sentEffects(); });
+
+  policeEffectItem.setOnChange([&]()
+                               { sentEffects(); });
+
+  policeModeItem.setOnChange([&]()
+                             {
+                               policeMode = static_cast<PoliceMode>(policeModeItem.getCurrentIndex());
+                               sentEffects();
+                               //
+                             });
 
   headLightEffectItem.setOnChange([&]()
                                   { sentEffects(); });
@@ -214,9 +258,9 @@ void CarControlScreen::draw()
     lightModeText += "I";
 
   if (lightModeText.length() == 0)
-    lightModeText = "None";
+    lightModeText = "NA";
 
-  lightModeItem.setName("Lights: " + lightModeText);
+  lightModeItem.setName("LM: " + lightModeText);
 
   headLightEffectItem.setHidden(!isHeadlightEnabled);
   headLightSplitItem.setHidden(!isHeadlightEnabled);
@@ -259,7 +303,7 @@ void CarControlScreen::update()
     fullPacket fp;
     memset(&fp, 0, sizeof(fullPacket));
     fp.direction = PacketDirection::SEND;
-    memcpy(fp.mac, car_addr, 6);
+    memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
     fp.p.type = CAR_CMD_PING;
     fp.p.len = 0;
 
@@ -313,6 +357,9 @@ void CarControlScreen::onEnter()
                              startupEffectActive = eCmd.startup;
                              rgbEffectActive = eCmd.rgb;
                              nightriderEffectActive = eCmd.nightrider;
+                             policeEffectActive = eCmd.police;
+                             policeMode = eCmd.policeMode;
+                             policeModeItem.setCurrentIndex((uint8_t)policeMode);
 
                              headLightEffectActive = eCmd.headlight;
                              headLightSplit = eCmd.headlightSplit;
@@ -325,6 +372,9 @@ void CarControlScreen::onEnter()
                              //
                            });
 
+  led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
+  ledControllerSelectItem.setCurrentIndex(led_controller_addr_index);
+
   connected = false;
   mode = ApplicationMode::OFF;
 }
@@ -334,7 +384,7 @@ void CarControlScreen::sentEffects()
   fullPacket fp;
   memset(&fp, 0, sizeof(fullPacket));
   fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, car_addr, 6);
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
   fp.p.type = CAR_CMD_SET_EFFECTS;
 
   EffectsCmd eCmd = {0};
@@ -343,6 +393,9 @@ void CarControlScreen::sentEffects()
   eCmd.startup = startupEffectActive;
   eCmd.rgb = rgbEffectActive;
   eCmd.nightrider = nightriderEffectActive;
+  eCmd.police = policeEffectActive;
+  eCmd.policeMode = policeMode;
+
   eCmd.headlight = headLightEffectActive;
   eCmd.headlightSplit = headLightSplit;
   eCmd.headlightR = headLightR;
@@ -362,7 +415,7 @@ void CarControlScreen::getEffects()
   fullPacket fp;
   memset(&fp, 0, sizeof(fullPacket));
   fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, car_addr, 6);
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
   fp.p.type = CAR_CMD_GET_EFFECTS;
   fp.p.len = 0;
 
