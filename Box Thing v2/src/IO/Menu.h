@@ -32,10 +32,13 @@ struct ActionFunction
  */
 class MenuItem
 {
+  friend class Menu;
+
 private:
   String name;
 
 protected:
+  Menu *parent;
   MenuItemType type;
   bool hidden = false;
 
@@ -408,6 +411,8 @@ public:
 // ###### Menu ######
 class Menu
 {
+  friend class MenuItem;
+
 private:
   uint8_t active;
 

@@ -43,7 +43,44 @@ MenuItemType MenuItem::getType()
 
 void MenuItem::setHidden(bool _hidden)
 {
+
+  if (_hidden == hidden)
+    return;
+
   hidden = _hidden;
+
+  if (hidden && parent != nullptr)
+    if (parent->items[parent->active] == this)
+    {
+      // If the current item is hidden and it's the active item, move to another visible item
+      if (parent->active < parent->numItems)
+      {
+        // Try to find the next non-hidden item
+        bool foundNext = false;
+        for (uint8_t i = parent->active + 1; i < parent->numItems; i++)
+        {
+          if (!parent->items[i]->isHidden())
+          {
+            parent->active = i;
+            foundNext = true;
+            break;
+          }
+        }
+
+        // If no next item found, try to find the previous non-hidden item
+        if (!foundNext)
+        {
+          for (int i = parent->active - 1; i >= 0; i--)
+          {
+            if (!parent->items[i]->isHidden())
+            {
+              parent->active = i;
+              break;
+            }
+          }
+        }
+      }
+    }
 }
 
 void MenuItem::setTextColor(u16_t _color)
@@ -435,6 +472,7 @@ void Menu::prevItem()
 
 void Menu::addMenuItem(MenuItem *_item)
 {
+  _item->parent = this;
   items.push_back(_item);
 
   numItems = items.size();

@@ -6,18 +6,13 @@
 #include "IO/Wireless.h"
 #include "IO/Menu.h"
 
-// 80:65:99:4b:3a:d0
-// static uint8_t car_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}; // s2 car
-
-// 30:30:f9:2a:05:20
-// static uint8_t car_addr[6] = {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}; // s3 dev
-
-static uint8_t led_controller_addrs[2][8] = {
-    {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev
+static uint8_t led_controller_addrs[3][8] = {
+    {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev 1
+    {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x18}, // s3 dev 2
     {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}  // s2 car
 };
 
-static std::vector<String> led_controller_names = {"Dev", "Car"};
+static std::vector<String> led_controller_names = {"Dev1", "Dev2", "Car"};
 
 static uint8_t led_controller_addr_index = 0;
 
@@ -57,6 +52,9 @@ enum class PoliceMode
 };
 struct EffectsCmd
 {
+  bool testEffect1;
+  bool testEffect2;
+
   bool leftIndicator;
   bool rightIndicator;
 
@@ -90,6 +88,9 @@ public:
   bool connected = false;
   bool lastConnected = false;
 
+  bool testEffect1Active = false;
+  bool testEffect2Active = false;
+
   bool leftIndicatorEffectActive = false;
   bool rightIndicatorEffectActive = false;
   bool startupEffectActive = false;
@@ -122,6 +123,9 @@ public:
   MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
 
   MenuItem lightModeItem = MenuItem("Light M");
+
+  MenuItemToggle testEffect1Item = MenuItemToggle("Test 1", &testEffect1Active, true);
+  MenuItemToggle testEffect2Item = MenuItemToggle("Test 2", &testEffect2Active, true);
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
@@ -160,6 +164,9 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
 
+  menu.addMenuItem(&testEffect1Item);
+  menu.addMenuItem(&testEffect2Item);
+
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
   menu.addMenuItem(&startupEffectItem);
@@ -195,6 +202,12 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
                                fp.p.len = 1;
                                fp.p.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
                                wireless.send(&fp); });
+
+  testEffect1Item.setOnChange([&]()
+                              { sentEffects(); });
+
+  testEffect2Item.setOnChange([&]()
+                              { sentEffects(); });
 
   leftIndicatorEffectItem.setOnChange([&]()
                                       { sentEffects(); });
@@ -388,6 +401,10 @@ void CarControlScreen::sentEffects()
   fp.p.type = CAR_CMD_SET_EFFECTS;
 
   EffectsCmd eCmd = {0};
+
+  eCmd.testEffect1 = testEffect1Active;
+  eCmd.testEffect2 = testEffect2Active;
+
   eCmd.leftIndicator = leftIndicatorEffectActive;
   eCmd.rightIndicator = rightIndicatorEffectActive;
   eCmd.startup = startupEffectActive;
