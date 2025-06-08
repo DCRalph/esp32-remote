@@ -19,6 +19,42 @@ void Display::drawCenteredText(uint8_t y, String text)
   u8g2.drawStr((DISPLAY_WIDTH - u8g2.getStrWidth(text.c_str())) / 2, y, text.c_str());
 }
 
+int Display::getCustomIconX(int width)
+{
+  int iconX;
+
+  if (isFirstIcon)
+  {
+    // First icon position is next to WiFi icon
+    u8g2.setFont(u8g2_font_koleeko_tf);
+    char buffer[32];
+    sprintf(buffer, "%d%%%", batteryGetPercentageSmooth());
+    int battW = u8g2.getStrWidth(buffer);
+
+    // Position is DISPLAY_WIDTH - battW - 2 - 8 - 2 - width
+    // (screen width - battery text width - space - wifi icon width - space - icon width)
+    iconX = DISPLAY_WIDTH - battW - 2 - 8 - 2 - width;
+
+    isFirstIcon = false;
+  }
+  else
+  {
+    // Subsequent icons are positioned to the left of the previous icon
+    iconX = lastIconX - 2 - width; // 2 pixels spacing between icons
+  }
+
+  // Update last icon position for next call
+  lastIconX = iconX;
+
+  return iconX;
+}
+
+void Display::resetCustomIconPosition()
+{
+  isFirstIcon = true;
+  lastIconX = 0;
+}
+
 void Display::drawTopBar(void)
 {
   u8g2.setFont(u8g2_font_koleeko_tf);
@@ -44,11 +80,8 @@ void Display::drawTopBar(void)
   else
     u8g2.drawGlyph(DISPLAY_WIDTH - 8 - battW - 2, 9, 0x0079);
 
-  // draw the variable lastFrameTime in the top bar before the wifi icon
-  // sprintf(buffer, "%dms", lastFrameTime);
-  // u8g2.setFont(u8g2_font_koleeko_tf);
-  // int frameTimeW = u8g2.getStrWidth(buffer);
-  // u8g2.drawStr(DISPLAY_WIDTH - 8 - battW - 2 - frameTimeW - 2, 9, buffer);
+  // Reset custom icon positions for the next frame
+  resetCustomIconPosition();
 }
 
 void Display::noTopBar()
@@ -92,7 +125,6 @@ void Display::display(void)
   screenManager.update();
   elapsedTime = micros() - startTime;
   screenUpdateDrawTime = elapsedTime;
-
 
   _noTopBar = false;
 }

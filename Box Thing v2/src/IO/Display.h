@@ -11,6 +11,10 @@ class Display
 private:
   bool _noTopBar = false;
 
+  // Variables to track custom icon positions in the top bar
+  int lastIconX = 0;
+  bool isFirstIcon = true;
+
 public:
   U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2 = U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
   // U8G2_SSD1309_128X64_NONAME0_F_HW_I2C u8g2 = U8G2_SSD1309_128X64_NONAME0_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
@@ -28,6 +32,12 @@ public:
   // profileing
   uint64_t startTime;
   uint64_t elapsedTime;
+
+  // Get X position for placing custom icons in the top bar
+  int getCustomIconX(int width);
+
+  // Reset custom icon positioning (call this before drawing a new frame if you want to reset positions)
+  void resetCustomIconPosition();
 };
 
 class Screen

@@ -9,7 +9,7 @@
 static uint8_t led_controller_addrs[3][8] = {
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev 1
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x18}, // s3 dev 2
-    {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd0}  // s2 car
+    {0x48, 0x27, 0xe2, 0x46, 0x59, 0xba}  // s2 car 48:27:e2:46:59:ba
 };
 
 static std::vector<String> led_controller_names = {"Dev1", "Dev2", "Car"};
@@ -69,7 +69,8 @@ struct EffectsCmd
 
   bool rgb;
   bool nightrider;
-  bool startup;
+  int startup;
+  int headlightStartup;
   bool police;
   PoliceMode policeMode;
 };
@@ -94,6 +95,7 @@ public:
   bool leftIndicatorEffectActive = false;
   bool rightIndicatorEffectActive = false;
   bool startupEffectActive = false;
+  int headlightStartup = 0;
   bool rgbEffectActive = false;
   bool nightriderEffectActive = false;
   bool policeEffectActive = false;
@@ -130,6 +132,9 @@ public:
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
   MenuItemToggle startupEffectItem = MenuItemToggle("Start", &startupEffectActive, true);
+  std::vector<String> headlightStartupItems = {"Off", "TOff", "Start", "On"};
+  MenuItemSelect headlightStartupItem = MenuItemSelect("Start", headlightStartupItems, 0);
+
   MenuItemToggle rgbEffectItem = MenuItemToggle("RGB", &rgbEffectActive, true);
   MenuItemToggle nightriderEffectItem = MenuItemToggle("Nrider", &nightriderEffectActive, true);
   MenuItemToggle policeEffectItem = MenuItemToggle("Police", &policeEffectActive, true);
@@ -170,6 +175,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
   menu.addMenuItem(&startupEffectItem);
+  menu.addMenuItem(&headlightStartupItem);
   menu.addMenuItem(&rgbEffectItem);
   menu.addMenuItem(&nightriderEffectItem);
   menu.addMenuItem(&policeEffectItem);
@@ -188,6 +194,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
                                       {
                                         led_controller_addr_index = ledControllerSelectItem.getCurrentIndex();
                                         preferences.putUInt("ctrlr_addr_idx", led_controller_addr_index);
+                                        setTopBarText(led_controller_names[led_controller_addr_index]);
                                         //
                                       });
 
@@ -217,6 +224,11 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   startupEffectItem.setOnChange([&]()
                                 { sentEffects(); });
+
+  headlightStartupItem.setOnChange([&]()
+                                   {
+                                     headlightStartup = headlightStartupItem.getCurrentIndex();
+                                    sentEffects(); });
 
   rgbEffectItem.setOnChange([&]()
                             { sentEffects(); });
@@ -271,9 +283,9 @@ void CarControlScreen::draw()
     lightModeText += "I";
 
   if (lightModeText.length() == 0)
-    lightModeText = "NA";
-
-  lightModeItem.setName("LM: " + lightModeText);
+    lightModeItem.setName("LM: NA");
+  else
+    lightModeItem.setName("LM: " + lightModeText);
 
   headLightEffectItem.setHidden(!isHeadlightEnabled);
   headLightSplitItem.setHidden(!isHeadlightEnabled);
@@ -283,6 +295,39 @@ void CarControlScreen::draw()
 
   brakeEffectItem.setHidden(!isTaillightEnabled);
   reverseLightEffectItem.setHidden(!isTaillightEnabled);
+
+  // Draw connection status icon in top bar
+
+  String connTxt = connected ? "Y" : "N";
+  int iconWidth = display.u8g2.getStrWidth(connTxt.c_str());
+  int iconX = display.getCustomIconX(iconWidth);
+  display.u8g2.drawStr(iconX, 9, connTxt.c_str());
+
+  // if (lightModeText.length() > 0)
+  //   lightModeText += "-";
+
+  // iconWidth = display.u8g2.getStrWidth(lightModeText.c_str());
+  // iconX = display.getCustomIconX(iconWidth);
+  // display.u8g2.drawStr(iconX, 9, lightModeText.c_str());
+
+  String modeShortTxt = "";
+  if (mode == ApplicationMode::NORMAL)
+    modeShortTxt = "N";
+  else if (mode == ApplicationMode::TEST)
+    modeShortTxt = "T";
+  else if (mode == ApplicationMode::REMOTE)
+    modeShortTxt = "R";
+  else if (mode == ApplicationMode::OFF)
+    modeShortTxt = "O";
+
+  modeShortTxt += "-";
+
+  iconWidth = display.u8g2.getStrWidth(modeShortTxt.c_str());
+  iconX = display.getCustomIconX(iconWidth);
+  display.u8g2.drawStr(iconX, 9, modeShortTxt.c_str());
+
+  // Set current controller name in top bar
+  setTopBarText(led_controller_names[led_controller_addr_index]);
 
   menu.draw();
 }
@@ -368,6 +413,8 @@ void CarControlScreen::onEnter()
                              leftIndicatorEffectActive = eCmd.leftIndicator;
                              rightIndicatorEffectActive = eCmd.rightIndicator;
                              startupEffectActive = eCmd.startup;
+                             headlightStartup = eCmd.headlightStartup;
+                             headlightStartupItem.setCurrentIndex(headlightStartup);
                              rgbEffectActive = eCmd.rgb;
                              nightriderEffectActive = eCmd.nightrider;
                              policeEffectActive = eCmd.police;
@@ -387,6 +434,9 @@ void CarControlScreen::onEnter()
 
   led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
   ledControllerSelectItem.setCurrentIndex(led_controller_addr_index);
+
+  // Initialize top bar with current device name
+  setTopBarText(led_controller_names[led_controller_addr_index]);
 
   connected = false;
   mode = ApplicationMode::OFF;
@@ -408,6 +458,7 @@ void CarControlScreen::sentEffects()
   eCmd.leftIndicator = leftIndicatorEffectActive;
   eCmd.rightIndicator = rightIndicatorEffectActive;
   eCmd.startup = startupEffectActive;
+  eCmd.headlightStartup = headlightStartup;
   eCmd.rgb = rgbEffectActive;
   eCmd.nightrider = nightriderEffectActive;
   eCmd.police = policeEffectActive;
