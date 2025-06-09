@@ -196,6 +196,29 @@ bool MenuItemToggle::get()
   return *value;
 }
 
+// ###### MenuItemString ######
+
+MenuItemString::MenuItemString(String _name, String *_value) : MenuItem(_name)
+{
+  type = MenuItemType::String;
+  value = _value;
+
+  addFunc(MENU_DEFUALT_CLICKS, [this]()
+          {
+            //
+          });
+}
+
+void MenuItemString::setValue(String _value)
+{
+  *value = _value;
+}
+
+String MenuItemString::getValue()
+{
+  return *value;
+}
+
 // ###### MenuItemNumberBase ######
 
 MenuItemNumberBase::MenuItemNumberBase(String _name)

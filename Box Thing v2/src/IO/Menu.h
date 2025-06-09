@@ -16,6 +16,7 @@ enum class MenuItemType
   Navigate,
   Back,
   Toggle,
+  String,
   Number,
   Select
 };
@@ -215,6 +216,22 @@ public:
   bool get();
 
   void draw(uint8_t _x, uint8_t _y, bool _active) override;
+};
+
+/**
+ * @brief Represents a menu item for displaying a string.
+ */
+class MenuItemString : public MenuItem
+{
+private:
+  String *value;
+
+public:
+  MenuItemString(String _name, String *_value);
+
+  void draw(uint8_t _x, uint8_t _y, bool _active) override;
+  void setValue(String _value);
+  String getValue();
 };
 
 enum class NumberValueType

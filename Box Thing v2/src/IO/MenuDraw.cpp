@@ -40,6 +40,24 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
   display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
 }
 
+// ###### MenuItemString ######
+
+void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
+{
+  display.u8g2.setFont(u8g2_font_profont22_tf);
+
+  if (_active)
+  {
+    display.u8g2.setDrawColor(1);
+    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+    display.u8g2.setDrawColor(0);
+  }
+  else
+    display.u8g2.setDrawColor(1);
+
+  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+  display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(getValue().c_str()) - 5, _y + 15, getValue().c_str());
+}
 // ###### MenuItemNumber ######
 
 template <typename T>
@@ -153,7 +171,7 @@ void Menu::draw()
     if (active <= 0) // if the top item is selected
       topItem = 0;
     else if (calcActive >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
-      if (numItemsVisible < 3)                                 // if there are less than 3 items
+      if (numItemsVisible < 3)                                     // if there are less than 3 items
         topItem = 0;
       else // if there are more than 3 items
         topItem = static_cast<u8_t>(numItemsVisible - 3);

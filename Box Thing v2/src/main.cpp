@@ -223,7 +223,7 @@ void setup()
   xTaskCreatePinnedToCore(
       fpsTaskFunction, /* Task function. */
       "fpsTask",       /* name of task. */
-      10000,           /* Stack size of task */
+      1024,           /* Stack size of task */
       NULL,            /* parameter of the task */
       1,               /* priority of the task */
       &fpsTask,        /* Task handle to keep track of created task */
@@ -277,7 +277,7 @@ void loop()
     screenManager.setScreen("Shutdown");
 
   // display.display();
-  if (millis() - lastDraw > 20)
+  if (millis() - lastDraw > 25)
   {
     lastDraw = millis();
 

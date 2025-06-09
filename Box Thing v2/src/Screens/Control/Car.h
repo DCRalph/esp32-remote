@@ -23,6 +23,7 @@ constexpr uint8_t CAR_CMD_SET_EFFECTS = 0xe2;
 constexpr uint8_t CAR_CMD_GET_EFFECTS = 0xe3;
 constexpr uint8_t CAR_CMD_SET_INPUTS = 0xe4;
 constexpr uint8_t CAR_CMD_GET_INPUTS = 0xe5;
+constexpr uint8_t CAR_CMD_TRIGGER_SEQUENCE = 0xe6;
 
 enum class ApplicationMode
 {
@@ -82,9 +83,16 @@ struct InputsCmd
   bool accOn;
   bool indicatorLeft;
   bool indicatorRight;
+  bool headlight;
   bool brake;
   bool reverse;
 };
+
+struct TriggerSequenceCmd
+{
+  uint8_t sequence;
+};
+
 class CarControlScreen : public Screen
 {
 public:
@@ -176,9 +184,32 @@ public:
   MenuItemToggle accOnItem = MenuItemToggle("Acc", &accOn, true);
   MenuItemToggle indicatorLeftItem = MenuItemToggle("Left", &indicatorLeft, true);
   MenuItemToggle indicatorRightItem = MenuItemToggle("Right", &indicatorRight, true);
+  MenuItemToggle headlightItem = MenuItemToggle("H.Light", &headlight, true);
   MenuItemToggle brakeItem = MenuItemToggle("Brake", &brake, true);
   MenuItemToggle reverseItem = MenuItemToggle("Reverse", &reverse, true);
-  MenuItemToggle headlightItem = MenuItemToggle("H.Light", &headlight, true);
+
+  MenuItemAction unlockSequenceTriggerItem = MenuItemAction("Unlock Seq", 1, [&]()
+                                                            {
+                                                              triggerSequence(0);
+                                                              //
+                                                            });
+  MenuItemAction lockSequenceTriggerItem = MenuItemAction("Lock Seq", 1, [&]()
+                                                          {
+                                                            triggerSequence(1);
+                                                            //
+                                                          });
+
+  MenuItemAction rgbSequenceTriggerItem = MenuItemAction("RGB Seq", 1, [&]()
+                                                         {
+                                                           triggerSequence(2);
+                                                           //
+                                                         });
+
+  MenuItemAction nightRiderSequenceTriggerItem = MenuItemAction("Night Rider Seq", 1, [&]()
+                                                                {
+                                                                  triggerSequence(3);
+                                                                  //
+                                                                });
 
   void draw() override;
   void update() override;
@@ -189,6 +220,8 @@ public:
 
   void sendInputs();
   void getInputs();
+
+  void triggerSequence(uint8_t seq);
 };
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
@@ -232,9 +265,15 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&accOnItem);
   menu.addMenuItem(&indicatorLeftItem);
   menu.addMenuItem(&indicatorRightItem);
+  menu.addMenuItem(&headlightItem);
   menu.addMenuItem(&brakeItem);
   menu.addMenuItem(&reverseItem);
-  menu.addMenuItem(&headlightItem);
+
+  // sequences
+  menu.addMenuItem(&unlockSequenceTriggerItem);
+  menu.addMenuItem(&lockSequenceTriggerItem);
+  menu.addMenuItem(&rgbSequenceTriggerItem);
+  menu.addMenuItem(&nightRiderSequenceTriggerItem);
 
   ledControllerSelectItem.setOnChange([&]()
                                       {
@@ -322,14 +361,14 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   indicatorRightItem.setOnChange([&]()
                                  { sendInputs(); });
 
+  headlightItem.setOnChange([&]()
+                            { sendInputs(); });
+
   brakeItem.setOnChange([&]()
                         { sendInputs(); });
 
   reverseItem.setOnChange([&]()
                           { sendInputs(); });
-
-  headlightItem.setOnChange([&]()
-                            { sendInputs(); });
 }
 
 void CarControlScreen::draw()
@@ -380,9 +419,15 @@ void CarControlScreen::draw()
   accOnItem.setHidden(!testMode);
   indicatorLeftItem.setHidden(!testMode);
   indicatorRightItem.setHidden(!testMode);
+  headlightItem.setHidden(!testMode);
   brakeItem.setHidden(!testMode);
   reverseItem.setHidden(!testMode);
-  headlightItem.setHidden(!testMode);
+
+  // sequences
+  unlockSequenceTriggerItem.setHidden(!testMode);
+  lockSequenceTriggerItem.setHidden(!testMode);
+  rgbSequenceTriggerItem.setHidden(!testMode);
+  nightRiderSequenceTriggerItem.setHidden(!testMode);
 
   // Draw connection status icon in top bar
 
@@ -470,6 +515,7 @@ void CarControlScreen::onEnter()
 
                              // Request current effects
                              getEffects();
+                             getInputs();
                              //
                            });
 
@@ -524,6 +570,7 @@ void CarControlScreen::onEnter()
                              accOn = iCmd.accOn;
                              indicatorLeft = iCmd.indicatorLeft;
                              indicatorRight = iCmd.indicatorRight;
+                             headlight = iCmd.headlight;
                              brake = iCmd.brake;
                              reverse = iCmd.reverse;
 
@@ -600,6 +647,7 @@ void CarControlScreen::sendInputs()
   iCmd.accOn = accOn;
   iCmd.indicatorLeft = indicatorLeft;
   iCmd.indicatorRight = indicatorRight;
+  iCmd.headlight = headlight;
   iCmd.brake = brake;
   iCmd.reverse = reverse;
 
@@ -617,6 +665,23 @@ void CarControlScreen::getInputs()
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
   fp.p.type = CAR_CMD_GET_INPUTS;
   fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::triggerSequence(uint8_t seq)
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CAR_CMD_TRIGGER_SEQUENCE;
+
+  TriggerSequenceCmd tCmd = {0};
+  tCmd.sequence = seq;
+
+  fp.p.len = sizeof(tCmd);
+  memcpy(fp.p.data, &tCmd, sizeof(tCmd));
 
   wireless.send(&fp);
 }
