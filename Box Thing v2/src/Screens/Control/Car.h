@@ -21,6 +21,8 @@ constexpr uint8_t CAR_CMD_PING = 0xe0;
 constexpr uint8_t CAR_CMD_SET_MODE = 0xe1;
 constexpr uint8_t CAR_CMD_SET_EFFECTS = 0xe2;
 constexpr uint8_t CAR_CMD_GET_EFFECTS = 0xe3;
+constexpr uint8_t CAR_CMD_SET_INPUTS = 0xe4;
+constexpr uint8_t CAR_CMD_GET_INPUTS = 0xe5;
 
 enum class ApplicationMode
 {
@@ -75,6 +77,14 @@ struct EffectsCmd
   PoliceMode policeMode;
 };
 
+struct InputsCmd
+{
+  bool accOn;
+  bool indicatorLeft;
+  bool indicatorRight;
+  bool brake;
+  bool reverse;
+};
 class CarControlScreen : public Screen
 {
 public:
@@ -89,6 +99,25 @@ public:
   bool connected = false;
   bool lastConnected = false;
 
+  ApplicationMode mode = ApplicationMode::NORMAL;
+
+  bool isHeadlightEnabled = false;
+  bool isTaillightEnabled = false;
+  bool isUnderglowEnabled = false;
+  bool isInteriorEnabled = false;
+
+  MenuItemSelect ledControllerSelectItem = MenuItemSelect("Ctr", led_controller_names, 0);
+
+  MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
+
+  std::vector<String> modeItems = {"Norm", "Test", "Rem", "Off"};
+  MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
+
+  MenuItem lightModeItem = MenuItem("Light M");
+
+  // #########################################################
+  // Effects
+  // #########################################################
   bool testEffect1Active = false;
   bool testEffect2Active = false;
 
@@ -109,22 +138,6 @@ public:
 
   bool brakeEffectActive = false;
   bool reverseLightEffectActive = false;
-
-  ApplicationMode mode = ApplicationMode::NORMAL;
-
-  bool isHeadlightEnabled = false;
-  bool isTaillightEnabled = false;
-  bool isUnderglowEnabled = false;
-  bool isInteriorEnabled = false;
-
-  MenuItemSelect ledControllerSelectItem = MenuItemSelect("Ctr", led_controller_names, 0);
-
-  MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
-
-  std::vector<String> modeItems = {"Norm", "Test", "Rem", "Off"};
-  MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
-
-  MenuItem lightModeItem = MenuItem("Light M");
 
   MenuItemToggle testEffect1Item = MenuItemToggle("Test 1", &testEffect1Active, true);
   MenuItemToggle testEffect2Item = MenuItemToggle("Test 2", &testEffect2Active, true);
@@ -150,16 +163,37 @@ public:
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
   MenuItemToggle reverseLightEffectItem = MenuItemToggle("Rev", &reverseLightEffectActive, true);
 
+  // #########################################################
+  // Inputs
+  // #########################################################
+  bool accOn = false;
+  bool indicatorLeft = false;
+  bool indicatorRight = false;
+  bool brake = false;
+  bool reverse = false;
+  bool headlight = false;
+
+  MenuItemToggle accOnItem = MenuItemToggle("Acc", &accOn, true);
+  MenuItemToggle indicatorLeftItem = MenuItemToggle("Left", &indicatorLeft, true);
+  MenuItemToggle indicatorRightItem = MenuItemToggle("Right", &indicatorRight, true);
+  MenuItemToggle brakeItem = MenuItemToggle("Brake", &brake, true);
+  MenuItemToggle reverseItem = MenuItemToggle("Reverse", &reverse, true);
+  MenuItemToggle headlightItem = MenuItemToggle("H.Light", &headlight, true);
+
   void draw() override;
   void update() override;
   void onEnter() override;
 
-  void sentEffects();
+  void sendEffects();
   void getEffects();
+
+  void sendInputs();
+  void getInputs();
 };
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 {
+  // general items
   menu.addMenuItem(&backItem);
 
   menu.addMenuItem(&ledControllerSelectItem);
@@ -169,6 +203,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
 
+  // effects
   menu.addMenuItem(&testEffect1Item);
   menu.addMenuItem(&testEffect2Item);
 
@@ -181,14 +216,25 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&policeEffectItem);
   menu.addMenuItem(&policeModeItem);
 
+  // mode specific effects
+  // headlight
   menu.addMenuItem(&headLightEffectItem);
   menu.addMenuItem(&headLightSplitItem);
   menu.addMenuItem(&headLightRItem);
   menu.addMenuItem(&headLightGItem);
   menu.addMenuItem(&headLightBItem);
 
+  // taillight
   menu.addMenuItem(&brakeEffectItem);
   menu.addMenuItem(&reverseLightEffectItem);
+
+  // inputs
+  menu.addMenuItem(&accOnItem);
+  menu.addMenuItem(&indicatorLeftItem);
+  menu.addMenuItem(&indicatorRightItem);
+  menu.addMenuItem(&brakeItem);
+  menu.addMenuItem(&reverseItem);
+  menu.addMenuItem(&headlightItem);
 
   ledControllerSelectItem.setOnChange([&]()
                                       {
@@ -211,61 +257,61 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
                                wireless.send(&fp); });
 
   testEffect1Item.setOnChange([&]()
-                              { sentEffects(); });
+                              { sendEffects(); });
 
   testEffect2Item.setOnChange([&]()
-                              { sentEffects(); });
+                              { sendEffects(); });
 
   leftIndicatorEffectItem.setOnChange([&]()
-                                      { sentEffects(); });
+                                      { sendEffects(); });
 
   rightIndicatorEffectItem.setOnChange([&]()
-                                       { sentEffects(); });
+                                       { sendEffects(); });
 
   startupEffectItem.setOnChange([&]()
-                                { sentEffects(); });
+                                { sendEffects(); });
 
   headlightStartupItem.setOnChange([&]()
                                    {
                                      headlightStartup = headlightStartupItem.getCurrentIndex();
-                                    sentEffects(); });
+                                    sendEffects(); });
 
   rgbEffectItem.setOnChange([&]()
-                            { sentEffects(); });
+                            { sendEffects(); });
 
   nightriderEffectItem.setOnChange([&]()
-                                   { sentEffects(); });
+                                   { sendEffects(); });
 
   policeEffectItem.setOnChange([&]()
-                               { sentEffects(); });
+                               { sendEffects(); });
 
   policeModeItem.setOnChange([&]()
                              {
                                policeMode = static_cast<PoliceMode>(policeModeItem.getCurrentIndex());
-                               sentEffects();
+                               sendEffects();
                                //
                              });
 
   headLightEffectItem.setOnChange([&]()
-                                  { sentEffects(); });
+                                  { sendEffects(); });
 
   headLightSplitItem.setOnChange([&]()
-                                 { sentEffects(); });
+                                 { sendEffects(); });
 
   headLightRItem.setOnChange([&]()
-                             { sentEffects(); });
+                             { sendEffects(); });
 
   headLightGItem.setOnChange([&]()
-                             { sentEffects(); });
+                             { sendEffects(); });
 
   headLightBItem.setOnChange([&]()
-                             { sentEffects(); });
+                             { sendEffects(); });
 
   brakeEffectItem.setOnChange([&]()
-                              { sentEffects(); });
+                              { sendEffects(); });
 
   reverseLightEffectItem.setOnChange([&]()
-                                     { sentEffects(); });
+                                     { sendEffects(); });
 }
 
 void CarControlScreen::draw()
@@ -287,14 +333,38 @@ void CarControlScreen::draw()
   else
     lightModeItem.setName("LM: " + lightModeText);
 
-  headLightEffectItem.setHidden(!isHeadlightEnabled);
-  headLightSplitItem.setHidden(!isHeadlightEnabled);
-  headLightRItem.setHidden(!isHeadlightEnabled);
-  headLightGItem.setHidden(!isHeadlightEnabled);
-  headLightBItem.setHidden(!isHeadlightEnabled);
+  bool testMode = mode == ApplicationMode::TEST;
 
-  brakeEffectItem.setHidden(!isTaillightEnabled);
-  reverseLightEffectItem.setHidden(!isTaillightEnabled);
+  // effects
+  testEffect1Item.setHidden(testMode);
+  testEffect2Item.setHidden(testMode);
+
+  leftIndicatorEffectItem.setHidden(testMode);
+  rightIndicatorEffectItem.setHidden(testMode);
+  startupEffectItem.setHidden(testMode);
+  headlightStartupItem.setHidden(testMode);
+  rgbEffectItem.setHidden(testMode);
+  nightriderEffectItem.setHidden(testMode);
+  policeEffectItem.setHidden(testMode);
+  policeModeItem.setHidden(testMode);
+
+  // mode specific effects
+  headLightEffectItem.setHidden(!isHeadlightEnabled || testMode);
+  headLightSplitItem.setHidden(!isHeadlightEnabled || testMode);
+  headLightRItem.setHidden(!isHeadlightEnabled || testMode);
+  headLightGItem.setHidden(!isHeadlightEnabled || testMode);
+  headLightBItem.setHidden(!isHeadlightEnabled || testMode);
+
+  brakeEffectItem.setHidden(!isTaillightEnabled || testMode);
+  reverseLightEffectItem.setHidden(!isTaillightEnabled || testMode);
+
+  // inputs
+  accOnItem.setHidden(!testMode);
+  indicatorLeftItem.setHidden(!testMode);
+  indicatorRightItem.setHidden(!testMode);
+  brakeItem.setHidden(!testMode);
+  reverseItem.setHidden(!testMode);
+  headlightItem.setHidden(!testMode);
 
   // Draw connection status icon in top bar
 
@@ -302,13 +372,6 @@ void CarControlScreen::draw()
   int iconWidth = display.u8g2.getStrWidth(connTxt.c_str());
   int iconX = display.getCustomIconX(iconWidth);
   display.u8g2.drawStr(iconX, 9, connTxt.c_str());
-
-  // if (lightModeText.length() > 0)
-  //   lightModeText += "-";
-
-  // iconWidth = display.u8g2.getStrWidth(lightModeText.c_str());
-  // iconX = display.getCustomIconX(iconWidth);
-  // display.u8g2.drawStr(iconX, 9, lightModeText.c_str());
 
   String modeShortTxt = "";
   if (mode == ApplicationMode::NORMAL)
@@ -432,6 +495,23 @@ void CarControlScreen::onEnter()
                              //
                            });
 
+  // Get inputs response handler
+  wireless.addOnReceiveFor(CAR_CMD_GET_INPUTS, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+
+                             InputsCmd iCmd;
+                             memcpy(&iCmd, fp->p.data, sizeof(InputsCmd));
+
+                             accOn = iCmd.accOn;
+                             indicatorLeft = iCmd.indicatorLeft;
+                             indicatorRight = iCmd.indicatorRight;
+                             brake = iCmd.brake;
+                             reverse = iCmd.reverse;
+
+                             //
+                           });
+
   led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
   ledControllerSelectItem.setCurrentIndex(led_controller_addr_index);
 
@@ -442,7 +522,7 @@ void CarControlScreen::onEnter()
   mode = ApplicationMode::OFF;
 }
 
-void CarControlScreen::sentEffects()
+void CarControlScreen::sendEffects()
 {
   fullPacket fp;
   memset(&fp, 0, sizeof(fullPacket));
@@ -485,6 +565,39 @@ void CarControlScreen::getEffects()
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
   fp.p.type = CAR_CMD_GET_EFFECTS;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::sendInputs()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CAR_CMD_SET_INPUTS;
+
+  InputsCmd iCmd = {0};
+  iCmd.accOn = accOn;
+  iCmd.indicatorLeft = indicatorLeft;
+  iCmd.indicatorRight = indicatorRight;
+  iCmd.brake = brake;
+  iCmd.reverse = reverse;
+
+  fp.p.len = sizeof(iCmd);
+  memcpy(fp.p.data, &iCmd, sizeof(iCmd));
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::getInputs()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CAR_CMD_GET_INPUTS;
   fp.p.len = 0;
 
   wireless.send(&fp);

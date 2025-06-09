@@ -13,6 +13,7 @@
 #include "IO/Wireless.h"
 #include "IO/Battery.h"
 #include "IO/Haptic.h"
+#include "IO/PartitionTable.h"
 
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
@@ -119,16 +120,8 @@ void setupESPNOW()
   ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::EspNowStarted);
 }
 
-void setup()
+void initScreens()
 {
-  pinMode(LATCH_PIN, OUTPUT);
-  digitalWrite(LATCH_PIN, HIGH); // Set latch pin to high as soon as possible
-
-  initConfig();
-
-  display.init();
-  screenManager.init();
-
   screenManager.addScreen(&startUp);
 
   screenManager.setScreen("Start Up");
@@ -198,6 +191,19 @@ void setup()
 
   ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(7);
   display.display();
+}
+
+void setup()
+{
+  pinMode(LATCH_PIN, OUTPUT);
+  digitalWrite(LATCH_PIN, HIGH); // Set latch pin to high as soon as possible
+
+  initConfig();
+
+  display.init();
+  screenManager.init();
+
+  initScreens();
 
   if (preferences.getBool("espnowOn", false))
   {
@@ -233,6 +239,9 @@ void setup()
     screenManager.setScreen("Home");
     haptic.playEffect(37);
   }
+
+  PartitionTable currentTable = PartitionTable::createFromFlash();
+  // currentTable.print();
 }
 
 int64_t lastEncoderValue = 0;

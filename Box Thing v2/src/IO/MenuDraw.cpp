@@ -131,6 +131,7 @@ void Menu::draw()
   uint8_t itemMap[numItems];
 
   uint8_t numItemsVisible = 0;
+  uint8_t numItemsHidden = 0;
   for (uint8_t i = 0; i < numItems; i++)
   {
     if (!items[i]->isHidden())
@@ -138,7 +139,12 @@ void Menu::draw()
       itemMap[numItemsVisible] = i;
       numItemsVisible++;
     }
+
+    if (items[i]->isHidden() && active > i)
+      numItemsHidden++;
   }
+
+  uint8_t calcActive = active - numItemsHidden;
 
   for (uint8_t i = 0; i < numItemsPerPage; i++)
   {
@@ -146,13 +152,13 @@ void Menu::draw()
 
     if (active <= 0) // if the top item is selected
       topItem = 0;
-    else if (active >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
+    else if (calcActive >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
       if (numItemsVisible < 3)                                 // if there are less than 3 items
         topItem = 0;
       else // if there are more than 3 items
         topItem = static_cast<u8_t>(numItemsVisible - 3);
     else // if any other item is selected
-      topItem = active - 1;
+      topItem = calcActive - 1;
 
     uint8_t itemIdx = i + topItem;
 
@@ -163,8 +169,8 @@ void Menu::draw()
 
   display.u8g2.setDrawColor(1);
 
-  uint8_t scrollBarPosition = (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible) * active;
-  uint8_t scrollBarHeight = (numItemsVisible < 1 ? 1 : numItemsVisible) - 1 == active ? DISPLAY_HEIGHT - 12 - scrollBarPosition : (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible);
+  uint8_t scrollBarPosition = (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible) * calcActive;
+  uint8_t scrollBarHeight = (numItemsVisible < 1 ? 1 : numItemsVisible) - 1 == calcActive ? DISPLAY_HEIGHT - 12 - scrollBarPosition : (DISPLAY_HEIGHT - 13) / (numItemsVisible < 1 ? 1 : numItemsVisible);
 
   display.u8g2.drawLine(DISPLAY_WIDTH - 2, 12, DISPLAY_WIDTH - 2, DISPLAY_HEIGHT - 1);
   display.u8g2.drawBox(DISPLAY_WIDTH - 3, 12 + scrollBarPosition, 3, scrollBarHeight);
