@@ -312,6 +312,24 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   reverseLightEffectItem.setOnChange([&]()
                                      { sendEffects(); });
+
+  accOnItem.setOnChange([&]()
+                        { sendInputs(); });
+
+  indicatorLeftItem.setOnChange([&]()
+                                { sendInputs(); });
+
+  indicatorRightItem.setOnChange([&]()
+                                 { sendInputs(); });
+
+  brakeItem.setOnChange([&]()
+                        { sendInputs(); });
+
+  reverseItem.setOnChange([&]()
+                          { sendInputs(); });
+
+  headlightItem.setOnChange([&]()
+                            { sendInputs(); });
 }
 
 void CarControlScreen::draw()
