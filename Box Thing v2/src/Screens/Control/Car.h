@@ -55,27 +55,27 @@ enum class PoliceMode
 };
 struct EffectsCmd
 {
-  bool testEffect1;
-  bool testEffect2;
-
   bool leftIndicator;
   bool rightIndicator;
 
-  bool headlight;
+  int headlightMode;
   bool headlightSplit;
   bool headlightR;
   bool headlightG;
   bool headlightB;
+
+  int taillightMode;
+  bool taillightSplit;
 
   bool brake;
   bool reverse;
 
   bool rgb;
   bool nightrider;
-  int startup;
-  int headlightStartup;
   bool police;
   PoliceMode policeMode;
+  bool testEffect1;
+  bool testEffect2;
 };
 
 struct InputsCmd
@@ -126,50 +126,55 @@ public:
   // #########################################################
   // Effects
   // #########################################################
-  bool testEffect1Active = false;
-  bool testEffect2Active = false;
 
   bool leftIndicatorEffectActive = false;
   bool rightIndicatorEffectActive = false;
-  bool startupEffectActive = false;
-  int headlightStartup = 0;
-  bool rgbEffectActive = false;
-  bool nightriderEffectActive = false;
-  bool policeEffectActive = false;
-  PoliceMode policeMode = PoliceMode::SLOW;
 
-  bool headLightEffectActive = false;
+  int headlightMode = 0;
   bool headLightSplit = false;
   bool headLightR = false;
   bool headLightG = false;
   bool headLightB = false;
 
+  int taillightMode = 0;
+  bool taillightSplit = false;
+
   bool brakeEffectActive = false;
   bool reverseLightEffectActive = false;
 
-  MenuItemToggle testEffect1Item = MenuItemToggle("Test 1", &testEffect1Active, true);
-  MenuItemToggle testEffect2Item = MenuItemToggle("Test 2", &testEffect2Active, true);
+  // bool startupEffectActive = false;
+
+  bool rgbEffectActive = false;
+  bool nightriderEffectActive = false;
+  bool policeEffectActive = false;
+  PoliceMode policeMode = PoliceMode::SLOW;
+  bool testEffect1Active = false;
+  bool testEffect2Active = false;
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
-  MenuItemToggle startupEffectItem = MenuItemToggle("Start", &startupEffectActive, true);
-  std::vector<String> headlightStartupItems = {"Off", "TOff", "Start", "On"};
-  MenuItemSelect headlightStartupItem = MenuItemSelect("Start", headlightStartupItems, 0);
+
+  std::vector<String> headlightModeItems = {"Off", "Srt", "On"};
+  MenuItemSelect headlightModeItem = MenuItemSelect("H.Light", headlightModeItems, 0);
+  MenuItemToggle headLightSplitItem = MenuItemToggle("Split", &headLightSplit, true);
+  MenuItemToggle headLightRItem = MenuItemToggle("H.R", &headLightR, true);
+  MenuItemToggle headLightGItem = MenuItemToggle("H.G", &headLightG, true);
+  MenuItemToggle headLightBItem = MenuItemToggle("H.B", &headLightB, true);
+
+  std::vector<String> taillightModeItems = {"Off", "Srt", "On", "Dim"};
+  MenuItemSelect taillightModeItem = MenuItemSelect("T.Light", taillightModeItems, 0);
+  MenuItemToggle taillightSplitItem = MenuItemToggle("Split", &taillightSplit, true);
+
+  MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
+  MenuItemToggle reverseLightEffectItem = MenuItemToggle("Rev", &reverseLightEffectActive, true);
 
   MenuItemToggle rgbEffectItem = MenuItemToggle("RGB", &rgbEffectActive, true);
   MenuItemToggle nightriderEffectItem = MenuItemToggle("Nrider", &nightriderEffectActive, true);
   MenuItemToggle policeEffectItem = MenuItemToggle("Police", &policeEffectActive, true);
   std::vector<String> policeModeItems = {"Slow", "Fast"};
   MenuItemSelect policeModeItem = MenuItemSelect("Mode", policeModeItems, 0);
-
-  MenuItemToggle headLightEffectItem = MenuItemToggle("Headlight", &headLightEffectActive, true);
-  MenuItemToggle headLightSplitItem = MenuItemToggle("Split", &headLightSplit, true);
-  MenuItemToggle headLightRItem = MenuItemToggle("R", &headLightR, true);
-  MenuItemToggle headLightGItem = MenuItemToggle("G", &headLightG, true);
-  MenuItemToggle headLightBItem = MenuItemToggle("B", &headLightB, true);
-
-  MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
-  MenuItemToggle reverseLightEffectItem = MenuItemToggle("Rev", &reverseLightEffectActive, true);
+  MenuItemToggle testEffect1Item = MenuItemToggle("Test 1", &testEffect1Active, true);
+  MenuItemToggle testEffect2Item = MenuItemToggle("Test 2", &testEffect2Active, true);
 
   // #########################################################
   // Inputs
@@ -236,30 +241,30 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
 
-  // effects
-  menu.addMenuItem(&testEffect1Item);
-  menu.addMenuItem(&testEffect2Item);
-
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
-  menu.addMenuItem(&startupEffectItem);
-  menu.addMenuItem(&headlightStartupItem);
-  menu.addMenuItem(&rgbEffectItem);
-  menu.addMenuItem(&nightriderEffectItem);
-  menu.addMenuItem(&policeEffectItem);
-  menu.addMenuItem(&policeModeItem);
 
-  // mode specific effects
   // headlight
-  menu.addMenuItem(&headLightEffectItem);
+  menu.addMenuItem(&headlightModeItem);
   menu.addMenuItem(&headLightSplitItem);
   menu.addMenuItem(&headLightRItem);
   menu.addMenuItem(&headLightGItem);
   menu.addMenuItem(&headLightBItem);
 
   // taillight
+  menu.addMenuItem(&taillightModeItem);
+  menu.addMenuItem(&taillightSplitItem);
+
+  // taillight
   menu.addMenuItem(&brakeEffectItem);
   menu.addMenuItem(&reverseLightEffectItem);
+
+  menu.addMenuItem(&rgbEffectItem);
+  menu.addMenuItem(&nightriderEffectItem);
+  menu.addMenuItem(&policeEffectItem);
+  menu.addMenuItem(&policeModeItem);
+  menu.addMenuItem(&testEffect1Item);
+  menu.addMenuItem(&testEffect2Item);
 
   // inputs
   menu.addMenuItem(&accOnItem);
@@ -307,13 +312,29 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   rightIndicatorEffectItem.setOnChange([&]()
                                        { sendEffects(); });
 
-  startupEffectItem.setOnChange([&]()
-                                { sendEffects(); });
+  headlightModeItem.setOnChange([&]()
+                                {
+                                  headlightMode = headlightModeItem.getCurrentIndex();
+                                  sendEffects(); });
 
-  headlightStartupItem.setOnChange([&]()
-                                   {
-                                     headlightStartup = headlightStartupItem.getCurrentIndex();
-                                    sendEffects(); });
+  headLightSplitItem.setOnChange([&]()
+                                 { sendEffects(); });
+
+  headLightRItem.setOnChange([&]()
+                             { sendEffects(); });
+
+  headLightGItem.setOnChange([&]()
+                             { sendEffects(); });
+
+  headLightBItem.setOnChange([&]()
+                             { sendEffects(); });
+
+  taillightModeItem.setOnChange([&]()
+                                {
+                                  taillightMode = taillightModeItem.getCurrentIndex();
+                                  sendEffects(); });
+  taillightSplitItem.setOnChange([&]()
+                                 { sendEffects(); });
 
   rgbEffectItem.setOnChange([&]()
                             { sendEffects(); });
@@ -327,24 +348,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   policeModeItem.setOnChange([&]()
                              {
                                policeMode = static_cast<PoliceMode>(policeModeItem.getCurrentIndex());
-                               sendEffects();
-                               //
-                             });
-
-  headLightEffectItem.setOnChange([&]()
-                                  { sendEffects(); });
-
-  headLightSplitItem.setOnChange([&]()
-                                 { sendEffects(); });
-
-  headLightRItem.setOnChange([&]()
-                             { sendEffects(); });
-
-  headLightGItem.setOnChange([&]()
-                             { sendEffects(); });
-
-  headLightBItem.setOnChange([&]()
-                             { sendEffects(); });
+                               sendEffects(); });
 
   brakeEffectItem.setOnChange([&]()
                               { sendEffects(); });
@@ -393,27 +397,29 @@ void CarControlScreen::draw()
   bool testMode = mode == ApplicationMode::TEST;
 
   // effects
-  testEffect1Item.setHidden(testMode);
-  testEffect2Item.setHidden(testMode);
 
   leftIndicatorEffectItem.setHidden(testMode);
   rightIndicatorEffectItem.setHidden(testMode);
-  startupEffectItem.setHidden(testMode);
-  headlightStartupItem.setHidden(testMode);
-  rgbEffectItem.setHidden(testMode);
-  nightriderEffectItem.setHidden(testMode);
-  policeEffectItem.setHidden(testMode);
-  policeModeItem.setHidden(testMode);
 
   // mode specific effects
-  headLightEffectItem.setHidden(!isHeadlightEnabled || testMode);
+  headlightModeItem.setHidden(!isHeadlightEnabled || testMode);
   headLightSplitItem.setHidden(!isHeadlightEnabled || testMode);
   headLightRItem.setHidden(!isHeadlightEnabled || testMode);
   headLightGItem.setHidden(!isHeadlightEnabled || testMode);
   headLightBItem.setHidden(!isHeadlightEnabled || testMode);
 
+  taillightModeItem.setHidden(!isTaillightEnabled || testMode);
+  taillightSplitItem.setHidden(!isTaillightEnabled || testMode);
+
   brakeEffectItem.setHidden(!isTaillightEnabled || testMode);
   reverseLightEffectItem.setHidden(!isTaillightEnabled || testMode);
+
+  rgbEffectItem.setHidden(testMode);
+  nightriderEffectItem.setHidden(testMode);
+  policeEffectItem.setHidden(testMode);
+  policeModeItem.setHidden(testMode);
+  testEffect1Item.setHidden(testMode);
+  testEffect2Item.setHidden(testMode);
 
   // inputs
   accOnItem.setHidden(!testMode);
@@ -539,23 +545,29 @@ void CarControlScreen::onEnter()
 
                              leftIndicatorEffectActive = eCmd.leftIndicator;
                              rightIndicatorEffectActive = eCmd.rightIndicator;
-                             startupEffectActive = eCmd.startup;
-                             headlightStartup = eCmd.headlightStartup;
-                             headlightStartupItem.setCurrentIndex(headlightStartup);
-                             rgbEffectActive = eCmd.rgb;
-                             nightriderEffectActive = eCmd.nightrider;
-                             policeEffectActive = eCmd.police;
-                             policeMode = eCmd.policeMode;
-                             policeModeItem.setCurrentIndex((uint8_t)policeMode);
 
-                             headLightEffectActive = eCmd.headlight;
+                             headlightModeItem.setCurrentIndex(headlightMode);
+                             headlightMode = eCmd.headlightMode;
                              headLightSplit = eCmd.headlightSplit;
                              headLightR = eCmd.headlightR;
                              headLightG = eCmd.headlightG;
                              headLightB = eCmd.headlightB;
 
+                             taillightModeItem.setCurrentIndex(taillightMode);
+                             taillightMode = eCmd.taillightMode;
+                             taillightSplit = eCmd.taillightSplit;
+
                              brakeEffectActive = eCmd.brake;
                              reverseLightEffectActive = eCmd.reverse;
+
+                             rgbEffectActive = eCmd.rgb;
+                             nightriderEffectActive = eCmd.nightrider;
+                             policeEffectActive = eCmd.police;
+                             policeMode = eCmd.policeMode;
+                             policeModeItem.setCurrentIndex((uint8_t)policeMode);
+                             testEffect1Active = eCmd.testEffect1;
+                             testEffect2Active = eCmd.testEffect2;
+
                              //
                            });
 
@@ -597,25 +609,27 @@ void CarControlScreen::sendEffects()
 
   EffectsCmd eCmd = {0};
 
-  eCmd.testEffect1 = testEffect1Active;
-  eCmd.testEffect2 = testEffect2Active;
-
   eCmd.leftIndicator = leftIndicatorEffectActive;
   eCmd.rightIndicator = rightIndicatorEffectActive;
-  eCmd.startup = startupEffectActive;
-  eCmd.headlightStartup = headlightStartup;
-  eCmd.rgb = rgbEffectActive;
-  eCmd.nightrider = nightriderEffectActive;
-  eCmd.police = policeEffectActive;
-  eCmd.policeMode = policeMode;
 
-  eCmd.headlight = headLightEffectActive;
+  eCmd.headlightMode = headlightMode;
   eCmd.headlightSplit = headLightSplit;
   eCmd.headlightR = headLightR;
   eCmd.headlightG = headLightG;
   eCmd.headlightB = headLightB;
+
+  eCmd.taillightMode = taillightMode;
+  eCmd.taillightSplit = taillightSplit;
+
   eCmd.brake = brakeEffectActive;
   eCmd.reverse = reverseLightEffectActive;
+
+  eCmd.testEffect1 = testEffect1Active;
+  eCmd.testEffect2 = testEffect2Active;
+  eCmd.rgb = rgbEffectActive;
+  eCmd.nightrider = nightriderEffectActive;
+  eCmd.police = policeEffectActive;
+  eCmd.policeMode = policeMode;
 
   fp.p.len = sizeof(eCmd);
   memcpy(fp.p.data, &eCmd, sizeof(eCmd));
