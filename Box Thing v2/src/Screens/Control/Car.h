@@ -179,15 +179,15 @@ public:
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
 
   std::vector<String> headlightModeItems = {"Off", "Srt", "On"};
-  MenuItemSelect headlightModeItem = MenuItemSelect("H.Light", headlightModeItems, 0);
-  MenuItemToggle headLightSplitItem = MenuItemToggle("Split", &headLightSplit, true);
+  MenuItemSelect headlightModeItem = MenuItemSelect("H.Mode", headlightModeItems, 0);
+  MenuItemToggle headLightSplitItem = MenuItemToggle("H.Split", &headLightSplit, true);
   MenuItemToggle headLightRItem = MenuItemToggle("H.R", &headLightR, true);
   MenuItemToggle headLightGItem = MenuItemToggle("H.G", &headLightG, true);
   MenuItemToggle headLightBItem = MenuItemToggle("H.B", &headLightB, true);
 
   std::vector<String> taillightModeItems = {"Off", "Srt", "On", "Dim"};
-  MenuItemSelect taillightModeItem = MenuItemSelect("T.Light", taillightModeItems, 0);
-  MenuItemToggle taillightSplitItem = MenuItemToggle("Split", &taillightSplit, true);
+  MenuItemSelect taillightModeItem = MenuItemSelect("T.Mode", taillightModeItems, 0);
+  MenuItemToggle taillightSplitItem = MenuItemToggle("T.Split", &taillightSplit, true);
 
   MenuItemToggle brakeEffectItem = MenuItemToggle("Brake", &brakeEffectActive, true);
   MenuItemToggle reverseLightEffectItem = MenuItemToggle("Rev", &reverseLightEffectActive, true);
