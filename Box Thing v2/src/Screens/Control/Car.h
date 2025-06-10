@@ -24,6 +24,7 @@ constexpr uint8_t CAR_CMD_GET_EFFECTS = 0xe3;
 constexpr uint8_t CAR_CMD_SET_INPUTS = 0xe4;
 constexpr uint8_t CAR_CMD_GET_INPUTS = 0xe5;
 constexpr uint8_t CAR_CMD_TRIGGER_SEQUENCE = 0xe6;
+constexpr uint8_t CAR_CMD_GET_STATS = 0xe7;
 
 enum class ApplicationMode
 {
@@ -93,6 +94,18 @@ struct TriggerSequenceCmd
   uint8_t sequence;
 };
 
+struct AppStats
+{
+  uint32_t loopsPerSecond;
+  uint32_t updateInputTime;
+
+  uint32_t updateModeTime;
+  uint32_t updateSyncTime;
+
+  uint32_t updateEffectsTime;
+  uint32_t drawTime;
+};
+
 class CarControlScreen : public Screen
 {
 public:
@@ -106,6 +119,9 @@ public:
   uint64_t lastConfirmedPing = 0;
   bool connected = false;
   bool lastConnected = false;
+
+  bool statsActive = false;
+  AppStats stats;
 
   ApplicationMode mode = ApplicationMode::NORMAL;
 
@@ -122,6 +138,14 @@ public:
   MenuItemSelect modeSelectItem = MenuItemSelect("Mode", modeItems, 0);
 
   MenuItem lightModeItem = MenuItem("Light M");
+
+  MenuItemToggle statsItem = MenuItemToggle("Stats", &statsActive);
+  MenuItemNumber<uint32_t> statsLoopsItem = MenuItemNumber<uint32_t>("Lps", &stats.loopsPerSecond);
+  MenuItemNumber<uint32_t> statsUpdateInputTimeItem = MenuItemNumber<uint32_t>("IT", &stats.updateInputTime);
+  MenuItemNumber<uint32_t> statsUpdateModeTimeItem = MenuItemNumber<uint32_t>("MT", &stats.updateModeTime);
+  MenuItemNumber<uint32_t> statsUpdateSyncTimeItem = MenuItemNumber<uint32_t>("ST", &stats.updateSyncTime);
+  MenuItemNumber<uint32_t> statsUpdateEffectsTimeItem = MenuItemNumber<uint32_t>("ET", &stats.updateEffectsTime);
+  MenuItemNumber<uint32_t> statsDrawTimeItem = MenuItemNumber<uint32_t>("DT", &stats.drawTime);
 
   // #########################################################
   // Effects
@@ -240,6 +264,14 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
+
+  menu.addMenuItem(&statsItem);
+  menu.addMenuItem(&statsLoopsItem);
+  menu.addMenuItem(&statsUpdateInputTimeItem);
+  menu.addMenuItem(&statsUpdateModeTimeItem);
+  menu.addMenuItem(&statsUpdateSyncTimeItem);
+  menu.addMenuItem(&statsUpdateEffectsTimeItem);
+  menu.addMenuItem(&statsDrawTimeItem);
 
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
@@ -394,6 +426,13 @@ void CarControlScreen::draw()
   else
     lightModeItem.setName("LM: " + lightModeText);
 
+  statsLoopsItem.setHidden(!statsActive);
+  statsUpdateInputTimeItem.setHidden(!statsActive);
+  statsUpdateModeTimeItem.setHidden(!statsActive);
+  statsUpdateSyncTimeItem.setHidden(!statsActive);
+  statsUpdateEffectsTimeItem.setHidden(!statsActive);
+  statsDrawTimeItem.setHidden(!statsActive);
+
   bool testMode = mode == ApplicationMode::TEST;
 
   // effects
@@ -498,6 +537,18 @@ void CarControlScreen::update()
     fp.p.len = 0;
 
     wireless.send(&fp);
+
+    if (statsActive)
+    {
+      fullPacket fp2;
+      memset(&fp2, 0, sizeof(fullPacket));
+      fp2.direction = PacketDirection::SEND;
+      memcpy(fp2.mac, led_controller_addrs[led_controller_addr_index], 6);
+      fp2.p.type = CAR_CMD_GET_STATS;
+      fp2.p.len = 0;
+
+      wireless.send(&fp2);
+    }
   }
 }
 
@@ -585,6 +636,14 @@ void CarControlScreen::onEnter()
                              headlight = iCmd.headlight;
                              brake = iCmd.brake;
                              reverse = iCmd.reverse;
+
+                             //
+                           });
+
+  // Get stats response handler
+  wireless.addOnReceiveFor(CAR_CMD_GET_STATS, [&](fullPacket *fp)
+                           {
+                             memcpy(&stats, fp->p.data, sizeof(AppStats));
 
                              //
                            });
