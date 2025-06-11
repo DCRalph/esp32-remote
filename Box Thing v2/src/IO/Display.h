@@ -15,6 +15,12 @@ private:
   int lastIconX = 0;
   bool isFirstIcon = true;
 
+  // Notification system
+  String notificationMessage = "";
+  uint64_t notificationStartTime = 0;
+  uint32_t notificationDuration = 0;
+  bool notificationActive = false;
+
 public:
   U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2 = U8G2_SH1106_128X64_NONAME_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
   // U8G2_SSD1309_128X64_NONAME0_F_HW_I2C u8g2 = U8G2_SSD1309_128X64_NONAME0_F_HW_I2C(U8G2_R0, U8X8_PIN_NONE);
@@ -28,6 +34,12 @@ public:
   void drawTopBar(void);
   void noTopBar(void);
   void display(void);
+
+  // Notification system
+  void showNotification(String message, uint32_t durationMs = 2000);
+  void hideNotification();
+  bool isNotificationActive();
+  void drawNotification();
 
   // profileing
   uint64_t startTime;

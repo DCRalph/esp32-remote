@@ -7,91 +7,192 @@ static const char *TAG = "Menu";
 
 void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.u8g2.setFont(u8g2_font_profont22_tf);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Normal;
 
-  if (_active)
+  if (size == MenuSize::Small)
   {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
+    display.u8g2.setFont(u8g2_font_6x10_tf);
+
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
   }
   else
-    display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+  {
+    display.u8g2.setFont(u8g2_font_profont22_tf);
+
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+  }
 }
 
 // ###### MenuItemToggle ######
 
 void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.u8g2.setFont(u8g2_font_profont22_tf);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Normal;
 
-  if (_active)
+  if (size == MenuSize::Small)
   {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
+    display.u8g2.setFont(u8g2_font_6x10_tf);
+
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
+
+    String valueStr = *value ? "ON" : "OFF";
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 3, _y + 7, valueStr.c_str());
   }
   else
-    display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+  {
+    display.u8g2.setFont(u8g2_font_profont22_tf);
 
-  String valueStr = *value ? "ON" : "OFF";
-  display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+
+    String valueStr = *value ? "ON" : "OFF";
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+  }
 }
 
 // ###### MenuItemString ######
 
 void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.u8g2.setFont(u8g2_font_profont22_tf);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Normal;
 
-  if (_active)
+  if (size == MenuSize::Small)
   {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
+    display.u8g2.setFont(u8g2_font_6x10_tf);
+
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+
+    display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(getValue().c_str()) - 3, _y + 7, getValue().c_str());
   }
   else
-    display.u8g2.setDrawColor(1);
+  {
+    display.u8g2.setFont(u8g2_font_profont22_tf);
 
-  display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-  display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(getValue().c_str()) - 5, _y + 15, getValue().c_str());
+    if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.setDrawColor(0);
+    }
+    else
+      display.u8g2.setDrawColor(1);
+
+    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(getValue().c_str()) - 5, _y + 15, getValue().c_str());
+  }
 }
+
 // ###### MenuItemNumber ######
 
 template <typename T>
 void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.u8g2.setFont(u8g2_font_profont22_tf);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Normal;
 
-  if (!_active && selected)
+  if (size == MenuSize::Small)
   {
-    selected = false;
-  }
+    display.u8g2.setFont(u8g2_font_6x10_tf);
 
-  String valueStr = String(*value);
+    if (!_active && selected)
+    {
+      selected = false;
+    }
 
-  if (_active && selected)
-  {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
-  }
-  else if (_active)
-  {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
-    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    String valueStr = String(*value);
+
+    if (_active && selected)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 3, _y + 7, valueStr.c_str());
+    }
+    else if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.setDrawColor(0);
+      display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 3, _y + 7, valueStr.c_str());
+    }
+    else
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawStr(_x + 1, _y + 7, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 3, _y + 7, valueStr.c_str());
+    }
   }
   else
   {
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
-    display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    display.u8g2.setFont(u8g2_font_profont22_tf);
+
+    if (!_active && selected)
+    {
+      selected = false;
+    }
+
+    String valueStr = String(*value);
+
+    if (_active && selected)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    }
+    else if (_active)
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.setDrawColor(0);
+      display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    }
+    else
+    {
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawStr(_x + 1, _y + 15, getName().c_str());
+      display.u8g2.drawStr(DISPLAY_WIDTH - display.u8g2.getStrWidth(valueStr.c_str()) - 5, _y + 15, valueStr.c_str());
+    }
   }
 }
 
@@ -99,44 +200,86 @@ void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
 
 void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  // Draw similar to other items.
-  display.u8g2.setFont(u8g2_font_profont22_tf);
-
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Normal;
   String dispText = getName();
   String optionText = getSelectedOption();
 
-  if (_active && selected)
+  if (size == MenuSize::Small)
   {
-    // Editing mode: draw a frame around the option.
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
-    display.u8g2.drawStr(
-        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
-        _y + 15,
-        optionText.c_str());
-  }
-  else if (_active)
-  {
-    // Active but not editing: draw with a filled background.
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
-    display.u8g2.setDrawColor(0);
-    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
-    display.u8g2.drawStr(
-        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
-        _y + 15,
-        optionText.c_str());
+    display.u8g2.setFont(u8g2_font_6x10_tf);
+
+    if (_active && selected)
+    {
+      // Editing mode: draw a frame around the option.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.drawStr(_x + 1, _y + 7, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 3,
+          _y + 7,
+          optionText.c_str());
+    }
+    else if (_active)
+    {
+      // Active but not editing: draw with a filled background.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 8);
+      display.u8g2.setDrawColor(0);
+      display.u8g2.drawStr(_x + 1, _y + 7, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 3,
+          _y + 7,
+          optionText.c_str());
+    }
+    else
+    {
+      // Inactive: normal drawing.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawStr(_x + 1, _y + 7, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 3,
+          _y + 7,
+          optionText.c_str());
+    }
   }
   else
   {
-    // Inactive: normal drawing.
-    display.u8g2.setDrawColor(1);
-    display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
-    display.u8g2.drawStr(
-        DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
-        _y + 15,
-        optionText.c_str());
+    // Draw similar to other items.
+    display.u8g2.setFont(u8g2_font_profont22_tf);
+
+    if (_active && selected)
+    {
+      // Editing mode: draw a frame around the option.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawFrame(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+          _y + 15,
+          optionText.c_str());
+    }
+    else if (_active)
+    {
+      // Active but not editing: draw with a filled background.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawBox(_x, _y, DISPLAY_WIDTH - 4, 16);
+      display.u8g2.setDrawColor(0);
+      display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+          _y + 15,
+          optionText.c_str());
+    }
+    else
+    {
+      // Inactive: normal drawing.
+      display.u8g2.setDrawColor(1);
+      display.u8g2.drawStr(_x + 1, _y + 15, dispText.c_str());
+      display.u8g2.drawStr(
+          DISPLAY_WIDTH - display.u8g2.getStrWidth(optionText.c_str()) - 5,
+          _y + 15,
+          optionText.c_str());
+    }
   }
 }
 
@@ -144,7 +287,25 @@ void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
 
 void Menu::draw()
 {
-  display.u8g2.setFont(u8g2_font_profont22_tf);
+  // Delegate to active submenu if present
+  if (activeSubmenu)
+  {
+    activeSubmenu->draw();
+    return;
+  }
+
+  bool isSmall = (menuSize == MenuSize::Small);
+  int lineHeight = isSmall ? 8 : 18;
+  int startY = 12;
+
+  if (isSmall)
+  {
+    display.u8g2.setFont(u8g2_font_6x10_tf);
+  }
+  else
+  {
+    display.u8g2.setFont(u8g2_font_profont22_tf);
+  }
 
   uint8_t itemMap[numItems];
 
@@ -164,25 +325,43 @@ void Menu::draw()
 
   uint8_t calcActive = active - numItemsHidden;
 
+  // Check if we have any visible items to draw
+  if (numItemsVisible == 0)
+  {
+    return;
+  }
+
+  uint8_t itemRelIdx = calcActive - topItem;
+
+  // if first item on screen is selected and item is the first item in the list - update topItem
+  if (itemRelIdx <= 0 && calcActive == 0)
+    topItem = 0;
+
+  // if first item on screen is selected and item is not the first item in the list - update topItem
+  if (itemRelIdx <= 0 && calcActive > 0)
+    topItem--;
+
+  // if last item on screen is selected and item is not the last item in the list - update topItem
+  if (itemRelIdx >= numItemsPerPage - 1 && calcActive < numItemsVisible - 1)
+    topItem++;
+
+  // if last item on screen is selected and item is the last item in the list - update topItem
+  if (itemRelIdx >= numItemsPerPage - 1 && calcActive == numItemsVisible - 1)
+    topItem = numItemsVisible - numItemsPerPage;
+
   for (uint8_t i = 0; i < numItemsPerPage; i++)
   {
-    uint8_t topItem;
-
-    if (active <= 0) // if the top item is selected
-      topItem = 0;
-    else if (calcActive >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
-      if (numItemsVisible < 3)                                     // if there are less than 3 items
-        topItem = 0;
-      else // if there are more than 3 items
-        topItem = static_cast<u8_t>(numItemsVisible - 3);
-    else // if any other item is selected
-      topItem = calcActive - 1;
-
     uint8_t itemIdx = i + topItem;
+
+    // Add bounds checking to prevent crash
+    if (itemIdx >= numItemsVisible)
+    {
+      break;
+    }
 
     MenuItem *item = items[itemMap[itemIdx]];
 
-    item->draw(0, 12 + (i * 18), active == itemMap[itemIdx]);
+    item->draw(0, startY + (i * lineHeight), active == itemMap[itemIdx]);
   }
 
   display.u8g2.setDrawColor(1);
@@ -212,6 +391,13 @@ void MenuItem::run()
 
 void Menu::update()
 {
+  // Delegate to active submenu if present
+  if (activeSubmenu)
+  {
+    activeSubmenu->update();
+    return;
+  }
+
   if (numItems < 1)
   {
     if (ClickButtonEnc.clicks == 1)

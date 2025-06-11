@@ -26,6 +26,19 @@ constexpr uint8_t CAR_CMD_GET_INPUTS = 0xe5;
 constexpr uint8_t CAR_CMD_TRIGGER_SEQUENCE = 0xe6;
 constexpr uint8_t CAR_CMD_GET_STATS = 0xe7;
 
+// Sync management commands
+constexpr uint8_t CMD_SYNC_GET_DEVICES = 0xe8;
+constexpr uint8_t CMD_SYNC_GET_GROUPS = 0xe9;
+constexpr uint8_t CMD_SYNC_GET_GROUP_INFO = 0xea;
+constexpr uint8_t CMD_SYNC_JOIN_GROUP = 0xeb;
+constexpr uint8_t CMD_SYNC_LEAVE_GROUP = 0xec;
+constexpr uint8_t CMD_SYNC_CREATE_GROUP = 0xed;
+constexpr uint8_t CMD_SYNC_GET_STATUS = 0xee;
+constexpr uint8_t CMD_SYNC_SET_AUTO_JOIN = 0xef;
+constexpr uint8_t CMD_SYNC_GET_AUTO_JOIN = 0xf0;
+constexpr uint8_t CMD_SYNC_SET_AUTO_CREATE = 0xf1;
+constexpr uint8_t CMD_SYNC_GET_AUTO_CREATE = 0xf2;
+
 enum class ApplicationMode
 {
   NORMAL,
@@ -106,12 +119,108 @@ struct AppStats
   uint32_t drawTime;
 };
 
+// Sync management data structures
+struct SyncDeviceInfo
+{
+  uint32_t deviceId;
+  uint8_t mac[6];
+  uint32_t lastSeen;
+  uint32_t timeSinceLastSeen; // Calculated field in milliseconds
+  bool inCurrentGroup;
+  bool isGroupMaster;
+  bool isThisDevice;
+};
+
+struct SyncDevicesResponse
+{
+  uint8_t deviceCount;
+  uint32_t currentTime;      // Reference time for lastSeen calculations
+  SyncDeviceInfo devices[8]; // Reduced to 8 to accommodate larger struct
+};
+
+struct SyncGroupInfo
+{
+  uint32_t groupId;
+  uint32_t masterDeviceId;
+  uint8_t masterMac[6];
+  uint32_t lastSeen;
+  uint32_t timeSinceLastSeen; // Calculated field in milliseconds
+  bool isCurrentGroup;
+  bool canJoin; // True if we're not in a group or this is not our current group
+};
+
+struct SyncGroupsResponse
+{
+  uint8_t groupCount;
+  uint32_t currentTime;    // Reference time for lastSeen calculations
+  uint32_t ourGroupId;     // Our current group ID (0 if none)
+  SyncGroupInfo groups[4]; // Reduced to 4 to accommodate larger struct
+};
+
+struct SyncGroupMemberInfo
+{
+  uint32_t deviceId;
+  uint8_t mac[6];
+  bool isGroupMaster;
+  bool isThisDevice;
+  uint32_t lastHeartbeat; // 0 if unknown, otherwise time since last heartbeat
+};
+
+struct SyncCurrentGroupInfo
+{
+  uint32_t groupId;
+  uint32_t masterDeviceId;
+  bool isMaster;
+  bool timeSynced;
+  int32_t timeOffset;
+  uint32_t syncedTime;
+  uint8_t memberCount;
+  uint32_t currentTime;           // Reference time
+  SyncGroupMemberInfo members[6]; // Limit to 6 members to fit in packet
+};
+
+struct SyncJoinGroupCmd
+{
+  uint32_t groupId;
+};
+
+struct SyncCreateGroupCmd
+{
+  uint32_t groupId; // 0 = auto-generate, otherwise use specified ID
+};
+
+struct SyncDetailedStatus
+{
+  uint32_t deviceId;
+  uint32_t groupId;
+  uint32_t masterDeviceId;
+  bool isMaster;
+  bool timeSynced;
+  int32_t timeOffset;
+  uint32_t syncedTime;
+  uint8_t memberCount;
+  uint8_t discoveredDeviceCount;
+  uint8_t discoveredGroupCount;
+  bool autoJoinEnabled;
+  bool autoCreateEnabled;
+};
+
+struct SyncAutoJoinCmd
+{
+  bool enabled;
+};
+
+struct SyncAutoCreateCmd
+{
+  bool enabled;
+};
+
 class CarControlScreen : public Screen
 {
 public:
   CarControlScreen(String _name);
 
-  Menu menu = Menu();
+  Menu menu = Menu(MenuSize::Small);
 
   MenuItemBack backItem;
 
@@ -139,13 +248,17 @@ public:
 
   MenuItem lightModeItem = MenuItem("Light M");
 
-  MenuItemToggle statsItem = MenuItemToggle("Stats", &statsActive);
-  MenuItemNumber<uint32_t> statsLoopsItem = MenuItemNumber<uint32_t>("Lps", &stats.loopsPerSecond);
-  MenuItemNumber<uint32_t> statsUpdateInputTimeItem = MenuItemNumber<uint32_t>("IT", &stats.updateInputTime);
-  MenuItemNumber<uint32_t> statsUpdateModeTimeItem = MenuItemNumber<uint32_t>("MT", &stats.updateModeTime);
-  MenuItemNumber<uint32_t> statsUpdateSyncTimeItem = MenuItemNumber<uint32_t>("ST", &stats.updateSyncTime);
-  MenuItemNumber<uint32_t> statsUpdateEffectsTimeItem = MenuItemNumber<uint32_t>("ET", &stats.updateEffectsTime);
-  MenuItemNumber<uint32_t> statsDrawTimeItem = MenuItemNumber<uint32_t>("DT", &stats.drawTime);
+  // Stats submenu
+  MenuItemSubmenu statsUIItem = MenuItemSubmenu("Stats", &statsMenu);
+  Menu statsMenu = Menu(MenuSize::Small);
+  MenuItemBack statsBackItem;
+  MenuItemToggle statsActiveItem = MenuItemToggle("Active", &statsActive);
+  MenuItemNumber<uint32_t> statsLoopsItem = MenuItemNumber<uint32_t>("Loops/Sec", &stats.loopsPerSecond);
+  MenuItemNumber<uint32_t> statsUpdateInputTimeItem = MenuItemNumber<uint32_t>("Input Time", &stats.updateInputTime);
+  MenuItemNumber<uint32_t> statsUpdateModeTimeItem = MenuItemNumber<uint32_t>("Mode Time", &stats.updateModeTime);
+  MenuItemNumber<uint32_t> statsUpdateSyncTimeItem = MenuItemNumber<uint32_t>("Sync Time", &stats.updateSyncTime);
+  MenuItemNumber<uint32_t> statsUpdateEffectsTimeItem = MenuItemNumber<uint32_t>("Effects Time", &stats.updateEffectsTime);
+  MenuItemNumber<uint32_t> statsDrawTimeItem = MenuItemNumber<uint32_t>("Draw Time", &stats.drawTime);
 
   // #########################################################
   // Effects
@@ -240,6 +353,113 @@ public:
                                                                   //
                                                                 });
 
+  // #########################################################
+  // Sync Management UI - Redesigned
+  // #########################################################
+
+  // Main sync menu
+  Menu syncMenu = Menu(MenuSize::Small);
+  MenuItemBack syncBackItem;
+  MenuItemAction syncRefreshItem = MenuItemAction("Refresh All", 1, [&]()
+                                                  { this->syncRefreshData(); });
+
+  // This Device section
+  MenuItemSubmenu syncThisDeviceUIItem = MenuItemSubmenu("This Device", &syncThisDeviceMenu);
+  Menu syncThisDeviceMenu = Menu(MenuSize::Small);
+  MenuItemBack syncThisDeviceBackItem;
+  MenuItem thisDeviceIdItem = MenuItem("ID: ---");
+  MenuItem thisDeviceGroupItem = MenuItem("Group: ---");
+  MenuItem thisDeviceStatusItem = MenuItem("Status: ---");
+  MenuItemToggle autoJoinItem = MenuItemToggle("Auto Join", &autoJoinEnabled, true);
+  MenuItemToggle autoCreateItem = MenuItemToggle("Auto Create", &autoCreateEnabled, true);
+  MenuItemAction leaveGroupItem = MenuItemAction("Leave Group", 1, [&]()
+                                                 { this->leaveSyncGroup(); });
+
+  // Current Group section
+  MenuItemSubmenu syncCurrentGroupUIItem = MenuItemSubmenu("Current Group", &syncCurrentGroupMenu);
+  Menu syncCurrentGroupMenu = Menu(MenuSize::Small);
+  MenuItemBack syncCurrentGroupBackItem;
+  MenuItem currentGroupIdItem = MenuItem("ID: ---");
+  MenuItem currentGroupMasterItem = MenuItem("Master: ---");
+  MenuItem currentGroupMembersItem = MenuItem("Members: ---");
+  MenuItem currentGroupSyncItem = MenuItem("Sync: ---");
+
+  // Group Members submenu (for current group)
+  MenuItemSubmenu groupMembersUIItem = MenuItemSubmenu("View Members", &groupMembersMenu);
+  Menu groupMembersMenu = Menu(MenuSize::Small);
+  MenuItemBack groupMembersBackItem;
+  // Member items will be dynamically added
+
+  // Discovered Devices section
+  MenuItemSubmenu syncDevicesUIItem = MenuItemSubmenu("Devices", &syncDevicesMenu);
+  Menu syncDevicesMenu = Menu(MenuSize::Small);
+  MenuItemBack syncDevicesBackItem;
+  // Device items will be statically created (max 8)
+  MenuItem deviceItems[8] = {
+      MenuItem("Device 1: ---"),
+      MenuItem("Device 2: ---"),
+      MenuItem("Device 3: ---"),
+      MenuItem("Device 4: ---"),
+      MenuItem("Device 5: ---"),
+      MenuItem("Device 6: ---"),
+      MenuItem("Device 7: ---"),
+      MenuItem("Device 8: ---")};
+
+  // Device Detail submenu
+  MenuItemSubmenu deviceDetailUIItem = MenuItemSubmenu("Device Detail", &deviceDetailMenu);
+  Menu deviceDetailMenu = Menu(MenuSize::Small);
+  MenuItemBack deviceDetailBackItem;
+  MenuItem deviceDetailIdItem = MenuItem("ID: ---");
+  MenuItem deviceDetailMacItem = MenuItem("MAC: ---");
+  MenuItem deviceDetailLastSeenItem = MenuItem("Last: ---");
+  MenuItem deviceDetailStatusItem = MenuItem("Status: ---");
+  MenuItem deviceDetailGroupItem = MenuItem("Group: ---");
+
+  // Discovered Groups section
+  MenuItemSubmenu syncGroupsUIItem = MenuItemSubmenu("Groups", &syncGroupsMenu);
+  Menu syncGroupsMenu = Menu(MenuSize::Small);
+  MenuItemBack syncGroupsBackItem;
+  // Group items will be statically created (max 4)
+  MenuItem groupItems[4] = {
+      MenuItem("Group 1: ---"),
+      MenuItem("Group 2: ---"),
+      MenuItem("Group 3: ---"),
+      MenuItem("Group 4: ---")};
+
+  // Group Detail submenu
+  MenuItemSubmenu groupDetailUIItem = MenuItemSubmenu("Group Detail", &groupDetailMenu);
+  Menu groupDetailMenu = Menu(MenuSize::Small);
+  MenuItemBack groupDetailBackItem;
+  MenuItem groupDetailIdItem = MenuItem("ID: ---");
+  MenuItem groupDetailMasterItem = MenuItem("Master: ---");
+  MenuItem groupDetailMacItem = MenuItem("MAC: ---");
+  MenuItem groupDetailLastSeenItem = MenuItem("Last: ---");
+  MenuItem groupDetailStatusItem = MenuItem("Status: ---");
+  MenuItemAction groupJoinItem = MenuItemAction("Join Group", 1, [&]()
+                                                { this->joinSelectedGroup(); });
+
+  // Group Management
+  MenuItemAction syncCreateGroupItem = MenuItemAction("Create Group", 1, [&]()
+                                                      { this->syncCreateGroup(); });
+
+  MenuItemSubmenu syncUIItem = MenuItemSubmenu("Sync", &syncMenu);
+
+  // Sync data storage
+  SyncDevicesResponse syncDevices;
+  SyncGroupsResponse syncGroups;
+  SyncCurrentGroupInfo syncCurrentGroup;
+  SyncDetailedStatus syncStatus;
+
+  // Selection tracking and state
+  uint32_t selectedDeviceId = 0;
+  uint32_t selectedGroupId = 0;
+  bool autoJoinEnabled = false;
+  bool autoCreateEnabled = false;
+
+  // timing
+  uint64_t lastSyncUpdate = 0;
+  uint64_t lastSyncAutoRefresh = 0;
+
   void draw() override;
   void update() override;
   void onEnter() override;
@@ -251,6 +471,38 @@ public:
   void getInputs();
 
   void triggerSequence(uint8_t seq);
+
+  // Sync management methods
+  void syncRefreshData(bool showNotification = true);
+  void syncCreateGroup(uint32_t groupId = 0);
+
+  void requestSyncDevices();
+  void requestSyncGroups();
+  void requestSyncGroupInfo();
+  void requestSyncStatus();
+  void joinSyncGroup(uint32_t groupId);
+  void joinSelectedGroup();
+  void leaveSyncGroup();
+
+  // Auto join/create methods
+  void setAutoJoin(bool enabled);
+  void setAutoCreate(bool enabled);
+  void requestAutoJoinStatus();
+  void requestAutoCreateStatus();
+
+  // UI update methods
+  void updateThisDeviceDisplay();
+  void updateCurrentGroupDisplay();
+  void updateDevicesDisplay();
+  void updateGroupsDisplay();
+  void updateGroupMembersDisplay();
+  void showDeviceDetail(uint32_t deviceId);
+  void showGroupDetail(uint32_t groupId);
+
+  // Utility methods
+  String formatMacAddress(uint8_t *mac);
+  String formatTimestamp(uint32_t timestamp);
+  String formatTimeDuration(uint32_t milliseconds);
 };
 
 CarControlScreen::CarControlScreen(String _name) : Screen(_name)
@@ -265,13 +517,11 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&modeSelectItem);
   menu.addMenuItem(&lightModeItem);
 
-  menu.addMenuItem(&statsItem);
-  menu.addMenuItem(&statsLoopsItem);
-  menu.addMenuItem(&statsUpdateInputTimeItem);
-  menu.addMenuItem(&statsUpdateModeTimeItem);
-  menu.addMenuItem(&statsUpdateSyncTimeItem);
-  menu.addMenuItem(&statsUpdateEffectsTimeItem);
-  menu.addMenuItem(&statsDrawTimeItem);
+  // sync management
+  menu.addMenuItem(&syncUIItem);
+
+  // stats submenu
+  menu.addMenuItem(&statsUIItem);
 
   menu.addMenuItem(&leftIndicatorEffectItem);
   menu.addMenuItem(&rightIndicatorEffectItem);
@@ -311,6 +561,141 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&lockSequenceTriggerItem);
   menu.addMenuItem(&rgbSequenceTriggerItem);
   menu.addMenuItem(&nightRiderSequenceTriggerItem);
+
+  // Setup main sync menu
+  syncMenu.addMenuItem(&syncBackItem);
+  syncMenu.addMenuItem(&syncRefreshItem);
+  syncMenu.addMenuItem(&syncThisDeviceUIItem);
+  syncMenu.addMenuItem(&syncCurrentGroupUIItem);
+  syncMenu.addMenuItem(&syncDevicesUIItem);
+  syncMenu.addMenuItem(&syncGroupsUIItem);
+  syncMenu.addMenuItem(&syncCreateGroupItem);
+
+  // Setup This Device submenu
+  syncThisDeviceMenu.addMenuItem(&syncThisDeviceBackItem);
+  syncThisDeviceMenu.addMenuItem(&thisDeviceIdItem);
+  syncThisDeviceMenu.addMenuItem(&thisDeviceGroupItem);
+  syncThisDeviceMenu.addMenuItem(&thisDeviceStatusItem);
+  syncThisDeviceMenu.addMenuItem(&autoJoinItem);
+  syncThisDeviceMenu.addMenuItem(&autoCreateItem);
+  syncThisDeviceMenu.addMenuItem(&leaveGroupItem);
+  syncThisDeviceMenu.setParentMenu(&syncMenu);
+
+  // Setup Current Group submenu
+  syncCurrentGroupMenu.addMenuItem(&syncCurrentGroupBackItem);
+  syncCurrentGroupMenu.addMenuItem(&currentGroupIdItem);
+  syncCurrentGroupMenu.addMenuItem(&currentGroupMasterItem);
+  syncCurrentGroupMenu.addMenuItem(&currentGroupMembersItem);
+  syncCurrentGroupMenu.addMenuItem(&currentGroupSyncItem);
+  syncCurrentGroupMenu.addMenuItem(&groupMembersUIItem);
+  syncCurrentGroupMenu.setParentMenu(&syncMenu);
+
+  // Setup Group Members submenu
+  groupMembersMenu.addMenuItem(&groupMembersBackItem);
+  groupMembersMenu.setParentMenu(&syncCurrentGroupMenu);
+
+  // Setup devices submenu
+  syncDevicesMenu.addMenuItem(&syncDevicesBackItem);
+  for (int i = 0; i < 8; i++)
+  {
+    syncDevicesMenu.addMenuItem(&deviceItems[i]);
+  }
+  syncDevicesMenu.setParentMenu(&syncMenu);
+
+  // Setup device detail submenu
+  deviceDetailMenu.addMenuItem(&deviceDetailBackItem);
+  deviceDetailMenu.addMenuItem(&deviceDetailIdItem);
+  deviceDetailMenu.addMenuItem(&deviceDetailMacItem);
+  deviceDetailMenu.addMenuItem(&deviceDetailLastSeenItem);
+  deviceDetailMenu.addMenuItem(&deviceDetailStatusItem);
+  deviceDetailMenu.addMenuItem(&deviceDetailGroupItem);
+  deviceDetailMenu.setParentMenu(&syncDevicesMenu);
+
+  // Setup groups submenu
+  syncGroupsMenu.addMenuItem(&syncGroupsBackItem);
+  for (int i = 0; i < 4; i++)
+  {
+    syncGroupsMenu.addMenuItem(&groupItems[i]);
+  }
+  syncGroupsMenu.setParentMenu(&syncMenu);
+
+  // Setup group detail submenu
+  groupDetailMenu.addMenuItem(&groupDetailBackItem);
+  groupDetailMenu.addMenuItem(&groupDetailIdItem);
+  groupDetailMenu.addMenuItem(&groupDetailMasterItem);
+  groupDetailMenu.addMenuItem(&groupDetailMacItem);
+  groupDetailMenu.addMenuItem(&groupDetailLastSeenItem);
+  groupDetailMenu.addMenuItem(&groupDetailStatusItem);
+  groupDetailMenu.addMenuItem(&groupJoinItem);
+  groupDetailMenu.setParentMenu(&syncGroupsMenu);
+
+  // Setup stats submenu
+  statsMenu.addMenuItem(&statsBackItem);
+  statsMenu.addMenuItem(&statsActiveItem);
+  statsMenu.addMenuItem(&statsLoopsItem);
+  statsMenu.addMenuItem(&statsUpdateInputTimeItem);
+  statsMenu.addMenuItem(&statsUpdateModeTimeItem);
+  statsMenu.addMenuItem(&statsUpdateSyncTimeItem);
+  statsMenu.addMenuItem(&statsUpdateEffectsTimeItem);
+  statsMenu.addMenuItem(&statsDrawTimeItem);
+  statsMenu.setParentMenu(&menu);
+
+  // Set up sync menu enter callback to refresh data
+  syncUIItem.addFunc(1, [&]()
+                     { syncRefreshData(); });
+
+  // Set up callbacks for entering submenus
+  syncThisDeviceUIItem.addFunc(1, [&]()
+                               { 
+                                 requestSyncStatus();
+                                 requestAutoJoinStatus();
+                                 requestAutoCreateStatus();
+                                 updateThisDeviceDisplay(); });
+
+  syncCurrentGroupUIItem.addFunc(1, [&]()
+                                 { 
+                                   requestSyncGroupInfo();
+                                   updateCurrentGroupDisplay(); });
+
+  syncDevicesUIItem.addFunc(1, [&]()
+                            { 
+                             requestSyncDevices(); 
+                             updateDevicesDisplay(); });
+
+  syncGroupsUIItem.addFunc(1, [&]()
+                           { 
+                            requestSyncGroups(); 
+                            updateGroupsDisplay(); });
+
+  groupMembersUIItem.addFunc(1, [&]()
+                             { updateGroupMembersDisplay(); });
+
+  // Set up auto join/create callbacks
+  autoJoinItem.setOnChange([&]()
+                           { setAutoJoin(autoJoinEnabled); });
+
+  autoCreateItem.setOnChange([&]()
+                             { setAutoCreate(autoCreateEnabled); });
+
+  // Set up device selection callbacks
+  for (int i = 0; i < 8; i++)
+  {
+    deviceItems[i].addFunc(1, [this, i]()
+                           { 
+                             if (i < syncDevices.deviceCount && !deviceItems[i].isHidden()) {
+                               showDeviceDetail(syncDevices.devices[i].deviceId);
+                             } });
+  }
+
+  // Set up group selection callbacks
+  for (int i = 0; i < 4; i++)
+  {
+    groupItems[i].addFunc(1, [this, i]()
+                          { 
+                            if (i < syncGroups.groupCount && !groupItems[i].isHidden()) {
+                              showGroupDetail(syncGroups.groups[i].groupId);
+                            } });
+  }
 
   ledControllerSelectItem.setOnChange([&]()
                                       {
@@ -409,7 +794,6 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
 void CarControlScreen::draw()
 {
-
   String lightModeText = "";
 
   if (isHeadlightEnabled)
@@ -426,6 +810,7 @@ void CarControlScreen::draw()
   else
     lightModeItem.setName("LM: " + lightModeText);
 
+  // Stats items visibility is now handled within the stats submenu
   statsLoopsItem.setHidden(!statsActive);
   statsUpdateInputTimeItem.setHidden(!statsActive);
   statsUpdateModeTimeItem.setHidden(!statsActive);
@@ -522,6 +907,20 @@ void CarControlScreen::update()
       isTaillightEnabled = false;
       isUnderglowEnabled = false;
       isInteriorEnabled = false;
+    }
+  }
+
+  // Auto-refresh sync data when sync menus are active
+  if (connected && millis() - lastSyncAutoRefresh > 2000)
+  {
+    lastSyncAutoRefresh = millis();
+    // Check if any sync-related menu is currently active
+    Menu *currentMenu = menu.getActiveSubmenu();
+    bool syncMenuActive = (currentMenu == &syncMenu);
+
+    if (syncMenuActive)
+    {
+      syncRefreshData(false); // Don't show notification for auto-refresh
     }
   }
 
@@ -648,6 +1047,168 @@ void CarControlScreen::onEnter()
                              //
                            });
 
+  // Sync management response handlers
+  wireless.addOnReceiveFor(CMD_SYNC_GET_DEVICES, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             memcpy(&syncDevices, fp->p.data, sizeof(SyncDevicesResponse)); 
+                             
+                             // Log received devices data
+                             String logMsg = "=== SYNC DEVICES RECEIVED ===\n";
+                             logMsg += "Device count: " + String(syncDevices.deviceCount) + "\n";
+                             logMsg += "Current time: " + String(syncDevices.currentTime) + "\n";
+                             for (int i = 0; i < syncDevices.deviceCount; i++) {
+                               SyncDeviceInfo &device = syncDevices.devices[i];
+                               logMsg += "Device " + String(i) + ":\n";
+                               logMsg += "  ID: " + String(device.deviceId) + "\n";
+                               logMsg += "  MAC: " + formatMacAddress(device.mac) + "\n";
+                               logMsg += "  Last seen: " + String(device.lastSeen) + "\n";
+                               logMsg += "  Time since: " + String(device.timeSinceLastSeen) + "ms\n";
+                               logMsg += "  In group: " + String(device.inCurrentGroup) + "\n";
+                               logMsg += "  Is master: " + String(device.isGroupMaster) + "\n";
+                               logMsg += "  Is me: " + String(device.isThisDevice) + "\n";
+                             }
+                             logMsg += "=============================";
+                             Serial.println(logMsg);
+                             
+                             updateDevicesDisplay(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUPS, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             memcpy(&syncGroups, fp->p.data, sizeof(SyncGroupsResponse));
+                             
+                             // Log received groups data
+                             String logMsg = "=== SYNC GROUPS RECEIVED ===\n";
+                             logMsg += "Group count: " + String(syncGroups.groupCount) + "\n";
+                             logMsg += "Current time: " + String(syncGroups.currentTime) + "\n";
+                             logMsg += "Our group ID: " + String(syncGroups.ourGroupId) + "\n";
+                             for (int i = 0; i < syncGroups.groupCount; i++) {
+                               SyncGroupInfo &group = syncGroups.groups[i];
+                               logMsg += "Group " + String(i) + ":\n";
+                               logMsg += "  ID: " + String(group.groupId) + "\n";
+                               logMsg += "  Master ID: " + String(group.masterDeviceId) + "\n";
+                               logMsg += "  Master MAC: " + formatMacAddress(group.masterMac) + "\n";
+                               logMsg += "  Last seen: " + String(group.lastSeen) + "\n";
+                               logMsg += "  Time since: " + String(group.timeSinceLastSeen) + "ms\n";
+                               logMsg += "  Is current: " + String(group.isCurrentGroup) + "\n";
+                               logMsg += "  Can join: " + String(group.canJoin) + "\n";
+                             }
+                             logMsg += "============================";
+                             Serial.println(logMsg);
+                             
+                             updateGroupsDisplay(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUP_INFO, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             memcpy(&syncCurrentGroup, fp->p.data, sizeof(SyncCurrentGroupInfo));
+                             
+                             // Log received group info data
+                             String logMsg = "=== SYNC GROUP INFO RECEIVED ===\n";
+                             logMsg += "Group ID: " + String(syncCurrentGroup.groupId) + "\n";
+                             logMsg += "Master ID: " + String(syncCurrentGroup.masterDeviceId) + "\n";
+                             logMsg += "Is master: " + String(syncCurrentGroup.isMaster) + "\n";
+                             logMsg += "Time synced: " + String(syncCurrentGroup.timeSynced) + "\n";
+                             logMsg += "Time offset: " + String(syncCurrentGroup.timeOffset) + "\n";
+                             logMsg += "Synced time: " + String(syncCurrentGroup.syncedTime) + "\n";
+                             logMsg += "Member count: " + String(syncCurrentGroup.memberCount) + "\n";
+                             logMsg += "Current time: " + String(syncCurrentGroup.currentTime) + "\n";
+                             for (int i = 0; i < syncCurrentGroup.memberCount; i++) {
+                               SyncGroupMemberInfo &member = syncCurrentGroup.members[i];
+                               logMsg += "Member " + String(i) + ":\n";
+                               logMsg += "  ID: " + String(member.deviceId) + "\n";
+                               logMsg += "  MAC: " + formatMacAddress(member.mac) + "\n";
+                               logMsg += "  Is master: " + String(member.isGroupMaster) + "\n";
+                               logMsg += "  Is me: " + String(member.isThisDevice) + "\n";
+                               logMsg += "  Last heartbeat: " + String(member.lastHeartbeat) + "\n";
+                             }
+                             logMsg += "=================================";
+                             Serial.println(logMsg);
+                             
+                             updateCurrentGroupDisplay();
+                             updateGroupMembersDisplay(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_GET_STATUS, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             memcpy(&syncStatus, fp->p.data, sizeof(SyncDetailedStatus));
+                             
+                             // Log received status data
+                             String logMsg = "=== SYNC STATUS RECEIVED ===\n";
+                             logMsg += "Device ID: " + String(syncStatus.deviceId) + "\n";
+                             logMsg += "Group ID: " + String(syncStatus.groupId) + "\n";
+                             logMsg += "Master ID: " + String(syncStatus.masterDeviceId) + "\n";
+                             logMsg += "Is master: " + String(syncStatus.isMaster) + "\n";
+                             logMsg += "Time synced: " + String(syncStatus.timeSynced) + "\n";
+                             logMsg += "Time offset: " + String(syncStatus.timeOffset) + "\n";
+                             logMsg += "Synced time: " + String(syncStatus.syncedTime) + "\n";
+                             logMsg += "Member count: " + String(syncStatus.memberCount) + "\n";
+                             logMsg += "Discovered devices: " + String(syncStatus.discoveredDeviceCount) + "\n";
+                             logMsg += "Discovered groups: " + String(syncStatus.discoveredGroupCount) + "\n";
+                             logMsg += "Auto join enabled: " + String(syncStatus.autoJoinEnabled) + "\n";
+                             logMsg += "Auto create enabled: " + String(syncStatus.autoCreateEnabled) + "\n";
+                             logMsg += "============================";
+                             Serial.println(logMsg);
+                             
+                             updateThisDeviceDisplay(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_JOIN_GROUP, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             display.showNotification("Joined group!", 1500);
+                             // Refresh all sync data
+                             requestSyncStatus();
+                             requestSyncGroupInfo(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_LEAVE_GROUP, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             display.showNotification("Left group!", 1500);
+                             // Clear current group and refresh status
+                             memset(&syncCurrentGroup, 0, sizeof(syncCurrentGroup));
+                             requestSyncStatus(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_CREATE_GROUP, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             display.showNotification("Group created!", 1500);
+                             // Refresh all sync data
+                             requestSyncStatus();
+                             requestSyncGroupInfo(); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_SET_AUTO_JOIN, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             display.showNotification("Auto Join updated", 1000); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_GET_AUTO_JOIN, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             autoJoinEnabled = fp->p.data[0] != 0;
+                             
+                             // Log received auto join status
+                             String logMsg = "=== AUTO JOIN STATUS RECEIVED ===\n";
+                             logMsg += "Auto join enabled: " + String(autoJoinEnabled) + "\n";
+                             logMsg += "=================================";
+                             Serial.println(logMsg); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_SET_AUTO_CREATE, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             display.showNotification("Auto Create updated", 1000); });
+
+  wireless.addOnReceiveFor(CMD_SYNC_GET_AUTO_CREATE, [&](fullPacket *fp)
+                           {
+                             lastConfirmedPing = millis();
+                             autoCreateEnabled = fp->p.data[0] != 0;
+                             
+                             // Log received auto create status
+                             String logMsg = "=== AUTO CREATE STATUS RECEIVED ===\n";
+                             logMsg += "Auto create enabled: " + String(autoCreateEnabled) + "\n";
+                             logMsg += "===================================";
+                             Serial.println(logMsg); });
+
   led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
   ledControllerSelectItem.setCurrentIndex(led_controller_addr_index);
 
@@ -757,4 +1318,484 @@ void CarControlScreen::triggerSequence(uint8_t seq)
   memcpy(fp.p.data, &tCmd, sizeof(tCmd));
 
   wireless.send(&fp);
+}
+
+// Sync management methods
+void CarControlScreen::syncRefreshData(bool showNotification)
+{
+  requestSyncStatus();
+  requestSyncDevices();
+  requestSyncGroups();
+  requestSyncGroupInfo();
+  requestAutoJoinStatus();
+  requestAutoCreateStatus();
+
+  if (showNotification)
+  {
+    display.showNotification("Refreshing...", 1000);
+  }
+}
+
+void CarControlScreen::leaveSyncGroup()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_LEAVE_GROUP;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::syncCreateGroup(uint32_t groupId)
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_CREATE_GROUP;
+
+  SyncCreateGroupCmd cmd = {0};
+  cmd.groupId = groupId; // 0 = auto-generate
+
+  fp.p.len = sizeof(cmd);
+  memcpy(fp.p.data, &cmd, sizeof(cmd));
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestSyncDevices()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_DEVICES;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestSyncGroups()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_GROUPS;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestSyncGroupInfo()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_GROUP_INFO;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestSyncStatus()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_STATUS;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::joinSyncGroup(uint32_t groupId)
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_JOIN_GROUP;
+
+  SyncJoinGroupCmd cmd = {0};
+  cmd.groupId = groupId;
+
+  fp.p.len = sizeof(cmd);
+  memcpy(fp.p.data, &cmd, sizeof(cmd));
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::joinSelectedGroup()
+{
+  if (selectedGroupId != 0)
+  {
+    joinSyncGroup(selectedGroupId);
+    display.showNotification("Joining group...", 1500);
+  }
+  else
+  {
+    display.showNotification("No group selected", 1500);
+  }
+}
+
+// Auto join/create methods
+void CarControlScreen::setAutoJoin(bool enabled)
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_SET_AUTO_JOIN;
+
+  SyncAutoJoinCmd cmd = {0};
+  cmd.enabled = enabled;
+
+  fp.p.len = sizeof(cmd);
+  memcpy(fp.p.data, &cmd, sizeof(cmd));
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::setAutoCreate(bool enabled)
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_SET_AUTO_CREATE;
+
+  SyncAutoCreateCmd cmd = {0};
+  cmd.enabled = enabled;
+
+  fp.p.len = sizeof(cmd);
+  memcpy(fp.p.data, &cmd, sizeof(cmd));
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestAutoJoinStatus()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_AUTO_JOIN;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+void CarControlScreen::requestAutoCreateStatus()
+{
+  fullPacket fp;
+  memset(&fp, 0, sizeof(fullPacket));
+  fp.direction = PacketDirection::SEND;
+  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
+  fp.p.type = CMD_SYNC_GET_AUTO_CREATE;
+  fp.p.len = 0;
+
+  wireless.send(&fp);
+}
+
+// UI update methods
+void CarControlScreen::updateThisDeviceDisplay()
+{
+  // Only show valid device info if we're connected
+  if (syncStatus.deviceId != 0)
+  {
+    thisDeviceIdItem.setName("ID: " + String(syncStatus.deviceId));
+
+    if (syncStatus.groupId == 0)
+    {
+      thisDeviceGroupItem.setName("Group: None");
+      thisDeviceStatusItem.setName("Status: Solo");
+    }
+    else
+    {
+      thisDeviceGroupItem.setName("Group: " + String(syncStatus.groupId));
+      String statusText = syncStatus.isMaster ? "Master" : "Member";
+      if (syncStatus.timeSynced)
+      {
+        statusText += " (Synced)";
+      }
+      thisDeviceStatusItem.setName("Status: " + statusText);
+    }
+  }
+  else
+  {
+    // No connection - show default values
+    thisDeviceIdItem.setName("ID: ---");
+    thisDeviceGroupItem.setName("Group: ---");
+    thisDeviceStatusItem.setName("Status: Disconnected");
+  }
+}
+
+void CarControlScreen::updateCurrentGroupDisplay()
+{
+  if (syncCurrentGroup.groupId == 0)
+  {
+    currentGroupIdItem.setName("ID: None");
+    currentGroupMasterItem.setName("Master: ---");
+    currentGroupMembersItem.setName("Members: 0");
+    currentGroupSyncItem.setName("Sync: ---");
+    // Hide members submenu when not in a group
+    groupMembersUIItem.setHidden(true);
+  }
+  else
+  {
+    currentGroupIdItem.setName("ID: " + String(syncCurrentGroup.groupId));
+    currentGroupMasterItem.setName("Master: " + String(syncCurrentGroup.masterDeviceId));
+    currentGroupMembersItem.setName("Members: " + String(syncCurrentGroup.memberCount));
+
+    String syncText = syncCurrentGroup.timeSynced ? "OK" : "No";
+    if (syncCurrentGroup.timeSynced && syncCurrentGroup.timeOffset != 0)
+    {
+      syncText += " (" + String(syncCurrentGroup.timeOffset) + "ms)";
+    }
+    currentGroupSyncItem.setName("Sync: " + syncText);
+    // Show members submenu only when we have members
+    groupMembersUIItem.setHidden(syncCurrentGroup.memberCount == 0);
+  }
+}
+
+void CarControlScreen::updateDevicesDisplay()
+{
+  // Update device items - only show populated ones
+  for (int i = 0; i < 8; i++)
+  {
+    if (i < syncDevices.deviceCount)
+    {
+      SyncDeviceInfo &device = syncDevices.devices[i];
+      String deviceText = String(device.deviceId);
+
+      if (device.isThisDevice)
+      {
+        deviceText += " (Me)";
+      }
+      else if (device.inCurrentGroup)
+      {
+        deviceText += device.isGroupMaster ? " (GM)" : " (G)";
+      }
+
+      deviceText += " - " + formatTimeDuration(device.timeSinceLastSeen);
+      deviceItems[i].setName(deviceText);
+      deviceItems[i].setHidden(false);
+    }
+    else
+    {
+      // Hide unpopulated items completely
+      deviceItems[i].setHidden(true);
+    }
+  }
+}
+
+void CarControlScreen::updateGroupsDisplay()
+{
+  // Update group items - only show populated ones
+  for (int i = 0; i < 4; i++)
+  {
+    if (i < syncGroups.groupCount)
+    {
+      SyncGroupInfo &group = syncGroups.groups[i];
+      String groupText = "Group " + String(group.groupId);
+
+      if (group.isCurrentGroup)
+      {
+        groupText += " (Current)";
+      }
+      else if (group.canJoin)
+      {
+        groupText += " (Available)";
+      }
+      else
+      {
+        groupText += " (Busy)";
+      }
+
+      groupText += " - " + formatTimeDuration(group.timeSinceLastSeen);
+      groupItems[i].setName(groupText);
+      groupItems[i].setHidden(false);
+    }
+    else
+    {
+      // Hide unpopulated items completely
+      groupItems[i].setHidden(true);
+    }
+  }
+}
+
+void CarControlScreen::updateGroupMembersDisplay()
+{
+  // Clear existing member items (except back button)
+  while (groupMembersMenu.items.size() > 1)
+  {
+    groupMembersMenu.items.pop_back();
+  }
+
+  // Only show member details if we're actually in a group
+  if (syncCurrentGroup.groupId == 0 || syncCurrentGroup.memberCount == 0)
+  {
+    // No group or no members - could add a "No members" info item
+    return;
+  }
+
+  // Add member items dynamically for current group
+  for (int i = 0; i < syncCurrentGroup.memberCount && i < 6; i++)
+  {
+    SyncGroupMemberInfo &member = syncCurrentGroup.members[i];
+    String memberText = "Dev " + String(member.deviceId);
+
+    if (member.isThisDevice)
+    {
+      memberText += " (Me)";
+    }
+    if (member.isGroupMaster)
+    {
+      memberText += " (Master)";
+    }
+
+    // Note: Creating dynamic menu items here would require proper memory management
+    // For now, we'll keep it simple and just update the display when needed
+  }
+}
+
+void CarControlScreen::showDeviceDetail(uint32_t deviceId)
+{
+  selectedDeviceId = deviceId;
+
+  // Find the device in our list
+  SyncDeviceInfo *device = nullptr;
+  for (uint8_t i = 0; i < syncDevices.deviceCount; i++)
+  {
+    if (syncDevices.devices[i].deviceId == deviceId)
+    {
+      device = &syncDevices.devices[i];
+      break;
+    }
+  }
+
+  if (device != nullptr)
+  {
+    deviceDetailIdItem.setName("ID: " + String(device->deviceId));
+    deviceDetailMacItem.setName("MAC: " + formatMacAddress(device->mac));
+    deviceDetailLastSeenItem.setName("Last: " + formatTimeDuration(device->timeSinceLastSeen));
+
+    String statusText = "Unknown";
+    if (device->isThisDevice)
+    {
+      statusText = "This Device";
+    }
+    else if (device->inCurrentGroup)
+    {
+      statusText = device->isGroupMaster ? "Group Master" : "Group Member";
+    }
+    else
+    {
+      statusText = "Other Device";
+    }
+    deviceDetailStatusItem.setName("Status: " + statusText);
+
+    if (device->inCurrentGroup)
+    {
+      deviceDetailGroupItem.setName("Group: " + String(syncCurrentGroup.groupId));
+    }
+    else
+    {
+      deviceDetailGroupItem.setName("Group: None");
+    }
+
+    // Activate the device detail submenu
+    syncDevicesMenu.setActiveSubmenu(&deviceDetailMenu);
+  }
+}
+
+void CarControlScreen::showGroupDetail(uint32_t groupId)
+{
+  selectedGroupId = groupId;
+
+  // Find the group in our list
+  SyncGroupInfo *group = nullptr;
+  for (uint8_t i = 0; i < syncGroups.groupCount; i++)
+  {
+    if (syncGroups.groups[i].groupId == groupId)
+    {
+      group = &syncGroups.groups[i];
+      break;
+    }
+  }
+
+  if (group != nullptr)
+  {
+    groupDetailIdItem.setName("ID: " + String(group->groupId));
+    groupDetailMasterItem.setName("Master: " + String(group->masterDeviceId));
+    groupDetailMacItem.setName("MAC: " + formatMacAddress(group->masterMac));
+    groupDetailLastSeenItem.setName("Last: " + formatTimeDuration(group->timeSinceLastSeen));
+
+    String statusText = "Unknown";
+    if (group->isCurrentGroup)
+    {
+      statusText = "Current Group";
+    }
+    else if (group->canJoin)
+    {
+      statusText = "Available";
+    }
+    else
+    {
+      statusText = "Busy";
+    }
+    groupDetailStatusItem.setName("Status: " + statusText);
+
+    // Show/hide join button based on availability
+    groupJoinItem.setHidden(group->isCurrentGroup || !group->canJoin);
+
+    // Activate the group detail submenu
+    syncGroupsMenu.setActiveSubmenu(&groupDetailMenu);
+  }
+}
+
+String CarControlScreen::formatMacAddress(uint8_t *mac)
+{
+  String result = "";
+  for (int i = 0; i < 6; i++)
+  {
+    if (i > 0)
+      result += ":";
+    if (mac[i] < 16)
+      result += "0";
+    result += String(mac[i], HEX);
+  }
+  result.toUpperCase();
+  return result;
+}
+
+String CarControlScreen::formatTimestamp(uint32_t timestamp)
+{
+  // Convert timestamp to seconds ago
+  uint32_t now = millis() / 1000;
+  uint32_t ago = now - timestamp;
+
+  if (ago < 60)
+    return String(ago) + "s ago";
+  else if (ago < 3600)
+    return String(ago / 60) + "m ago";
+  else
+    return String(ago / 3600) + "h ago";
+}
+
+String CarControlScreen::formatTimeDuration(uint32_t milliseconds)
+{
+  if (milliseconds < 1000)
+    return String(milliseconds) + "ms";
+  else if (milliseconds < 60000)
+    return String(milliseconds / 1000) + "s";
+  else if (milliseconds < 3600000)
+    return String(milliseconds / 60000) + "m";
+  else
+    return String(milliseconds / 3600000) + "h";
 }

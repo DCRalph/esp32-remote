@@ -81,6 +81,17 @@ void MenuItem::setHidden(bool _hidden)
         }
       }
     }
+
+  // recompute numItemsPerPage with the hidden items removed
+  uint8_t visiableNumItems = parent->items.size();
+  for (uint8_t i = 0; i < visiableNumItems; i++)
+  {
+    if (parent->items[i]->isHidden())
+    {
+      visiableNumItems--;
+    }
+  }
+  parent->numItemsPerPage = visiableNumItems < parent->maxItemsPerPage ? visiableNumItems : parent->maxItemsPerPage;
 }
 
 void MenuItem::setTextColor(u16_t _color)
@@ -153,8 +164,17 @@ MenuItemBack::MenuItemBack() : MenuItem("Back")
 {
   type = MenuItemType::Back;
 
-  addFunc(MENU_DEFUALT_CLICKS, []()
-          { screenManager.back(); });
+  addFunc(MENU_DEFUALT_CLICKS, [this]()
+          { 
+            // Check if we're in a submenu first
+            if (parent && parent->getParentMenu())
+            {
+              parent->getParentMenu()->clearActiveSubmenu();
+            }
+            else
+            {
+              screenManager.back();
+            } });
 }
 
 // ###### MenuItemToggle ######
@@ -341,6 +361,31 @@ void MenuItemNumber<T>::decrease()
 }
 
 // ##############################
+// Implementation for MenuItemSubmenu
+// ##############################
+
+MenuItemSubmenu::MenuItemSubmenu(String _name, Menu *_submenu)
+    : MenuItem(_name), submenu(_submenu)
+{
+  type = MenuItemType::Submenu;
+
+  addFunc(MENU_DEFUALT_CLICKS, [this]()
+          { 
+            if (parent && submenu)
+            {
+              parent->setActiveSubmenu(submenu);
+            } });
+}
+
+void MenuItemSubmenu::run()
+{
+  if (parent && submenu)
+  {
+    parent->setActiveSubmenu(submenu);
+  }
+}
+
+// ##############################
 // Implementation for MenuItemSelect
 // ##############################
 
@@ -435,6 +480,13 @@ Menu::Menu()
 {
   // name = _name;
   active = 0;
+  setMenuSize(MenuSize::Normal);
+}
+
+Menu::Menu(MenuSize _size)
+{
+  active = 0;
+  setMenuSize(_size);
 }
 
 void Menu::setItemsPerPage(uint8_t _itemsPerPage)
@@ -445,6 +497,33 @@ void Menu::setItemsPerPage(uint8_t _itemsPerPage)
 uint8_t Menu::getItemsPerPage()
 {
   return maxItemsPerPage;
+}
+
+void Menu::setMenuSize(MenuSize _size)
+{
+  menuSize = _size;
+
+  // Adjust default items per page based on size
+  switch (_size)
+  {
+  case MenuSize::Small:
+    maxItemsPerPage = 6;
+    break;
+  case MenuSize::Normal:
+    maxItemsPerPage = 3;
+    break;
+  default:
+    maxItemsPerPage = 3;
+    break;
+  }
+
+  numItems = items.size();
+  numItemsPerPage = numItems < maxItemsPerPage ? numItems : maxItemsPerPage;
+}
+
+MenuSize Menu::getMenuSize() const
+{
+  return menuSize;
 }
 
 void Menu::setActive(uint8_t _active)
@@ -491,6 +570,35 @@ void Menu::prevItem()
       }
     } while (items[active]->isHidden());
   }
+}
+
+void Menu::setActiveSubmenu(Menu *submenu)
+{
+  activeSubmenu = submenu;
+  if (submenu)
+  {
+    submenu->setParentMenu(this);
+  }
+}
+
+void Menu::clearActiveSubmenu()
+{
+  activeSubmenu = nullptr;
+}
+
+Menu *Menu::getActiveSubmenu()
+{
+  return activeSubmenu;
+}
+
+void Menu::setParentMenu(Menu *parent)
+{
+  parentMenu = parent;
+}
+
+Menu *Menu::getParentMenu()
+{
+  return parentMenu;
 }
 
 void Menu::addMenuItem(MenuItem *_item)

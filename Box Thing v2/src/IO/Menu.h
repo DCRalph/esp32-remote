@@ -18,7 +18,14 @@ enum class MenuItemType
   Toggle,
   String,
   Number,
-  Select
+  Select,
+  Submenu
+};
+
+enum class MenuSize
+{
+  Normal,
+  Small
 };
 
 struct ActionFunction
@@ -375,6 +382,27 @@ template class MenuItemNumber<uint32_t>;
 template class MenuItemNumber<uint64_t>;
 
 // ##############################
+// MenuItemSubmenu declaration
+// ##############################
+class MenuItemSubmenu : public MenuItem
+{
+private:
+  Menu *submenu;
+
+public:
+  /**
+   * @brief Constructs a MenuItemSubmenu.
+   *
+   * @param _name The display name of the submenu item.
+   * @param _submenu Pointer to the submenu to display when clicked.
+   */
+  MenuItemSubmenu(String _name, Menu *_submenu);
+
+  /// Override run to activate the submenu.
+  virtual void run() override;
+};
+
+// ##############################
 // New MenuItemSelect declaration
 // ##############################
 class MenuItemSelect : public MenuItem
@@ -433,26 +461,41 @@ class Menu
 private:
   uint8_t active;
 
-  uint8_t maxItemsPerPage = 3;
+  uint8_t maxItemsPerPage = 0;
 
   uint8_t numItems;
   uint8_t numItemsPerPage;
   uint8_t offsetFromTop;
+  uint8_t topItem = 0; // Persistent scroll position
+
+  MenuSize menuSize = MenuSize::Normal;
+  Menu *activeSubmenu = nullptr; // Currently active submenu
+  Menu *parentMenu = nullptr;    // Parent menu (for back navigation)
 
 public:
   std::vector<MenuItem *> items;
   Menu();
+  Menu(MenuSize _size);
 
   // String name;
 
   void setItemsPerPage(uint8_t _itemsPerPage);
   uint8_t getItemsPerPage();
 
+  void setMenuSize(MenuSize _size);
+  MenuSize getMenuSize() const;
+
   void setActive(uint8_t _active);
   uint8_t getActive();
 
   void nextItem();
   void prevItem();
+
+  void setActiveSubmenu(Menu *submenu);
+  void clearActiveSubmenu();
+  Menu *getActiveSubmenu();
+  void setParentMenu(Menu *parent);
+  Menu *getParentMenu();
 
   void addMenuItem(MenuItem *_item);
   void draw();

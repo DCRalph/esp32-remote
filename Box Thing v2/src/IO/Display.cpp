@@ -116,6 +116,12 @@ void Display::display(void)
   elapsedTime = micros() - startTime;
   drawTopBarTime = elapsedTime;
 
+  // Check and draw notification if active
+  if (isNotificationActive())
+  {
+    drawNotification();
+  }
+
   startTime = micros();
   u8g2.sendBuffer();
   elapsedTime = micros() - startTime;
@@ -127,6 +133,68 @@ void Display::display(void)
   screenUpdateDrawTime = elapsedTime;
 
   _noTopBar = false;
+}
+
+// Notification system implementation
+void Display::showNotification(String message, uint32_t durationMs)
+{
+  notificationMessage = message;
+  notificationStartTime = millis();
+  notificationDuration = durationMs;
+  notificationActive = true;
+}
+
+void Display::hideNotification()
+{
+  notificationActive = false;
+  notificationMessage = "";
+}
+
+bool Display::isNotificationActive()
+{
+  if (!notificationActive)
+    return false;
+
+  // Check if notification has expired
+  if (millis() - notificationStartTime >= notificationDuration)
+  {
+    hideNotification();
+    return false;
+  }
+
+  return true;
+}
+
+void Display::drawNotification()
+{
+  if (!isNotificationActive() || notificationMessage.length() == 0)
+    return;
+
+  u8g2.setFont(u8g2_font_6x10_tf);
+
+  // Calculate text dimensions
+  int textWidth = u8g2.getStrWidth(notificationMessage.c_str());
+  int textHeight = 8; // Font height for u8g2_font_6x10_tf
+
+  // Calculate notification box dimensions and position
+  int boxWidth = textWidth + 8;   // 4px padding on each side
+  int boxHeight = textHeight + 6; // 3px padding top and bottom
+  int boxX = (DISPLAY_WIDTH - boxWidth) / 2;
+  int boxY = (DISPLAY_HEIGHT - boxHeight) / 2;
+
+  // Draw notification background (inverted box)
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(boxX, boxY, boxWidth, boxHeight);
+
+  // Draw notification border
+  u8g2.drawFrame(boxX - 1, boxY - 1, boxWidth + 2, boxHeight + 2);
+
+  // Draw notification text (inverted color)
+  u8g2.setDrawColor(0);
+  u8g2.drawStr(boxX + 4, boxY + textHeight + 1, notificationMessage.c_str());
+
+  // Reset draw color
+  u8g2.setDrawColor(1);
 }
 
 Screen::Screen(String _name)
