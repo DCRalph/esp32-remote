@@ -220,7 +220,7 @@ class CarControlScreen : public Screen
 public:
   CarControlScreen(String _name);
 
-  Menu menu = Menu(MenuSize::Small);
+  Menu menu = Menu(MenuSize::Medium);
 
   MenuItemBack backItem;
 
@@ -250,7 +250,7 @@ public:
 
   // Stats submenu
   MenuItemSubmenu statsUIItem = MenuItemSubmenu("Stats", &statsMenu);
-  Menu statsMenu = Menu(MenuSize::Small);
+  Menu statsMenu = Menu(MenuSize::Medium);
   MenuItemBack statsBackItem;
   MenuItemToggle statsActiveItem = MenuItemToggle("Active", &statsActive);
   MenuItemNumber<uint32_t> statsLoopsItem = MenuItemNumber<uint32_t>("Loops/Sec", &stats.loopsPerSecond);
@@ -358,7 +358,7 @@ public:
   // #########################################################
 
   // Main sync menu
-  Menu syncMenu = Menu(MenuSize::Small);
+  Menu syncMenu = Menu(MenuSize::Medium);
   MenuItemBack syncBackItem;
   MenuItemAction syncRefreshItem = MenuItemAction("Refresh All", 1, [&]()
                                                   { this->syncRefreshData(); });
@@ -392,7 +392,7 @@ public:
 
   // Discovered Devices section
   MenuItemSubmenu syncDevicesUIItem = MenuItemSubmenu("Devices", &syncDevicesMenu);
-  Menu syncDevicesMenu = Menu(MenuSize::Small);
+  Menu syncDevicesMenu = Menu(MenuSize::Medium);
   MenuItemBack syncDevicesBackItem;
   // Device items will be statically created (max 8)
   MenuItem deviceItems[8] = {
@@ -417,7 +417,7 @@ public:
 
   // Discovered Groups section
   MenuItemSubmenu syncGroupsUIItem = MenuItemSubmenu("Groups", &syncGroupsMenu);
-  Menu syncGroupsMenu = Menu(MenuSize::Small);
+  Menu syncGroupsMenu = Menu(MenuSize::Medium);
   MenuItemBack syncGroupsBackItem;
   // Group items will be statically created (max 4)
   MenuItem groupItems[4] = {

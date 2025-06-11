@@ -10,7 +10,7 @@ class SwitchMenuScreen : public Screen
 public:
   SwitchMenuScreen(String _name);
 
-  Menu menu = Menu();
+  Menu menu = Menu(MenuSize::Large);
 
   MenuItemBack backItem;
 

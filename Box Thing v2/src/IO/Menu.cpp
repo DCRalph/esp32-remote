@@ -480,7 +480,7 @@ Menu::Menu()
 {
   // name = _name;
   active = 0;
-  setMenuSize(MenuSize::Normal);
+  setMenuSize(MenuSize::Medium);
 }
 
 Menu::Menu(MenuSize _size)
@@ -509,7 +509,10 @@ void Menu::setMenuSize(MenuSize _size)
   case MenuSize::Small:
     maxItemsPerPage = 6;
     break;
-  case MenuSize::Normal:
+  case MenuSize::Medium:
+    maxItemsPerPage = 4;
+    break;
+  case MenuSize::Large:
     maxItemsPerPage = 3;
     break;
   default:

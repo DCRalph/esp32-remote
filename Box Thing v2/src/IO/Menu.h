@@ -24,7 +24,8 @@ enum class MenuItemType
 
 enum class MenuSize
 {
-  Normal,
+  Large,
+  Medium,
   Small
 };
 
@@ -468,7 +469,7 @@ private:
   uint8_t offsetFromTop;
   uint8_t topItem = 0; // Persistent scroll position
 
-  MenuSize menuSize = MenuSize::Normal;
+  MenuSize menuSize = MenuSize::Large;
   Menu *activeSubmenu = nullptr; // Currently active submenu
   Menu *parentMenu = nullptr;    // Parent menu (for back navigation)
 

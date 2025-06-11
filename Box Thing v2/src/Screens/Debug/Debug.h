@@ -65,7 +65,7 @@ public:
   String freeMemStr = "0";
   String usedMemStr = "0";
 
-  Menu menu = Menu();
+  Menu menu = Menu(MenuSize::Medium);
 
   MenuItemBack backItem;
 

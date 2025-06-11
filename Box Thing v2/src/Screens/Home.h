@@ -11,7 +11,7 @@ class HomeScreen : public Screen
 public:
   HomeScreen(String _name);
 
-  Menu menu = Menu();
+  Menu menu = Menu(MenuSize::Large);
 
   MenuItemNavigate switchMenuItem = MenuItemNavigate("Control", "Switch Menu");
 
