@@ -261,6 +261,7 @@ protected:
   bool selected = false; ///< Flag indicating whether this menu item is currently selected.
 
   bool isMutable = false; ///< Flag indicating whether this menu item is currently selected.
+  bool fastUpdate = false;
 
 public:
   MenuItemNumberBase(String _name);
@@ -272,6 +273,9 @@ public:
   virtual void increase() = 0;
   virtual void decrease() = 0;
   virtual NumberValueType getValueType() const = 0;
+
+  void setFastUpdate(bool _fastUpdate);
+  bool isFastUpdate();
 };
 
 /**

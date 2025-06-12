@@ -252,6 +252,16 @@ bool MenuItemNumberBase::isSelected() const
   return selected;
 }
 
+void MenuItemNumberBase::setFastUpdate(bool _fastUpdate)
+{
+  fastUpdate = _fastUpdate;
+}
+
+bool MenuItemNumberBase::isFastUpdate()
+{
+  return fastUpdate;
+}
+
 // ###### MenuItemNumber ######
 
 template <typename T>
@@ -344,6 +354,8 @@ void MenuItemNumber<T>::increase()
     {
       *value = static_cast<T>(newValue);
     }
+    if (isFastUpdate() && onChange != nullptr)
+      onChange();
   }
 }
 
@@ -357,6 +369,8 @@ void MenuItemNumber<T>::decrease()
     {
       *value = static_cast<T>(newValue);
     }
+    if (isFastUpdate() && onChange != nullptr)
+      onChange();
   }
 }
 

@@ -67,6 +67,27 @@ enum class PoliceMode
   SLOW,
   FAST
 };
+
+enum class SolidColorPreset
+{
+  OFF = 0,
+  RED,
+  GREEN,
+  BLUE,
+  WHITE,
+  YELLOW,
+  CYAN,
+  MAGENTA,
+  ORANGE,
+  PURPLE,
+  LIME,
+  PINK,
+  TEAL,
+  INDIGO,
+  GOLD,
+  SILVER,
+  CUSTOM
+};
 struct EffectsCmd
 {
   bool leftIndicator;
@@ -90,6 +111,11 @@ struct EffectsCmd
   PoliceMode policeMode;
   bool testEffect1;
   bool testEffect2;
+  bool solidColor;
+  SolidColorPreset solidColorPreset;
+  uint8_t solidColorR;
+  uint8_t solidColorG;
+  uint8_t solidColorB;
 };
 
 struct InputsCmd
@@ -287,6 +313,11 @@ public:
   PoliceMode policeMode = PoliceMode::SLOW;
   bool testEffect1Active = false;
   bool testEffect2Active = false;
+  bool solidColorEffectActive = false;
+  SolidColorPreset solidColorPreset = SolidColorPreset::OFF;
+  uint8_t solidColorR = 255;
+  uint8_t solidColorG = 255;
+  uint8_t solidColorB = 255;
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
@@ -312,6 +343,12 @@ public:
   MenuItemSelect policeModeItem = MenuItemSelect("Mode", policeModeItems, 0);
   MenuItemToggle testEffect1Item = MenuItemToggle("Test 1", &testEffect1Active, true);
   MenuItemToggle testEffect2Item = MenuItemToggle("Test 2", &testEffect2Active, true);
+  MenuItemToggle solidColorEffectItem = MenuItemToggle("Solid", &solidColorEffectActive, true);
+  std::vector<String> solidColorPresetItems = {"Off", "Red", "Green", "Blue", "White", "Yellow", "Cyan", "Magenta", "Orange", "Purple", "Lime", "Pink", "Teal", "Indigo", "Gold", "Silver", "Custom"};
+  MenuItemSelect solidColorPresetItem = MenuItemSelect("SC Col", solidColorPresetItems, 0);
+  MenuItemNumber<uint8_t> solidColorRItem = MenuItemNumber<uint8_t>("SC R", &solidColorR, 0, 255, 5);
+  MenuItemNumber<uint8_t> solidColorGItem = MenuItemNumber<uint8_t>("SC G", &solidColorG, 0, 255, 5);
+  MenuItemNumber<uint8_t> solidColorBItem = MenuItemNumber<uint8_t>("SC B", &solidColorB, 0, 255, 5);
 
   // #########################################################
   // Inputs
@@ -547,6 +584,14 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&policeModeItem);
   menu.addMenuItem(&testEffect1Item);
   menu.addMenuItem(&testEffect2Item);
+  menu.addMenuItem(&solidColorEffectItem);
+  menu.addMenuItem(&solidColorPresetItem);
+  menu.addMenuItem(&solidColorRItem);
+  menu.addMenuItem(&solidColorGItem);
+  menu.addMenuItem(&solidColorBItem);
+  solidColorRItem.setFastUpdate(true);
+  solidColorGItem.setFastUpdate(true);
+  solidColorBItem.setFastUpdate(true);
 
   // inputs
   menu.addMenuItem(&accOnItem);
@@ -790,6 +835,23 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   reverseItem.setOnChange([&]()
                           { sendInputs(); });
+
+  solidColorEffectItem.setOnChange([&]()
+                                   { sendEffects(); });
+
+  solidColorPresetItem.setOnChange([&]()
+                                   {
+                                     solidColorPreset = static_cast<SolidColorPreset>(solidColorPresetItem.getCurrentIndex());
+                                     sendEffects(); });
+
+  solidColorRItem.setOnChange([&]()
+                              { sendEffects(); });
+
+  solidColorGItem.setOnChange([&]()
+                              { sendEffects(); });
+
+  solidColorBItem.setOnChange([&]()
+                              { sendEffects(); });
 }
 
 void CarControlScreen::draw()
@@ -844,6 +906,11 @@ void CarControlScreen::draw()
   policeModeItem.setHidden(testMode);
   testEffect1Item.setHidden(testMode);
   testEffect2Item.setHidden(testMode);
+  solidColorEffectItem.setHidden(testMode);
+  solidColorPresetItem.setHidden(testMode);
+  solidColorRItem.setHidden(testMode);
+  solidColorGItem.setHidden(testMode);
+  solidColorBItem.setHidden(testMode);
 
   // inputs
   accOnItem.setHidden(!testMode);
@@ -1017,6 +1084,12 @@ void CarControlScreen::onEnter()
                              policeModeItem.setCurrentIndex((uint8_t)policeMode);
                              testEffect1Active = eCmd.testEffect1;
                              testEffect2Active = eCmd.testEffect2;
+                             solidColorEffectActive = eCmd.solidColor;
+                             solidColorPreset = eCmd.solidColorPreset;
+                             solidColorPresetItem.setCurrentIndex((uint8_t)solidColorPreset);
+                             solidColorR = eCmd.solidColorR;
+                             solidColorG = eCmd.solidColorG;
+                             solidColorB = eCmd.solidColorB;
 
                              //
                            });
@@ -1250,6 +1323,11 @@ void CarControlScreen::sendEffects()
   eCmd.nightrider = nightriderEffectActive;
   eCmd.police = policeEffectActive;
   eCmd.policeMode = policeMode;
+  eCmd.solidColor = solidColorEffectActive;
+  eCmd.solidColorPreset = solidColorPreset;
+  eCmd.solidColorR = solidColorR;
+  eCmd.solidColorG = solidColorG;
+  eCmd.solidColorB = solidColorB;
 
   fp.p.len = sizeof(eCmd);
   memcpy(fp.p.data, &eCmd, sizeof(eCmd));
