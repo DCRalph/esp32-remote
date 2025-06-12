@@ -1,10 +1,39 @@
 #include "Battery.h"
+#include <driver/adc.h>
+#include <esp_adc_cal.h>
+#include <soc/adc_channel.h>
 
 #define minVoltage 3.2f
 #define maxVoltage 4.2f
 
+const adc1_channel_t ADC_CHANNEL = ADC1_GPIO3_CHANNEL;
+
+// ADC Configuration
+const adc_atten_t ATTENUATION = ADC_ATTEN_DB_11;     // 11dB attenuation for full range
+const adc_bits_width_t BIT_WIDTH = ADC_WIDTH_BIT_12; // 12-bit resolution
+
+// ADC calibration characteristics
+static esp_adc_cal_characteristics_t adc_chars;
+static bool adc_initialized = false;
+
 static float batteryVoltage = 1.0f;
 static float batteryVoltageSmooth = 1.0f;
+
+// Initialize ADC with calibration
+void initADC()
+{
+  if (!adc_initialized)
+  {
+    // Configure ADC
+    adc1_config_width(BIT_WIDTH);
+    adc1_config_channel_atten(ADC_CHANNEL, ATTENUATION);
+
+    // Characterize ADC for calibration
+    esp_adc_cal_characterize(ADC_UNIT_1, ATTENUATION, BIT_WIDTH, 0, &adc_chars);
+
+    adc_initialized = true;
+  }
+}
 
 float batteryGetVoltage()
 {
@@ -32,17 +61,31 @@ int batteryGetPercentageSmooth()
 
 void batteryUpdate()
 {
-  int adcValue = batterySense.analogRead();
-  float adcVoltage = (adcValue / 4095.0) * BATTERY_SENSE_VCC;
+  // Initialize ADC if not already done
+  initADC();
 
-  batteryVoltage = (adcVoltage * (BATTERY_SENSE_R1 + BATTERY_SENSE_R2) / BATTERY_SENSE_R2) + BATTERY_SENSE_OFFSET;
+  // Read raw ADC value using ESP-IDF functions
+  int adcRaw = adc1_get_raw(ADC_CHANNEL);
 
-  if (batteryVoltageSmooth == 1.0f)
+  // Convert raw value to calibrated voltage in millivolts
+  uint32_t adcVoltage_mV = esp_adc_cal_raw_to_voltage(adcRaw, &adc_chars);
+
+  // Convert to volts
+  float adcVoltage = adcVoltage_mV / 1000.0f;
+
+  adcVoltage += 0.029;
+
+  // Calculate battery voltage using voltage divider formula
+  // Battery voltage = ADC voltage * (R1 + R2) / R2
+  batteryVoltage = adcVoltage * (BATTERY_SENSE_R1 + BATTERY_SENSE_R2) / BATTERY_SENSE_R2;
+
+  // Apply smoothing filter
+  if (batteryVoltageSmooth < 1.0f)
   {
     batteryVoltageSmooth = batteryVoltage;
   }
   else
   {
-    batteryVoltageSmooth = batteryVoltageSmooth * 0.95 + batteryVoltage * 0.05;
+    batteryVoltageSmooth = batteryVoltageSmooth * 0.9 + batteryVoltage * 0.1;
   }
 }

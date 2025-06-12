@@ -57,8 +57,8 @@ extern uint64_t screenUpdateDrawTime;
 #define BATTERY_SENSE_PIN 3
 #define BATTERY_SENSE_R1 10000 // 10k
 #define BATTERY_SENSE_R2 997   // 1k
-#define BATTERY_SENSE_VCC 3.3
-#define BATTERY_SENSE_OFFSET 0.33
+#define BATTERY_SENSE_VCC 3.16
+#define BATTERY_SENSE_OFFSET 0.0
 
 #define MCP_POWER_GOOD_PIN 38
 #define MCP_STATE_1_PIN 47
