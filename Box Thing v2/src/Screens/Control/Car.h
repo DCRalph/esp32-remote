@@ -6,13 +6,18 @@
 #include "IO/Wireless.h"
 #include "IO/Menu.h"
 
-static uint8_t led_controller_addrs[3][8] = {
+static uint8_t led_controller_addrs[8][8] = {
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev 1
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x18}, // s3 dev 2
-    {0x48, 0x27, 0xe2, 0x46, 0x59, 0xba}  // s2 car 48:27:e2:46:59:ba
+    {0x48, 0x27, 0xe2, 0x46, 0x59, 0xba}, // s2 car 48:27:e2:46:59:ba
+    {0x24, 0xEC, 0x4A, 0x76, 0x1E, 0x94}, // s3v1 1 24:EC:4A:76:1E:94
+    {0x24, 0xEC, 0x4A, 0x76, 0x1E, 0x9C}, // s3v1 2 24:EC:4A:76:1E:9C
+    {0x24, 0xEC, 0x4A, 0x76, 0x1E, 0x98}, // s3v1 3 24:EC:4A:76:1E:98
+    {0x24, 0xEC, 0x4A, 0x76, 0x1E, 0xE8}, // s3v1 4 24:EC:4A:76:1E:E8
+    {0x24, 0xEC, 0x4A, 0x76, 0x1E, 0xD0}, // s3v1 5 24:EC:4A:76:1E:D0
 };
 
-static std::vector<String> led_controller_names = {"Dev1", "Dev2", "Car"};
+static std::vector<String> led_controller_names = {"Dev1", "Dev2", "Car", "D1", "D2", "D3", "D4", "D5"};
 
 static uint8_t led_controller_addr_index = 0;
 
@@ -1760,7 +1765,7 @@ void CarControlScreen::showDeviceDetail(uint32_t deviceId)
   if (device != nullptr)
   {
     deviceDetailIdItem.setName("ID: " + String(device->deviceId));
-    deviceDetailMacItem.setName("MAC: " + formatMacAddress(device->mac));
+    deviceDetailMacItem.setName(formatMacAddress(device->mac));
     deviceDetailLastSeenItem.setName("Last: " + formatTimeDuration(device->timeSinceLastSeen));
 
     String statusText = "Unknown";
@@ -1811,7 +1816,7 @@ void CarControlScreen::showGroupDetail(uint32_t groupId)
   {
     groupDetailIdItem.setName("ID: " + String(group->groupId));
     groupDetailMasterItem.setName("Master: " + String(group->masterDeviceId));
-    groupDetailMacItem.setName("MAC: " + formatMacAddress(group->masterMac));
+    groupDetailMacItem.setName(formatMacAddress(group->masterMac));
     groupDetailLastSeenItem.setName("Last: " + formatTimeDuration(group->timeSinceLastSeen));
 
     String statusText = "Unknown";
