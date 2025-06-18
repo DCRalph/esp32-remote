@@ -39,10 +39,8 @@ constexpr uint8_t CMD_SYNC_JOIN_GROUP = 0xeb;
 constexpr uint8_t CMD_SYNC_LEAVE_GROUP = 0xec;
 constexpr uint8_t CMD_SYNC_CREATE_GROUP = 0xed;
 constexpr uint8_t CMD_SYNC_GET_STATUS = 0xee;
-constexpr uint8_t CMD_SYNC_SET_AUTO_JOIN = 0xef;
-constexpr uint8_t CMD_SYNC_GET_AUTO_JOIN = 0xf0;
-constexpr uint8_t CMD_SYNC_SET_AUTO_CREATE = 0xf1;
-constexpr uint8_t CMD_SYNC_GET_AUTO_CREATE = 0xf2;
+constexpr uint8_t CMD_SYNC_SET_MODE = 0xef;
+constexpr uint8_t CMD_SYNC_GET_MODE = 0xf0;
 
 enum class ApplicationMode
 {
@@ -220,6 +218,11 @@ struct SyncCreateGroupCmd
   uint32_t groupId; // 0 = auto-generate, otherwise use specified ID
 };
 
+struct SyncModeCmd
+{
+  uint8_t mode;
+};
+
 struct SyncDetailedStatus
 {
   uint32_t deviceId;
@@ -232,20 +235,15 @@ struct SyncDetailedStatus
   uint8_t memberCount;
   uint8_t discoveredDeviceCount;
   uint8_t discoveredGroupCount;
-  bool autoJoinEnabled;
-  bool autoCreateEnabled;
+  int syncMode; // 0=SOLO, 1=JOIN, 2=HOST
 };
 
-struct SyncAutoJoinCmd
+enum class SyncMode
 {
-  bool enabled;
+  SOLO,
+  JOIN,
+  HOST
 };
-
-struct SyncAutoCreateCmd
-{
-  bool enabled;
-};
-
 class CarControlScreen : public Screen
 {
 public:
@@ -412,8 +410,8 @@ public:
   MenuItem thisDeviceIdItem = MenuItem("ID: ---");
   MenuItem thisDeviceGroupItem = MenuItem("Group: ---");
   MenuItem thisDeviceStatusItem = MenuItem("Status: ---");
-  MenuItemToggle autoJoinItem = MenuItemToggle("Auto Join", &autoJoinEnabled, true);
-  MenuItemToggle autoCreateItem = MenuItemToggle("Auto Create", &autoCreateEnabled, true);
+  std::vector<String> syncModeItems = {"Solo", "Join", "Host"};
+  MenuItemSelect syncModeItem = MenuItemSelect("Sync Mode", syncModeItems, 0);
   MenuItemAction leaveGroupItem = MenuItemAction("Leave Group", 1, [&]()
                                                  { this->leaveSyncGroup(); });
 
@@ -495,8 +493,7 @@ public:
   // Selection tracking and state
   uint32_t selectedDeviceId = 0;
   uint32_t selectedGroupId = 0;
-  bool autoJoinEnabled = false;
-  bool autoCreateEnabled = false;
+  SyncMode currentSyncMode = SyncMode::SOLO;
 
   // timing
   uint64_t lastSyncUpdate = 0;
@@ -525,12 +522,8 @@ public:
   void joinSyncGroup(uint32_t groupId);
   void joinSelectedGroup();
   void leaveSyncGroup();
-
-  // Auto join/create methods
-  void setAutoJoin(bool enabled);
-  void setAutoCreate(bool enabled);
-  void requestAutoJoinStatus();
-  void requestAutoCreateStatus();
+  void setSyncMode(SyncMode mode);
+  void requestSyncMode();
 
   // UI update methods
   void updateThisDeviceDisplay();
@@ -626,8 +619,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   syncThisDeviceMenu.addMenuItem(&thisDeviceIdItem);
   syncThisDeviceMenu.addMenuItem(&thisDeviceGroupItem);
   syncThisDeviceMenu.addMenuItem(&thisDeviceStatusItem);
-  syncThisDeviceMenu.addMenuItem(&autoJoinItem);
-  syncThisDeviceMenu.addMenuItem(&autoCreateItem);
+  syncThisDeviceMenu.addMenuItem(&syncModeItem);
   syncThisDeviceMenu.addMenuItem(&leaveGroupItem);
   syncThisDeviceMenu.setParentMenu(&syncMenu);
 
@@ -698,8 +690,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   syncThisDeviceUIItem.addFunc(1, [&]()
                                { 
                                  requestSyncStatus();
-                                 requestAutoJoinStatus();
-                                 requestAutoCreateStatus();
+                                 requestSyncMode();
                                  updateThisDeviceDisplay(); });
 
   syncCurrentGroupUIItem.addFunc(1, [&]()
@@ -720,12 +711,11 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   groupMembersUIItem.addFunc(1, [&]()
                              { updateGroupMembersDisplay(); });
 
-  // Set up auto join/create callbacks
-  autoJoinItem.setOnChange([&]()
-                           { setAutoJoin(autoJoinEnabled); });
-
-  autoCreateItem.setOnChange([&]()
-                             { setAutoCreate(autoCreateEnabled); });
+  // Set up sync mode callback
+  syncModeItem.setOnChange([&]()
+                           {
+                             currentSyncMode = static_cast<SyncMode>(syncModeItem.getCurrentIndex());
+                             setSyncMode(currentSyncMode); });
 
   // Set up device selection callbacks
   for (int i = 0; i < 8; i++)
@@ -1224,8 +1214,6 @@ void CarControlScreen::onEnter()
                              logMsg += "Member count: " + String(syncStatus.memberCount) + "\n";
                              logMsg += "Discovered devices: " + String(syncStatus.discoveredDeviceCount) + "\n";
                              logMsg += "Discovered groups: " + String(syncStatus.discoveredGroupCount) + "\n";
-                             logMsg += "Auto join enabled: " + String(syncStatus.autoJoinEnabled) + "\n";
-                             logMsg += "Auto create enabled: " + String(syncStatus.autoCreateEnabled) + "\n";
                              logMsg += "============================";
                              Serial.println(logMsg);
                              
@@ -1255,37 +1243,22 @@ void CarControlScreen::onEnter()
                              requestSyncStatus();
                              requestSyncGroupInfo(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_SET_AUTO_JOIN, [&](fullPacket *fp)
+  // Set sync mode response handler
+  wireless.addOnReceiveFor(CMD_SYNC_SET_MODE, [&](fullPacket *fp)
                            {
                              lastConfirmedPing = millis();
-                             display.showNotification("Auto Join updated", 1000); });
+                             uint8_t currentMode = fp->p.data[0];
+                             display.showNotification("Sync mode set!", 1500);
+                             // Could update UI to reflect new mode if needed
+                           });
 
-  wireless.addOnReceiveFor(CMD_SYNC_GET_AUTO_JOIN, [&](fullPacket *fp)
+  // Get sync mode response handler
+  wireless.addOnReceiveFor(CMD_SYNC_GET_MODE, [&](fullPacket *fp)
                            {
                              lastConfirmedPing = millis();
-                             autoJoinEnabled = fp->p.data[0] != 0;
-                             
-                             // Log received auto join status
-                             String logMsg = "=== AUTO JOIN STATUS RECEIVED ===\n";
-                             logMsg += "Auto join enabled: " + String(autoJoinEnabled) + "\n";
-                             logMsg += "=================================";
-                             Serial.println(logMsg); });
-
-  wireless.addOnReceiveFor(CMD_SYNC_SET_AUTO_CREATE, [&](fullPacket *fp)
-                           {
-                             lastConfirmedPing = millis();
-                             display.showNotification("Auto Create updated", 1000); });
-
-  wireless.addOnReceiveFor(CMD_SYNC_GET_AUTO_CREATE, [&](fullPacket *fp)
-                           {
-                             lastConfirmedPing = millis();
-                             autoCreateEnabled = fp->p.data[0] != 0;
-                             
-                             // Log received auto create status
-                             String logMsg = "=== AUTO CREATE STATUS RECEIVED ===\n";
-                             logMsg += "Auto create enabled: " + String(autoCreateEnabled) + "\n";
-                             logMsg += "===================================";
-                             Serial.println(logMsg); });
+                             uint8_t mode = fp->p.data[0];
+                             currentSyncMode = static_cast<SyncMode>(mode);
+                             syncModeItem.setCurrentIndex(mode); });
 
   led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
   ledControllerSelectItem.setCurrentIndex(led_controller_addr_index);
@@ -1407,11 +1380,10 @@ void CarControlScreen::triggerSequence(uint8_t seq)
 void CarControlScreen::syncRefreshData(bool showNotification)
 {
   requestSyncStatus();
+  requestSyncMode();
   requestSyncDevices();
   requestSyncGroups();
   requestSyncGroupInfo();
-  requestAutoJoinStatus();
-  requestAutoCreateStatus();
 
   if (showNotification)
   {
@@ -1526,17 +1498,16 @@ void CarControlScreen::joinSelectedGroup()
   }
 }
 
-// Auto join/create methods
-void CarControlScreen::setAutoJoin(bool enabled)
+void CarControlScreen::setSyncMode(SyncMode mode)
 {
   fullPacket fp;
   memset(&fp, 0, sizeof(fullPacket));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_SET_AUTO_JOIN;
+  fp.p.type = CMD_SYNC_SET_MODE;
 
-  SyncAutoJoinCmd cmd = {0};
-  cmd.enabled = enabled;
+  SyncModeCmd cmd = {0};
+  cmd.mode = static_cast<uint8_t>(mode);
 
   fp.p.len = sizeof(cmd);
   memcpy(fp.p.data, &cmd, sizeof(cmd));
@@ -1544,42 +1515,13 @@ void CarControlScreen::setAutoJoin(bool enabled)
   wireless.send(&fp);
 }
 
-void CarControlScreen::setAutoCreate(bool enabled)
+void CarControlScreen::requestSyncMode()
 {
   fullPacket fp;
   memset(&fp, 0, sizeof(fullPacket));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_SET_AUTO_CREATE;
-
-  SyncAutoCreateCmd cmd = {0};
-  cmd.enabled = enabled;
-
-  fp.p.len = sizeof(cmd);
-  memcpy(fp.p.data, &cmd, sizeof(cmd));
-
-  wireless.send(&fp);
-}
-
-void CarControlScreen::requestAutoJoinStatus()
-{
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
-  fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_AUTO_JOIN;
-  fp.p.len = 0;
-
-  wireless.send(&fp);
-}
-
-void CarControlScreen::requestAutoCreateStatus()
-{
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
-  fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_AUTO_CREATE;
+  fp.p.type = CMD_SYNC_GET_MODE;
   fp.p.len = 0;
 
   wireless.send(&fp);
