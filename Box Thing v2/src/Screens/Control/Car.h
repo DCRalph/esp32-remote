@@ -91,6 +91,7 @@ enum class SolidColorPreset
   SILVER,
   CUSTOM
 };
+
 struct EffectsCmd
 {
   bool leftIndicator;
@@ -119,6 +120,7 @@ struct EffectsCmd
   uint8_t solidColorR;
   uint8_t solidColorG;
   uint8_t solidColorB;
+  bool colorFade;
 };
 
 struct InputsCmd
@@ -321,6 +323,7 @@ public:
   uint8_t solidColorR = 255;
   uint8_t solidColorG = 255;
   uint8_t solidColorB = 255;
+  bool colorFadeEffectActive = false;
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
@@ -352,6 +355,7 @@ public:
   MenuItemNumber<uint8_t> solidColorRItem = MenuItemNumber<uint8_t>("SC R", &solidColorR, 0, 255, 5);
   MenuItemNumber<uint8_t> solidColorGItem = MenuItemNumber<uint8_t>("SC G", &solidColorG, 0, 255, 5);
   MenuItemNumber<uint8_t> solidColorBItem = MenuItemNumber<uint8_t>("SC B", &solidColorB, 0, 255, 5);
+  MenuItemToggle colorFadeEffectItem = MenuItemToggle("C.Fade", &colorFadeEffectActive, true);
 
   // #########################################################
   // Inputs
@@ -587,6 +591,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&solidColorRItem);
   menu.addMenuItem(&solidColorGItem);
   menu.addMenuItem(&solidColorBItem);
+  menu.addMenuItem(&colorFadeEffectItem);
   solidColorRItem.setFastUpdate(true);
   solidColorGItem.setFastUpdate(true);
   solidColorBItem.setFastUpdate(true);
@@ -847,6 +852,9 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   solidColorBItem.setOnChange([&]()
                               { sendEffects(); });
+
+  colorFadeEffectItem.setOnChange([&]()
+                                  { sendEffects(); });
 }
 
 void CarControlScreen::draw()
@@ -906,6 +914,7 @@ void CarControlScreen::draw()
   solidColorRItem.setHidden(testMode);
   solidColorGItem.setHidden(testMode);
   solidColorBItem.setHidden(testMode);
+  colorFadeEffectItem.setHidden(testMode);
 
   // inputs
   accOnItem.setHidden(!testMode);
@@ -1085,6 +1094,7 @@ void CarControlScreen::onEnter()
                              solidColorR = eCmd.solidColorR;
                              solidColorG = eCmd.solidColorG;
                              solidColorB = eCmd.solidColorB;
+                             colorFadeEffectActive = eCmd.colorFade;
 
                              //
                            });
@@ -1306,6 +1316,7 @@ void CarControlScreen::sendEffects()
   eCmd.solidColorR = solidColorR;
   eCmd.solidColorG = solidColorG;
   eCmd.solidColorB = solidColorB;
+  eCmd.colorFade = colorFadeEffectActive;
 
   fp.p.len = sizeof(eCmd);
   memcpy(fp.p.data, &eCmd, sizeof(eCmd));
