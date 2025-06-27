@@ -594,6 +594,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   menu.addMenuItem(&solidColorRItem);
   menu.addMenuItem(&solidColorGItem);
   menu.addMenuItem(&solidColorBItem);
+  menu.addMenuItem(&colorFadeEffectItem);
   solidColorRItem.setFastUpdate(true);
   solidColorGItem.setFastUpdate(true);
   solidColorBItem.setFastUpdate(true);
