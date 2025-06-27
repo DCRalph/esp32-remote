@@ -9,7 +9,7 @@
 const adc1_channel_t ADC_CHANNEL = ADC1_GPIO3_CHANNEL;
 
 // ADC Configuration
-const adc_atten_t ATTENUATION = ADC_ATTEN_DB_11;     // 11dB attenuation for full range
+const adc_atten_t ATTENUATION = ADC_ATTEN_DB_12;     // 11dB attenuation for full range
 const adc_bits_width_t BIT_WIDTH = ADC_WIDTH_BIT_12; // 12-bit resolution
 
 // ADC calibration characteristics
@@ -64,23 +64,18 @@ void batteryUpdate()
   // Initialize ADC if not already done
   initADC();
 
-  // Read raw ADC value using ESP-IDF functions
   int adcRaw = adc1_get_raw(ADC_CHANNEL);
-
-  // Convert raw value to calibrated voltage in millivolts
   uint32_t adcVoltage_mV = esp_adc_cal_raw_to_voltage(adcRaw, &adc_chars);
 
   // Convert to volts
   float adcVoltage = adcVoltage_mV / 1000.0f;
 
-  adcVoltage += 0.029;
+  // adcVoltage += 0.029; // calibration
 
-  // Calculate battery voltage using voltage divider formula
-  // Battery voltage = ADC voltage * (R1 + R2) / R2
   batteryVoltage = adcVoltage * (BATTERY_SENSE_R1 + BATTERY_SENSE_R2) / BATTERY_SENSE_R2;
 
   // Apply smoothing filter
-  if (batteryVoltageSmooth < 1.0f)
+  if (batteryVoltageSmooth <= 1.0f)
   {
     batteryVoltageSmooth = batteryVoltage;
   }
