@@ -121,6 +121,7 @@ struct EffectsCmd
   uint8_t solidColorG;
   uint8_t solidColorB;
   bool colorFade;
+  bool commit;
 };
 
 struct InputsCmd
@@ -324,6 +325,7 @@ public:
   uint8_t solidColorG = 255;
   uint8_t solidColorB = 255;
   bool colorFadeEffectActive = false;
+  bool commitEffectActive = false;
 
   MenuItemToggle leftIndicatorEffectItem = MenuItemToggle("Left", &leftIndicatorEffectActive, true);
   MenuItemToggle rightIndicatorEffectItem = MenuItemToggle("Right", &rightIndicatorEffectActive, true);
@@ -355,7 +357,8 @@ public:
   MenuItemNumber<uint8_t> solidColorRItem = MenuItemNumber<uint8_t>("SC R", &solidColorR, 0, 255, 5);
   MenuItemNumber<uint8_t> solidColorGItem = MenuItemNumber<uint8_t>("SC G", &solidColorG, 0, 255, 5);
   MenuItemNumber<uint8_t> solidColorBItem = MenuItemNumber<uint8_t>("SC B", &solidColorB, 0, 255, 5);
-  MenuItemToggle colorFadeEffectItem = MenuItemToggle("C.Fade", &colorFadeEffectActive, true);
+  MenuItemToggle colorFadeEffectItem = MenuItemToggle("Color Fade", &colorFadeEffectActive, true);
+  MenuItemToggle commitEffectItem = MenuItemToggle("Commit", &commitEffectActive, true);
 
   // #########################################################
   // Inputs
@@ -595,6 +598,8 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   solidColorRItem.setFastUpdate(true);
   solidColorGItem.setFastUpdate(true);
   solidColorBItem.setFastUpdate(true);
+  menu.addMenuItem(&colorFadeEffectItem);
+  menu.addMenuItem(&commitEffectItem);
 
   // inputs
   menu.addMenuItem(&accOnItem);
@@ -855,6 +860,9 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   colorFadeEffectItem.setOnChange([&]()
                                   { sendEffects(); });
+
+  commitEffectItem.setOnChange([&]()
+                               { sendEffects(); });
 }
 
 void CarControlScreen::draw()
@@ -915,6 +923,7 @@ void CarControlScreen::draw()
   solidColorGItem.setHidden(testMode);
   solidColorBItem.setHidden(testMode);
   colorFadeEffectItem.setHidden(testMode);
+  commitEffectItem.setHidden(testMode);
 
   // inputs
   accOnItem.setHidden(!testMode);
@@ -1095,6 +1104,7 @@ void CarControlScreen::onEnter()
                              solidColorG = eCmd.solidColorG;
                              solidColorB = eCmd.solidColorB;
                              colorFadeEffectActive = eCmd.colorFade;
+                             commitEffectActive = eCmd.commit;
 
                              //
                            });
@@ -1317,6 +1327,7 @@ void CarControlScreen::sendEffects()
   eCmd.solidColorG = solidColorG;
   eCmd.solidColorB = solidColorB;
   eCmd.colorFade = colorFadeEffectActive;
+  eCmd.commit = commitEffectActive;
 
   fp.p.len = sizeof(eCmd);
   memcpy(fp.p.data, &eCmd, sizeof(eCmd));
