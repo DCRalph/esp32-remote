@@ -22,10 +22,14 @@ struct canFrame
 
 enum class HeadLightsState
 {
-  OFF = 0x24,
-  FOG = 0x25,
-  LOWBEAM = 0x26,
-  HIGHBEAM = 0x27,
+// 0x20 - 32
+// 0x21 - 33
+// 0x22 - 34
+// 0x23 - 35
+  OFF = 0x00, // 36
+  FOG = 0x01, // 37
+  LOWBEAM = 0x02, // 38
+  HIGHBEAM = 0x03, // 39
 };
 
 // string map for HeadLightsState
@@ -34,6 +38,18 @@ const std::unordered_map<HeadLightsState, std::string> HeadLightsStateMap = {
     {HeadLightsState::FOG, "FOG"},
     {HeadLightsState::LOWBEAM, "LOWBEAM"},
     {HeadLightsState::HIGHBEAM, "HIGHBEAM"},
+};
+
+enum class HandBrakeState
+{
+  OFF = 0x00,
+  ON = 0x01,
+};
+
+// string map for HandBrakeState
+const std::unordered_map<HandBrakeState, std::string> HandBrakeStateMap = {
+    {HandBrakeState::OFF, "OFF"},
+    {HandBrakeState::ON, "ON"},
 };
 
 enum class GearState
@@ -61,6 +77,7 @@ const std::unordered_map<GearState, std::string> GearStateMap = {
 // shifter states
 enum class ShifterState
 {
+  NONE = 0x00,
   PARK = 0x01,
   REVERSE = 0x02,
   NEUTRAL = 0x04,
@@ -72,6 +89,7 @@ enum class ShifterState
 
 // string map for ShifterState
 const std::unordered_map<ShifterState, std::string> ShifterStateMap = {
+    {ShifterState::NONE, "NONE"},
     {ShifterState::PARK, "PARK"},
     {ShifterState::REVERSE, "REVERSE"},
     {ShifterState::NEUTRAL, "NEUTRAL"},
