@@ -22,21 +22,21 @@ int savvyCanHandleSerial(String command)
   switch (cmd)
   {
   case 'O': // Open CAN channel
-    canNormal();
+    return canNormal();
     Serial.print("\r");
     break;
 
   case 'C': // Close CAN channel
-    canSleep();
+    return canSleep();
     Serial.print("\r");
     break;
 
   case 't':
-    savvyCanWrite(command);
+    return savvyCanWrite(command);
     break;
 
   case 'T':
-    savvyCanWriteEXT(command);
+    return savvyCanWriteEXT(command);
     break;
 
     // Implement other SLCAN commands as needed
@@ -52,6 +52,7 @@ int savvyCanHandleSerial(String command)
 int savvyCanWrite(String command)
 {
   // Command format: tIIILDDDDDDDD
+  // example t7df030205
   // III: 3-digit standard CAN ID in hex
   unsigned long canId = strtoul(command.substring(1, 4).c_str(), NULL, 16);
   uint8_t len = strtoul(command.substring(4, 5).c_str(), NULL, 16);

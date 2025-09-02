@@ -22,7 +22,7 @@ HeadLightsDecoder::HeadLightsDecoder()
 void HeadLightsDecoder::process(canFrame *frame)
 {
     // Decode RPM data from the frame
-    uint8_t state = frame->data[0];
+    uint8_t state = frame->data[0] & 0x03; // only the first 2 bits are used
 
     result = static_cast<HeadLightsState>(state);
 }
