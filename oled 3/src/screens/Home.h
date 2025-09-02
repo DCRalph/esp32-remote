@@ -30,6 +30,8 @@ public:
   MenuItemNavigate remoteRelay = MenuItemNavigate("Remote Relay", "RemoteRelay");
 
   MenuItemNavigate boxThingEncoderItem = MenuItemNavigate("BoxThingEncoder", "BoxThingEncoder");
+  MenuItemNavigate testLoadingItem = MenuItemNavigate("Test Loading", "Test Loading");
+  MenuItemNavigate engineItem = MenuItemNavigate("Engine", "Engine");
 
   MenuItemNumber<uint32_t> fpsItem = MenuItemNumber<uint32_t>("FPS", &lastFps);
   MenuItemNumber<uint32_t> frameTimeItem = MenuItemNumber<uint32_t>("Frame Time", &lastFrameTime);
@@ -59,6 +61,8 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&remoteRelay);
   menu.addMenuItem(&boxThingEncoderItem);
+  menu.addMenuItem(&testLoadingItem);
+  menu.addMenuItem(&engineItem);
   menu.addMenuItem(&PowerOffMenuItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testBlinkItem);
@@ -79,7 +83,6 @@ void HomeScreen::update()
   //   uint32_t color = (0 << 16) | (255 << 8) | 0;
   //   btnLed.Blink(color, 200, 3);
   // }
-
 }
 
 void HomeScreen::onEnter()

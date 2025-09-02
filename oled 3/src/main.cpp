@@ -34,6 +34,11 @@
 // /remoteRelay
 #include "screens/RemoteRelay.h"
 
+// Test
+#include "screens/TestLoading.h"
+// Engine
+#include "screens/Engine.h"
+
 #include "IO/GPIO.h"
 
 WiFiClient espClient;
@@ -59,9 +64,11 @@ SystemInfoScreen systemInfoScreen("System Info");
 
 // /remoteRelay
 RemoteRelayScreen remoteRelayScreen("RemoteRelay");
+TestLoadingScreen testLoadingScreen("Test Loading");
+EngineScreen engineScreen("Engine");
 
 unsigned long long prevMillis1;
-int interval1 = 200;
+int interval1 = 500;
 
 bool sleepCountdown = false;
 unsigned long long sleepCountdownMillis = 0;
@@ -151,6 +158,8 @@ void setup()
 
   // /remoteRelay
   screenManager.addScreen(&remoteRelayScreen);
+  screenManager.addScreen(&testLoadingScreen);
+  screenManager.addScreen(&engineScreen);
 
   wireless.setup();
   wireless.setRecvCb(espNowCb);
@@ -244,7 +253,7 @@ void loop()
     battery.update();
   }
 
-  if (!sleepLoop() && millis() - lastDraw > 25)
+  if (!sleepLoop() && millis() - lastDraw > (1000 / 30))
   {
     lastDraw = millis();
 
