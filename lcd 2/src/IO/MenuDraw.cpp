@@ -1,45 +1,137 @@
 #include "Menu.h"
+#include "Buttons.h"
 
 static const char *TAG = "Menu";
+
+namespace
+{
+  constexpr uint16_t kMenuBg = TFT_BLACK;
+  constexpr uint16_t kMenuText = TFT_WHITE;
+  constexpr uint16_t kMenuActiveBg = TFT_WHITE;
+  constexpr uint16_t kMenuActiveText = TFT_BLACK;
+
+  struct MenuDrawStyle
+  {
+    uint8_t textSize;
+    int lineHeight;
+    uint8_t radius;
+  };
+
+  MenuDrawStyle getStyle(MenuSize size)
+  {
+    switch (size)
+    {
+    case MenuSize::Small:
+      return {1, 12, 2};
+    case MenuSize::Medium:
+      return {2, 20, 3};
+    case MenuSize::Large:
+    default:
+      return {3, 28, 4};
+    }
+  }
+
+  int calcTextY(int y, const MenuDrawStyle &style)
+  {
+    return y + (style.lineHeight - display.sprite.fontHeight()) / 2;
+  }
+
+  int readSelectClicks()
+  {
+    // Treat any non-navigation click (long/double) as a select click.
+    if (ClickButtonDOWN.clicks != 0 && ClickButtonDOWN.clicks != 1)
+      return 1;
+    if (ClickButtonUP.clicks != 0 && ClickButtonUP.clicks != 1)
+      return 1;
+    return 0;
+  }
+
+  int readEncoderDelta()
+  {
+    if (ClickButtonDOWN.clicks == 1)
+      return 1;
+    if (ClickButtonUP.clicks == 1)
+      return -1;
+    return 0;
+  }
+} // namespace
 
 // ###### MenuItem ######
 
 void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.sprite.setTextSize(2);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
+  MenuDrawStyle style = getStyle(size);
+
+  display.sprite.setTextSize(style.textSize);
+  display.sprite.setTextDatum(TL_DATUM);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
-    display.sprite.setTextColor(activeTextColor);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
-    display.sprite.setTextColor(textColor);
+  {
+    display.sprite.setTextColor(kMenuText, kMenuBg);
+  }
 
-  display.sprite.setTextDatum(TL_DATUM);
-  display.sprite.drawString(getName(), _x + 4, _y + 3);
+  int textY = calcTextY(_y, style);
+  display.sprite.drawString(getName(), _x + 2, textY);
 }
 
 // ###### MenuItemToggle ######
 
 void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-  display.sprite.setTextSize(2);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
+  MenuDrawStyle style = getStyle(size);
+
+  display.sprite.setTextSize(style.textSize);
+  display.sprite.setTextDatum(TL_DATUM);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
-    display.sprite.setTextColor(activeTextColor);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
-    display.sprite.setTextColor(textColor);
+  {
+    display.sprite.setTextColor(kMenuText, kMenuBg);
+  }
 
-  display.sprite.setTextDatum(TL_DATUM);
-  display.sprite.drawString(getName(), _x + 4, _y + 3);
+  int textY = calcTextY(_y, style);
+  display.sprite.drawString(getName(), _x + 2, textY);
 
   String valueStr = *value ? "ON" : "OFF";
   display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
+  display.sprite.drawString(valueStr, LCD_WIDTH - 6, textY);
+}
+
+// ###### MenuItemString ######
+
+void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
+{
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
+  MenuDrawStyle style = getStyle(size);
+
+  display.sprite.setTextSize(style.textSize);
+  display.sprite.setTextDatum(TL_DATUM);
+
+  if (_active)
+  {
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+  }
+  else
+  {
+    display.sprite.setTextColor(kMenuText, kMenuBg);
+  }
+
+  int textY = calcTextY(_y, style);
+  display.sprite.drawString(getName(), _x + 2, textY);
+  display.sprite.setTextDatum(TR_DATUM);
+  display.sprite.drawString(getValue(), LCD_WIDTH - 6, textY);
 }
 
 // ###### MenuItemNumber ######
@@ -47,112 +139,166 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 template <typename T>
 void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
 {
-
-  display.sprite.setTextSize(2);
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
+  MenuDrawStyle style = getStyle(size);
 
   if (!_active && selected)
   {
     selected = false;
   }
 
+  display.sprite.setTextSize(style.textSize);
+  display.sprite.setTextDatum(TL_DATUM);
+
   String valueStr = String(*value);
 
   if (_active && selected)
   {
-    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
-
-    display.sprite.setTextColor(textColor);
-    display.sprite.setTextDatum(TL_DATUM);
-    display.sprite.drawString(getName(), _x + 4, _y + 2);
-    display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
+    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
+    display.sprite.setTextColor(kMenuText, kMenuBg);
   }
   else if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 10, 20, 5, bgColor);
-
-    display.sprite.setTextColor(activeTextColor);
-    display.sprite.setTextDatum(TL_DATUM);
-    display.sprite.drawString(getName(), _x + 4, _y + 2);
-    display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(textColor);
-    display.sprite.setTextDatum(TL_DATUM);
-    display.sprite.drawString(getName(), _x + 4, _y + 2);
-    display.sprite.setTextDatum(TR_DATUM);
-    display.sprite.drawString(valueStr, LCD_WIDTH - 10, _y + 3);
+    display.sprite.setTextColor(kMenuText, kMenuBg);
   }
+
+  int textY = calcTextY(_y, style);
+  display.sprite.drawString(getName(), _x + 2, textY);
+
+  display.sprite.setTextDatum(TR_DATUM);
+  display.sprite.drawString(valueStr, LCD_WIDTH - 6, textY);
+}
+
+// ###### MenuItemSelect ######
+
+void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
+{
+  MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
+  MenuDrawStyle style = getStyle(size);
+  String dispText = getName();
+  String optionText = getSelectedOption();
+
+  display.sprite.setTextSize(style.textSize);
+  display.sprite.setTextDatum(TL_DATUM);
+
+  if (_active && selected)
+  {
+    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
+    display.sprite.setTextColor(kMenuText, kMenuBg);
+  }
+  else if (_active)
+  {
+    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+  }
+  else
+  {
+    display.sprite.setTextColor(kMenuText, kMenuBg);
+  }
+
+  int textY = calcTextY(_y, style);
+  display.sprite.drawString(dispText, _x + 2, textY);
+  display.sprite.setTextDatum(TR_DATUM);
+  display.sprite.drawString(optionText, LCD_WIDTH - 6, textY);
 }
 
 // ###### Menu ######
 
 void Menu::draw()
 {
-  display.sprite.setTextDatum(TL_DATUM);
+  // Delegate to active submenu if present
+  if (activeSubmenu)
+  {
+    activeSubmenu->draw();
+    return;
+  }
 
-  //   uint8_t itemMap[numItems];
-  //   uint8_t numItemsVisible = 0;
-  //   for (uint8_t i = 0; i < numItems; i++)
-  //   {
-  //     if (!items[i]->isHidden())
-  //     {
-  //       itemMap[numItemsVisible] = i;
-  //       numItemsVisible++;
-  //     }
-  //   }
+  MenuDrawStyle style = getStyle(menuSize);
+  int lineHeight = style.lineHeight;
+  int startY = 22;
 
-  //   for (uint8_t i = 0; i < numItemsPerPage; i++)
-  //   {
-  //     uint8_t topItem;
+  uint8_t itemMap[numItems];
 
-  //     if (active <= 0) // if the top item is selected
-  //       topItem = 0;
-  //     else if (active >= static_cast<u8_t>(numItemsVisible - 1)) // if the bottom item is selected
-  //       if (numItemsVisible < numItemsPerPage)                                 // if there are less than 3 items
-  //         topItem = 0;
-  //       else // if there are more than 3 items
-  //         topItem = static_cast<u8_t>(numItemsVisible - numItemsPerPage);
-  //     else // if any other item is selected
-  //       topItem = active - 1;
+  uint8_t numItemsVisible = 0;
+  uint8_t numItemsHidden = 0;
+  for (uint8_t i = 0; i < numItems; i++)
+  {
+    if (!items[i]->isHidden())
+    {
+      itemMap[numItemsVisible] = i;
+      numItemsVisible++;
+    }
 
-  //     uint8_t itemIdx = i + topItem;
+    if (items[i]->isHidden() && active > i)
+      numItemsHidden++;
+  }
 
-  //     MenuItem *item = items[itemMap[itemIdx]];
+  uint8_t calcActive = active - numItemsHidden;
 
-  // #ifdef TFT_BIG
-  //     item->draw(5, 45 + (i * 39), active == itemMap[itemIdx]);
-  // #else
-  //     item->draw(5, 25 + (i * 20), active == itemMap[itemIdx]);
-  // #endif
-  //   }
+  // Check if we have any visible items to draw
+  if (numItemsVisible == 0)
+  {
+    return;
+  }
 
-  if (active - offsetFromTop >= numItemsPerPage - 1 && active < numItems - 1)
-    offsetFromTop = active - numItemsPerPage + 2;
-  if (active <= offsetFromTop && active > 0)
-    offsetFromTop = active - 1;
+  uint8_t itemRelIdx = calcActive - topItem;
+
+  // if first item on screen is selected and item is the first item in the list - update topItem
+  if (itemRelIdx <= 0 && calcActive == 0)
+    topItem = 0;
+
+  // if first item on screen is selected and item is not the first item in the list - update topItem
+  if (itemRelIdx <= 0 && calcActive > 0)
+    topItem--;
+
+  // if last item on screen is selected and item is not the last item in the list - update topItem
+  if (itemRelIdx >= numItemsPerPage - 1 && calcActive < numItemsVisible - 1)
+    topItem++;
+
+  // if last item on screen is selected and item is the last item in the list - update topItem
+  if (itemRelIdx >= numItemsPerPage - 1 && calcActive == numItemsVisible - 1)
+    topItem = numItemsVisible - numItemsPerPage;
 
   for (uint8_t i = 0; i < numItemsPerPage; i++)
   {
-    MenuItem *item = items[i + offsetFromTop];
+    uint8_t itemIdx = i + topItem;
 
-    item->draw(5, 25 + (i * 20), active == i + offsetFromTop);
+    // Add bounds checking to prevent crash
+    if (itemIdx >= numItemsVisible)
+    {
+      break;
+    }
+
+    MenuItem *item = items[itemMap[itemIdx]];
+
+    item->draw(0, startY + (i * lineHeight), active == itemMap[itemIdx]);
   }
 
-  uint8_t scrollBarPosition = (LCD_HEIGHT - 31) / (numItems < 1 ? 1 : numItems) * active;
-  uint8_t scrollBarHeight = (numItems < 1 ? 1 : numItems) - 1 == active ? LCD_HEIGHT - 30 - scrollBarPosition : (LCD_HEIGHT - 31) / (numItems < 1 ? 1 : numItems);
+  int trackStart = startY;
+  int trackHeight = LCD_HEIGHT - trackStart - 1;
+  int visibleCount = numItemsVisible < 1 ? 1 : numItemsVisible;
+  int scrollBarPosition = (trackHeight - 1) / visibleCount * calcActive;
+  int scrollBarHeight = (visibleCount - 1 == calcActive) ? trackHeight - scrollBarPosition : (trackHeight - 1) / visibleCount;
 
-  display.sprite.drawLine(LCD_WIDTH - 2, 30, LCD_WIDTH - 2, LCD_HEIGHT - 1, TFT_WHITE);
-  display.sprite.fillRect(LCD_WIDTH - 3, 30 + scrollBarPosition, 3, scrollBarHeight, TFT_WHITE);
+  display.sprite.drawLine(LCD_WIDTH - 2, trackStart, LCD_WIDTH - 2, LCD_HEIGHT - 1, kMenuText);
+  display.sprite.fillRect(LCD_WIDTH - 3, trackStart + scrollBarPosition, 3, scrollBarHeight, kMenuText);
 }
 
 void MenuItem::run()
 {
+  ESP_LOGI(TAG, "Running %s", name.c_str());
+  ESP_LOGI(TAG, "Functions: %d", functions.size());
+
+  int selectClicks = readSelectClicks();
+
   for (uint8_t i = 0; i < functions.size(); i++)
   {
-    if (ClickButtonUP.clicks == functions[i].clicksToRunUp || ClickButtonDOWN.clicks == functions[i].clicksToRunDown)
+    if (selectClicks == functions[i].clicksToRun)
     {
       functions[i].func();
       break;
@@ -162,54 +308,96 @@ void MenuItem::run()
 
 void Menu::update()
 {
+  // Delegate to active submenu if present
+  if (activeSubmenu)
+  {
+    activeSubmenu->update();
+    return;
+  }
+
+  int selectClicks = readSelectClicks();
+
   if (numItems < 1)
   {
-    if (ClickButtonUP.clicks == 1 || ClickButtonDOWN.clicks == 1)
+    if (selectClicks == 1)
+    {
       screenManager.back();
+    }
 
     return;
   }
 
-  if (ClickButtonUP.clicks != 0 && ClickButtonUP.clicks != 1 || ClickButtonDOWN.clicks != 0 && ClickButtonDOWN.clicks != 1)
-    items[active]->run();
-
-    // if ((items[active]->getType() == MenuItemType::Navigate || items[active]->getType() == MenuItemType::Back) && ClickButtonTRIGGER.clicks == 1)
-    // {
-    //   items[active]->executeFunc();
-    // }
-
-  if (ClickButtonDOWN.clicks == 1)
+  if (selectClicks != 0)
   {
-    if (items[active]->getType() == MenuItemType::Number)
+    ESP_LOGI(TAG, "Clicks: %d", selectClicks);
+    items[active]->run();
+  }
+
+  MenuItem *currentItem = items[active];
+  int encoderDelta = readEncoderDelta();
+
+  if (encoderDelta > 0)
+  {
+
+    switch (currentItem->getType())
     {
-      if (((MenuItemNumber<int> *)items[active])->isSelected())
-        ((MenuItemNumber<int> *)items[active])->increase();
-      else if (((MenuItemNumber<long> *)items[active])->isSelected())
-        ((MenuItemNumber<long> *)items[active])->increase();
-      else if (((MenuItemNumber<uint8_t> *)items[active])->isSelected())
-        ((MenuItemNumber<uint8_t> *)items[active])->increase();
+    case MenuItemType::Select:
+    {
+      MenuItemSelect *selectItem = (MenuItemSelect *)currentItem;
+
+      if (selectItem && selectItem->isSelected())
+        selectItem->prevOption();
       else
         nextItem();
     }
-    else
-      nextItem();
-    ESP_LOGI(TAG, "Down. Active: %d. clicks: %d. pressed: %d", active, ClickButtonDOWN.clicks, ClickButtonDOWN.depressed);
-  }
-  else if (ClickButtonUP.clicks == 1)
-  {
-    if (items[active]->getType() == MenuItemType::Number)
+    break;
+
+    case MenuItemType::Number:
     {
-      if (((MenuItemNumber<int> *)items[active])->isSelected())
-        ((MenuItemNumber<int> *)items[active])->decrease();
-      else if (((MenuItemNumber<long> *)items[active])->isSelected())
-        ((MenuItemNumber<long> *)items[active])->decrease();
-      else if (((MenuItemNumber<uint8_t> *)items[active])->isSelected())
-        ((MenuItemNumber<uint8_t> *)items[active])->decrease();
+      MenuItemNumberBase *numberItem = (MenuItemNumberBase *)currentItem;
+
+      if (numberItem && numberItem->isSelected())
+        numberItem->decrease();
+      else
+        nextItem();
+    }
+    break;
+
+    default:
+      nextItem();
+      break;
+    }
+  }
+  else if (encoderDelta < 0)
+  {
+
+    switch (currentItem->getType())
+    {
+    case MenuItemType::Select:
+    {
+      MenuItemSelect *selectItem = (MenuItemSelect *)currentItem;
+
+      if (selectItem && selectItem->isSelected())
+        selectItem->nextOption();
       else
         prevItem();
     }
-    else
+    break;
+
+    case MenuItemType::Number:
+    {
+      MenuItemNumberBase *numberItem = (MenuItemNumberBase *)currentItem;
+
+      if (numberItem && numberItem->isSelected())
+        numberItem->increase();
+      else
+        prevItem();
+    }
+    break;
+
+    default:
       prevItem();
-    ESP_LOGI(TAG, "Up. Active: %d. clicks: %d. pressed: %d", active, ClickButtonUP.clicks, ClickButtonUP.depressed);
+      break;
+    }
   }
 }

@@ -5,7 +5,7 @@
 #include "ScreenManager.h"
 #include "Menu.h"
 
-#include "battery.h"
+#include "Battery.h"
 
 class Screen;
 

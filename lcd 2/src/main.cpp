@@ -14,6 +14,7 @@
 #include "screens/Error.h"
 
 #include "screens/Home.h"
+#include "screens/MenuTest.h"
 
 #include "screens/SettingsScreen.h"
 #include "screens/Settings/RSSIMeter.h"
@@ -36,6 +37,7 @@ WiFiClient espClient;
 
 ErrorScreen errorScreen("Error");
 HomeScreen homeScreen("Home");
+MenuTestScreen menuTestScreen("Menu Test");
 
 Settings settings("Settings");
 RSSIMeter rssiMeter("RSSI");
@@ -83,6 +85,7 @@ void setup()
   // setup screens
   screenManager.addScreen(&errorScreen);
   screenManager.addScreen(&homeScreen);
+  screenManager.addScreen(&menuTestScreen);
 
   // /settings
   screenManager.addScreen(&rssiMeter);

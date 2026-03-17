@@ -14,6 +14,7 @@ public:
   MenuItemNavigate ControlMenuItem = MenuItemNavigate("Control", "Control");
   MenuItemNavigate settingsMenuItem = MenuItemNavigate("Settings", "Settings");
   MenuItemNavigate sendMenuItem = MenuItemNavigate("Send", "Send");
+  MenuItemNavigate menuTestItem = MenuItemNavigate("Menu Test", "Menu Test");
 
   MenuItemAction testPopupItem = MenuItemAction("Test Popup", 2, []()
                                                 {
@@ -43,6 +44,7 @@ HomeScreen::HomeScreen(String _name) : Screen(_name)
 
   menu.addMenuItem(&settingsMenuItem);
   menu.addMenuItem(&sendMenuItem);
+  menu.addMenuItem(&menuTestItem);
   menu.addMenuItem(&testPopupItem);
   menu.addMenuItem(&testPopupItem2);
 }
