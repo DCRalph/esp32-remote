@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
 #include "IO/Wireless.h"
 
 static void relayChangeCb(uint8_t cmd, bool *global)

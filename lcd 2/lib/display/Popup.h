@@ -1,9 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "Buttons.h"
-#include "IO/Display.h"
-#include "IO/ScreenManager.h"
+#include "IO/Buttons.h"
+#include "Display.cpp"
+#include "ScreenManager.h"
 
 class Popup
 {

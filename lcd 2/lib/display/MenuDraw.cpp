@@ -1,5 +1,5 @@
 #include "Menu.h"
-#include "Buttons.h"
+#include "IO/Buttons.h"
 
 static const char *TAG = "Menu";
 
@@ -33,7 +33,7 @@ namespace
 
   int calcTextY(int y, const MenuDrawStyle &style)
   {
-    return y + (style.lineHeight - display.sprite.fontHeight()) / 2;
+    return y + (style.lineHeight - display.fontHeight()) / 2;
   }
 
   int readSelectClicks()
@@ -63,21 +63,21 @@ void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
   MenuDrawStyle style = getStyle(size);
 
-  display.sprite.setTextSize(style.textSize);
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextSize(style.textSize);
+  display.setTextDatum(TL_DATUM);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(kMenuText, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
-  display.sprite.drawString(getName(), _x + 2, textY);
+  display.drawString(getName(), _x + 2, textY);
 }
 
 // ###### MenuItemToggle ######
@@ -87,25 +87,25 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
   MenuDrawStyle style = getStyle(size);
 
-  display.sprite.setTextSize(style.textSize);
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextSize(style.textSize);
+  display.setTextDatum(TL_DATUM);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(kMenuText, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
-  display.sprite.drawString(getName(), _x + 2, textY);
+  display.drawString(getName(), _x + 2, textY);
 
   String valueStr = *value ? "ON" : "OFF";
-  display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.drawString(valueStr, LCD_WIDTH - 6, textY);
+  display.setTextDatum(TR_DATUM);
+  display.drawString(valueStr, LCD_WIDTH - 6, textY);
 }
 
 // ###### MenuItemString ######
@@ -115,23 +115,23 @@ void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
   MenuDrawStyle style = getStyle(size);
 
-  display.sprite.setTextSize(style.textSize);
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextSize(style.textSize);
+  display.setTextDatum(TL_DATUM);
 
   if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(kMenuText, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
-  display.sprite.drawString(getName(), _x + 2, textY);
-  display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.drawString(getValue(), LCD_WIDTH - 6, textY);
+  display.drawString(getName(), _x + 2, textY);
+  display.setTextDatum(TR_DATUM);
+  display.drawString(getValue(), LCD_WIDTH - 6, textY);
 }
 
 // ###### MenuItemNumber ######
@@ -147,31 +147,31 @@ void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
     selected = false;
   }
 
-  display.sprite.setTextSize(style.textSize);
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextSize(style.textSize);
+  display.setTextDatum(TL_DATUM);
 
   String valueStr = String(*value);
 
   if (_active && selected)
   {
-    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
+    display.setTextColor(kMenuText, kMenuBg);
   }
   else if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(kMenuText, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
-  display.sprite.drawString(getName(), _x + 2, textY);
+  display.drawString(getName(), _x + 2, textY);
 
-  display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.drawString(valueStr, LCD_WIDTH - 6, textY);
+  display.setTextDatum(TR_DATUM);
+  display.drawString(valueStr, LCD_WIDTH - 6, textY);
 }
 
 // ###### MenuItemSelect ######
@@ -183,28 +183,28 @@ void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
   String dispText = getName();
   String optionText = getSelectedOption();
 
-  display.sprite.setTextSize(style.textSize);
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextSize(style.textSize);
+  display.setTextDatum(TL_DATUM);
 
   if (_active && selected)
   {
-    display.sprite.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.drawRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuText);
+    display.setTextColor(kMenuText, kMenuBg);
   }
   else if (_active)
   {
-    display.sprite.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.sprite.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, LCD_WIDTH - 4, style.lineHeight, style.radius, kMenuActiveBg);
+    display.setTextColor(kMenuActiveText, kMenuActiveBg);
   }
   else
   {
-    display.sprite.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(kMenuText, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
-  display.sprite.drawString(dispText, _x + 2, textY);
-  display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.drawString(optionText, LCD_WIDTH - 6, textY);
+  display.drawString(dispText, _x + 2, textY);
+  display.setTextDatum(TR_DATUM);
+  display.drawString(optionText, LCD_WIDTH - 6, textY);
 }
 
 // ###### Menu ######
@@ -285,8 +285,8 @@ void Menu::draw()
   int scrollBarPosition = (trackHeight - 1) / visibleCount * calcActive;
   int scrollBarHeight = (visibleCount - 1 == calcActive) ? trackHeight - scrollBarPosition : (trackHeight - 1) / visibleCount;
 
-  display.sprite.drawLine(LCD_WIDTH - 2, trackStart, LCD_WIDTH - 2, LCD_HEIGHT - 1, kMenuText);
-  display.sprite.fillRect(LCD_WIDTH - 3, trackStart + scrollBarPosition, 3, scrollBarHeight, kMenuText);
+  display.drawLine(LCD_WIDTH - 2, trackStart, LCD_WIDTH - 2, LCD_HEIGHT - 1, kMenuText);
+  display.fillRect(LCD_WIDTH - 3, trackStart + scrollBarPosition, 3, scrollBarHeight, kMenuText);
 }
 
 void MenuItem::run()

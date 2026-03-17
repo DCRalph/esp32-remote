@@ -1,9 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "Display.h"
+#include "Display.cpp"
+#include "Popup.cpp"
 #include <vector>
-#include "Popup.h"
 
 class Screen;
 class Popup;
@@ -23,7 +23,7 @@ private:
 public:
   ScreenManager();
 
-  void init();
+  void init(Display &display);
 
   void draw(void);
   void update(void);
@@ -49,6 +49,9 @@ public:
   void closePopup(void);
   void drawPopup(void);
   bool isPopupActive(void);
+
+private:
+  Display *display;
 };
 
 extern ScreenManager screenManager;

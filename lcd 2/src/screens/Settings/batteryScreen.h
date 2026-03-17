@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
 #include "IO/Buttons.h"
 #include "IO/Battery.h"
 
@@ -16,7 +16,7 @@ public:
 
 void BatteryScreen::draw()
 {
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextDatum(TL_DATUM);
 
   int percent = battery.getPercentageI();
   percent = constrain(percent, 0, 100);
@@ -28,25 +28,25 @@ void BatteryScreen::draw()
   else if (percent < 50)
     color = TFT_ORANGE;
 
-  display.sprite.setTextSize(4);
-  display.sprite.setTextColor(TFT_GREEN);
-  display.sprite.drawString("Battery", 10, 30);
+  display.setTextSize(4);
+  display.setTextColor(TFT_GREEN);
+  display.drawString("Battery", 10, 30);
 
-  display.sprite.drawRoundRect((LCD_WIDTH / 4 * 3) - 25, 36, 50, 125, 5, TFT_WHITE);
-  display.sprite.fillRect((LCD_WIDTH / 4 * 3) - 5, 29, 10, 7, TFT_WHITE);
+  display.drawRoundRect((LCD_WIDTH / 4 * 3) - 25, 36, 50, 125, 5, TFT_WHITE);
+  display.fillRect((LCD_WIDTH / 4 * 3) - 5, 29, 10, 7, TFT_WHITE);
 
-  display.sprite.fillRoundRect((LCD_WIDTH / 4 * 3) - 23, 36 + 2 + (121 - height), 46, height, 5, color);
+  display.fillRoundRect((LCD_WIDTH / 4 * 3) - 23, 36 + 2 + (121 - height), 46, height, 5, color);
 
-  display.sprite.setTextSize(4);
-  display.sprite.setTextColor(TFT_WHITE);
+  display.setTextSize(4);
+  display.setTextColor(TFT_WHITE);
 
   char buf[10];
 
   sprintf(buf, "%.2fV", battery.getVoltage());
-  display.sprite.drawString(buf, 10, 80);
+  display.drawString(buf, 10, 80);
 
   sprintf(buf, "%i%%", battery.getPercentageI());
-  display.sprite.drawString(buf, 10, 120);
+  display.drawString(buf, 10, 120);
 }
 
 void BatteryScreen::update()

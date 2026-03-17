@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
 #include "IO/Buttons.h"
 
 class RSSIMeter : public Screen
@@ -15,19 +15,19 @@ public:
 
 void RSSIMeter::draw()
 {
-  display.sprite.setTextDatum(MC_DATUM);
+  display.setTextDatum(MC_DATUM);
 
-  display.sprite.setTextSize(5);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString("RSSI", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 30);
+  display.setTextSize(5);
+  display.setTextColor(TFT_CYAN);
+  display.drawString("RSSI", LCD_WIDTH / 2, LCD_HEIGHT / 2 - 30);
 
-  display.sprite.setTextSize(7);
-  display.sprite.setTextColor(TFT_WHITE);
+  display.setTextSize(7);
+  display.setTextColor(TFT_WHITE);
 
   char buf[20];
   sprintf(buf, "%i", WiFi.RSSI());
 
-  display.sprite.drawString(buf, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
+  display.drawString(buf, LCD_WIDTH / 2, LCD_HEIGHT / 2 + 30);
 }
 
 void RSSIMeter::update()

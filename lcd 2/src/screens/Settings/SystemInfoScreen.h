@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
 #include "IO/Buttons.h"
 
 class SystemInfoScreen : public Screen
@@ -26,33 +26,33 @@ String formatBytes(size_t bytes) {
 
 void SystemInfoScreen::draw()
 {
-  display.sprite.setTextDatum(TL_DATUM); // Top left datum
-  
-  display.sprite.setTextSize(2);
+  display.setTextDatum(TL_DATUM); // Top left datum
+
+  display.setTextSize(2);
 
   // Heap Size
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Heap Size:", 10, 30);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getHeapSize()), 150, 30); // Position the value next to the label
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Heap Size:", 10, 30);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getHeapSize()), 150, 30); // Position the value next to the label
 
   // Free Heap
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Free Heap:", 10, 50);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getFreeHeap()), 150, 50);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Free Heap:", 10, 50);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getFreeHeap()), 150, 50);
 
   // PSRAM Size
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("PSRAM Size:", 10, 110);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getPsramSize()), 150, 110);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("PSRAM Size:", 10, 110);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getPsramSize()), 150, 110);
 
   // Free PSRAM
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Free PSRAM:", 10, 140);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getFreePsram()), 150, 140);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Free PSRAM:", 10, 140);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getFreePsram()), 150, 140);
 
 }
 

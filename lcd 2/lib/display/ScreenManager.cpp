@@ -1,15 +1,17 @@
-#include "ScreenManager.h"
+#include "display/ScreenManager.h"
 
 static const char* TAG = "ScreenManager";
 
-ScreenManager::ScreenManager()
+ScreenManager::ScreenManager() : display(nullptr)
 {
   currentScreen = -1;
   popupActive = false;
 }
 
-void ScreenManager::init()
+void ScreenManager::init(Display &displayRef)
 {
+  display = &displayRef;
+  displayRef.setScreenManager(this);
   // Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
   ESP_LOGI(TAG, "Initialized");
 }

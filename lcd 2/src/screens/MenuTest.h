@@ -1,9 +1,10 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
+#include "display/Menu.h"
+#include "display/Popup.h"
 #include "IO/Buttons.h"
-#include "IO/Popup.h"
 
 class MenuTestScreen : public Screen
 {

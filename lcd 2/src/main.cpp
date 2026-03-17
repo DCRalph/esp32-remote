@@ -5,11 +5,12 @@
 #include <WiFi.h>
 
 #include "IO/Battery.h"
-#include "IO/buttons.h"
+#include "IO/Buttons.h"
 #include "IO/Wireless.h"
 
-#include "IO/Display.h"
-#include "IO/ScreenManager.h"
+#include "Display.cpp"
+#include "display/TFTDisplayDriver.h"
+#include "display/ScreenManager.h"
 
 #include "screens/Error.h"
 
@@ -34,6 +35,8 @@
 
 
 WiFiClient espClient;
+
+TFTDisplayDriver displayDriver;
 
 ErrorScreen errorScreen("Error");
 HomeScreen homeScreen("Home");
@@ -80,7 +83,8 @@ void setup()
 
   battery.init();
 
-  display.init();
+  display.begin(&displayDriver, &screenManager);
+  screenManager.init(display);
 
   // setup screens
   screenManager.addScreen(&errorScreen);
@@ -163,17 +167,17 @@ bool sleepLoop()
   {
     display.clearScreen();
 
-    display.sprite.setTextSize(2);
-    display.sprite.setTextDatum(TC_DATUM);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString("Sleeping...", LCD_WIDTH / 2, 60);
-    display.sprite.drawString("Release to cancel", LCD_WIDTH / 2, 110);
+    display.setTextSize(2);
+    display.setTextDatum(TC_DATUM);
+    display.setTextColor(TFT_WHITE);
+    display.drawString("Sleeping...", LCD_WIDTH / 2, 60);
+    display.drawString("Release to cancel", LCD_WIDTH / 2, 110);
 
     char buf[20];
     long msToGo = sleepCountdownTime - (millis() - sleepCountdownMillis);
 
     sprintf(buf, "in %.1f S", float(msToGo) / 1000);
-    display.sprite.drawString(buf, LCD_WIDTH / 2, 80);
+    display.drawString(buf, LCD_WIDTH / 2, 80);
 
     u8_t percent = map(msToGo, 0, sleepCountdownTime - sleepDisplayTime, 0, 100);
     int x = map(percent, 0, 100, 0, LCD_WIDTH - 44);
@@ -182,10 +186,10 @@ bool sleepLoop()
     u8_t g = map(percent, 0, 100, 100, 255);
     u8_t b = 0;
 
-    u16_t color = display.tft.color565(r, g, b);
+    u16_t color = display.color565(r, g, b);
 
-    display.sprite.drawRoundRect(20, 5, LCD_WIDTH - 40, 50, 20, TFT_WHITE);
-    display.sprite.fillRoundRect(22, 6, x, 48, 20, color);
+    display.drawRoundRect(20, 5, LCD_WIDTH - 40, 50, 20, TFT_WHITE);
+    display.fillRoundRect(22, 6, x, 48, 20, color);
 
     display.push();
   }
@@ -215,5 +219,5 @@ void loop()
   }
 
   if (!sleepLoop())
-    display.display();
+    display.render();
 }

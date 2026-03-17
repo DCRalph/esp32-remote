@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include "display/Display.h"
 #include "IO/Buttons.h"
 #include "IO/Wireless.h"
 
@@ -22,19 +22,19 @@ void CarLocksScreen::draw()
 {
   display.noTopBar();
 
-  display.sprite.setTextDatum(TL_DATUM);
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.setTextSize(4);
+  display.setTextDatum(TL_DATUM);
+  display.setTextColor(TFT_WHITE);
+  display.setTextSize(4);
   
-  display.sprite.setTextDatum(TR_DATUM);
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.setTextSize(3);
-  display.sprite.drawString("Lock ->", LCD_WIDTH - 2, 2);
+  display.setTextDatum(TR_DATUM);
+  display.setTextColor(TFT_WHITE);
+  display.setTextSize(3);
+  display.drawString("Lock ->", LCD_WIDTH - 2, 2);
 
-  display.sprite.setTextDatum(BR_DATUM);
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.setTextSize(3);
-  display.sprite.drawString("(exit) Unlock ->", LCD_WIDTH - 2, LCD_HEIGHT - 2);
+  display.setTextDatum(BR_DATUM);
+  display.setTextColor(TFT_WHITE);
+  display.setTextSize(3);
+  display.drawString("(exit) Unlock ->", LCD_WIDTH - 2, LCD_HEIGHT - 2);
 }
 
 void CarLocksScreen::update()
