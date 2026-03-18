@@ -2,7 +2,36 @@
 #pragma once
 
 #include <Arduino.h>
-#include "config.h"
+#include "display_config.h"
+
+// Display default colors/datum (match TFT_eSPI when used with TFT driver)
+#ifndef TFT_BLACK
+#define TFT_BLACK 0x0000
+#endif
+#ifndef TFT_BLUE
+#define TFT_BLUE  0x001F
+#endif
+#ifndef TC_DATUM
+#define TC_DATUM  1
+#endif
+#ifndef TL_DATUM
+#define TL_DATUM  0
+#endif
+#ifndef TR_DATUM
+#define TR_DATUM  2
+#endif
+#ifndef ML_DATUM
+#define ML_DATUM  3
+#endif
+#ifndef MR_DATUM
+#define MR_DATUM  5
+#endif
+#ifndef TFT_WHITE
+#define TFT_WHITE 0xFFFF
+#endif
+#ifndef TFT_RED
+#define TFT_RED   0xF800
+#endif
 
 class ScreenManager;
 
@@ -100,3 +129,6 @@ public:
 };
 
 extern Display display;
+
+// Provided by application
+int getBatteryPercentage();

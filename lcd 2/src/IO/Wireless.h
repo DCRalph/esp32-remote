@@ -2,50 +2,19 @@
 
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
 #include <WiFi.h>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <map>
 
-// ============================================================
-// Transport primitives (shared by Wireless + Mesh)
-// ============================================================
-
-struct TransportAddress
-{
-  std::array<uint8_t, 6> bytes{};
-
-  static constexpr TransportAddress broadcast()
-  {
-    return TransportAddress{{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
-  }
-};
-
-struct __attribute__((packed)) TransportPacket
-{
-  uint16_t type = 0;
-  uint16_t len = 0;
-  uint8_t data[250]{};
-};
-
-class ITransport
-{
-public:
-  using ReceiveCallback = std::function<void(const TransportAddress &source, const TransportPacket &packet)>;
-
-  virtual ~ITransport() = default;
-  virtual bool begin() = 0;
-  virtual void end() = 0;
-  virtual bool isReady() const = 0;
-  virtual int sendPacket(const TransportPacket &packet, const TransportAddress &peer) = 0;
-  virtual void setReceiveCallback(ReceiveCallback cb) = 0;
-};
-
-using data_packet = TransportPacket;
+#include "ITransport.h"
 
 // ============================================================
-// Packet wrappers used by existing sync code
+// Wireless-layer frame (MAC + direction + payload)
 // ============================================================
 
 enum class PacketDirection
@@ -54,14 +23,12 @@ enum class PacketDirection
   RECV
 };
 
-struct fullPacket
+struct WirelessFrame
 {
-  uint8_t mac[6];
+  uint8_t mac[ESP_NOW_ETH_ALEN];
   PacketDirection direction;
-  data_packet p;
+  TransportPacket packet;
 };
-
-extern uint8_t BROADCAST_MAC[6];
 
 // ============================================================
 // ESP-NOW transport implementation
@@ -70,19 +37,21 @@ extern uint8_t BROADCAST_MAC[6];
 class Wireless : public ITransport
 {
 private:
+  static constexpr uint8_t kRxQueueDepth = 16;
   bool setupDone = false;
+  bool broadcastPeerConfigured_ = false;
+  QueueHandle_t incomingQueue_ = nullptr;
+  std::atomic<uint32_t> droppedRxFrames_{0};
 
-  std::function<void(fullPacket *fp)> onReceiveOtherCb;
-  std::map<uint16_t, std::function<void(fullPacket *fp)>> onReceiveForCallbacks;
+  std::function<void(WirelessFrame *frame)> onReceiveOtherCb;
+  std::map<uint16_t, std::function<void(WirelessFrame *frame)>> onReceiveForCallbacks;
   ReceiveCallback receiveCb;
 
 public:
-  esp_now_send_status_t lastStatus = ESP_NOW_SEND_FAIL;
-
   Wireless();
   void setup();   // Backward-compatible alias for begin()
   void unSetup(); // Backward-compatible alias for end()
-  void loop();
+  void loop() override;
 
   bool isSetupDone() const;
 
@@ -91,24 +60,28 @@ public:
   void recvCallback(const uint8_t *mac_addr, const uint8_t *data, uint16_t len);
 
   // Set the generic "other" callback.
-  void setOnReceiveOther(std::function<void(fullPacket *fp)> cb);
+  void setOnReceiveOther(std::function<void(WirelessFrame *frame)> cb);
   // Register a type-specific callback.
   void addOnReceiveFor(uint16_t type,
-                       std::function<void(fullPacket *fp)> cb);
+                       std::function<void(WirelessFrame *frame)> cb);
   // Remove a type-specific callback.
   void removeOnReceiveFor(uint16_t type);
 
-  int send(const data_packet *p, const uint8_t *peer_addr);
+  int send(const TransportPacket *p, const uint8_t *peer_addr);
   int send(const uint8_t *data, uint16_t len, const uint8_t *peer_addr);
 
-  int send(fullPacket *fp);
+  int send(WirelessFrame *frame);
 
   // ITransport
   bool begin() override;
   void end() override;
   bool isReady() const override;
+  esp_now_send_status_t getLastStatus() const;
   int sendPacket(const TransportPacket &packet, const TransportAddress &peer) override;
   void setReceiveCallback(ReceiveCallback cb) override;
+
+private:
+  std::atomic<esp_now_send_status_t> lastStatus_{ESP_NOW_SEND_FAIL};
 };
 
 extern Wireless wireless;

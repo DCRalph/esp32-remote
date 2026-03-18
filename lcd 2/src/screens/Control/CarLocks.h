@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
+#include "Display.h"
 #include "IO/Buttons.h"
 #include "IO/Wireless.h"
 
@@ -42,7 +42,7 @@ void CarLocksScreen::update()
 
   if (ClickButtonUP.clicks == 1)
   {
-    data_packet p;
+    TransportPacket p;
     p.type = 0x10; // car locks
     p.len = 1;
     p.data[0] = 0; // lock
@@ -52,7 +52,7 @@ void CarLocksScreen::update()
 
   if (ClickButtonDOWN.clicks == -1)
   {
-    data_packet p;
+    TransportPacket p;
     p.type = 0x10; // car locks
     p.len = 1;
     p.data[0] = 1; // unlock

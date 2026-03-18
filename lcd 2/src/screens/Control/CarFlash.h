@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
+#include "Display.h"
 #include "IO/Wireless.h"
 
 class CarFlashScreen : public Screen
@@ -20,7 +20,7 @@ public:
 
   MenuItemAction relay1FlashItem = MenuItemAction("Flash R 1", 2, [&]()
                                                   {
-                                                    data_packet p;
+                                                    TransportPacket p;
                                                     p.type = CMD_RELAY_1_FLASH;
                                                     p.len = 2;
                                                     p.data[0] = count;

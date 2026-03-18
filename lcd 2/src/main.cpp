@@ -7,10 +7,12 @@
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
 #include "IO/Wireless.h"
+#include "IO/Mesh.h"
 
-#include "Display.cpp"
-#include "display/TFTDisplayDriver.h"
-#include "display/ScreenManager.h"
+#include "Display.h"
+#include "MenuInput.h"
+#include "TFTDisplayDriver.h"
+#include "ScreenManager.h"
 
 #include "screens/Error.h"
 
@@ -21,7 +23,7 @@
 #include "screens/Settings/RSSIMeter.h"
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/WiFiInfo.h"
-#include "screens/Settings/SystemInfoScreen.h"  
+#include "screens/Settings/SystemInfoScreen.h"
 
 #include "screens/Send.h"
 
@@ -32,11 +34,14 @@
 #include "screens/Control/Car.h"
 #include "screens/Control/CarFlash.h"
 
-
-
 WiFiClient espClient;
 
 TFTDisplayDriver displayDriver;
+
+int getBatteryPercentage()
+{
+  return battery.getPercentageI();
+}
 
 ErrorScreen errorScreen("Error");
 HomeScreen homeScreen("Home");
@@ -86,6 +91,14 @@ void setup()
   display.begin(&displayDriver, &screenManager);
   screenManager.init(display);
 
+  MenuInputConfig menuInputConfig;
+  menuInputConfig.mode = MenuInputMode::Buttons2;
+  menuInputConfig.navigationClicks = 1;   // 1 click = up/down
+  menuInputConfig.defaultSelectClicks = 2; // 2 clicks = default action (e.g. select / run default route)
+  menuInputConfig.getUpClicks = []() { return (int)ClickButtonUP.clicks; };
+  menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
+  MenuInput::configure(menuInputConfig);
+
   // setup screens
   screenManager.addScreen(&errorScreen);
   screenManager.addScreen(&homeScreen);
@@ -114,6 +127,19 @@ void setup()
   // WiFi.setAutoReconnect(true);
 
   wireless.setup();
+
+  auto syncMgr = SyncManager::getInstance();
+
+  syncMgr->setTransport(&wireless);
+
+  syncMgr->setDeviceIdProvider([]() -> uint32_t
+                               {
+                                 return 0x69;
+                                 //
+                               });
+
+  syncMgr->begin();
+  syncMgr->setSyncMode(SyncMode::JOIN);
 
   // WiFi.mode(WIFI_STA);
   // esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
@@ -207,6 +233,7 @@ void loop()
 {
 
   buttons.update();
+  SyncManager::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {

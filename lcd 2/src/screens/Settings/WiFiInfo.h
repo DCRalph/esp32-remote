@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
+#include "Display.h"
 #include "IO/Buttons.h"
 
 class WiFiInfoScreen : public Screen

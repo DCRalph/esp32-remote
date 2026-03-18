@@ -1,8 +1,8 @@
 #pragma once
 
-#include "config.h"
-#include "Display.cpp"
-#include "Popup.cpp"
+#include "display_config.h"
+#include "Display.h"
+#include "Popup.h"
 #include <vector>
 
 class Screen;

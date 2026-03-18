@@ -1,7 +1,6 @@
 // TFT_eSPI sprite-backed driver implementation.
 #include "TFTDisplayDriver.h"
-
-#include "config.h"
+#include "display_config.h"
 
 TFTDisplayDriver::TFTDisplayDriver() : tft(), sprite(&tft)
 {

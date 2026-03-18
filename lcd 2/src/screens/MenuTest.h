@@ -1,9 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
-#include "display/Menu.h"
-#include "display/Popup.h"
+#include "Display.h"
+#include "Menu.h"
+#include "Popup.h"
 #include "IO/Buttons.h"
 
 class MenuTestScreen : public Screen

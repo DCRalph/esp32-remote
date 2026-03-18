@@ -1,5 +1,7 @@
 #include "Menu.h"
-#include "IO/Buttons.h"
+#include "MenuInput.h"
+#include "display_config.h"
+#include "ScreenManager.h"
 
 static const char *TAG = "Menu";
 
@@ -34,25 +36,6 @@ namespace
   int calcTextY(int y, const MenuDrawStyle &style)
   {
     return y + (style.lineHeight - display.fontHeight()) / 2;
-  }
-
-  int readSelectClicks()
-  {
-    // Treat any non-navigation click (long/double) as a select click.
-    if (ClickButtonDOWN.clicks != 0 && ClickButtonDOWN.clicks != 1)
-      return 1;
-    if (ClickButtonUP.clicks != 0 && ClickButtonUP.clicks != 1)
-      return 1;
-    return 0;
-  }
-
-  int readEncoderDelta()
-  {
-    if (ClickButtonDOWN.clicks == 1)
-      return 1;
-    if (ClickButtonUP.clicks == 1)
-      return -1;
-    return 0;
   }
 } // namespace
 
@@ -294,11 +277,14 @@ void MenuItem::run()
   ESP_LOGI(TAG, "Running %s", name.c_str());
   ESP_LOGI(TAG, "Functions: %d", functions.size());
 
-  int selectClicks = readSelectClicks();
+  int selectClicksForMatch = MenuInput::getSelectClicksForMatch();
+  int rawSelectClicks = MenuInput::getSelectClicks();
 
   for (uint8_t i = 0; i < functions.size(); i++)
   {
-    if (selectClicks == functions[i].clicksToRun)
+    int want = functions[i].clicksToRun;
+    bool match = (selectClicksForMatch == want) || (rawSelectClicks == want);
+    if (match)
     {
       functions[i].func();
       break;
@@ -308,6 +294,8 @@ void MenuItem::run()
 
 void Menu::update()
 {
+  MenuInput::update();
+
   // Delegate to active submenu if present
   if (activeSubmenu)
   {
@@ -315,11 +303,21 @@ void Menu::update()
     return;
   }
 
-  int selectClicks = readSelectClicks();
+  if (MenuInput::getBackClicks() > 0)
+  {
+    if (getParentMenu())
+      getParentMenu()->clearActiveSubmenu();
+    else
+      screenManager.back();
+    return;
+  }
+
+  int selectClicks = MenuInput::getSelectClicks();
+  int selectClicksForMatch = MenuInput::getSelectClicksForMatch();
 
   if (numItems < 1)
   {
-    if (selectClicks == 1)
+    if (selectClicksForMatch == 1)
     {
       screenManager.back();
     }
@@ -329,12 +327,16 @@ void Menu::update()
 
   if (selectClicks != 0)
   {
-    ESP_LOGI(TAG, "Clicks: %d", selectClicks);
+    // ESP_LOGI(TAG, "Clicks: %d", selectClicks);
+    Serial.printf("Clicks: %d\n", selectClicks);
     items[active]->run();
   }
 
   MenuItem *currentItem = items[active];
-  int encoderDelta = readEncoderDelta();
+  int encoderDelta = MenuInput::getNavigationDelta();
+
+  if (encoderDelta != 0)
+    Serial.printf("Encoder Delta: %d\n", encoderDelta);
 
   if (encoderDelta > 0)
   {

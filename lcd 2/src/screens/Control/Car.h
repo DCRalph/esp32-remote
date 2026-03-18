@@ -1,18 +1,18 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
+#include "Display.h"
 #include "IO/Wireless.h"
 
 static void relayChangeCb(uint8_t cmd, bool *global)
 {
-  fullPacket fp;
-  memcpy(fp.mac, car_addr, 6);
+  WirelessFrame fp;
+  TransportAddress source = TransportAddress::fromMac(car_addr);
   fp.direction = PacketDirection::SEND;
-  fp.p.type = cmd;
-  fp.p.data[0] = !*global;
+  fp.packet.type = cmd;
+  fp.packet.data[0] = !*global;
 
-  wireless.send(&fp);
+  wireless.sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
 }
 
 class CarControlScreen : public Screen
@@ -26,7 +26,7 @@ public:
 
   MenuItemAction lockDoorItem = MenuItemAction("Lock Door", 2, []()
                                                {
-                                                 data_packet p;
+                                                 TransportPacket p;
                                                  p.type = CMD_DOOR_LOCK;
                                                  p.len = 1;
                                                  p.data[0] = 0;
@@ -37,7 +37,7 @@ public:
 
   MenuItemAction unlockDoorItem = MenuItemAction("Unlock Door", 2, []()
                                                  {
-                                                   data_packet p;
+                                                   TransportPacket p;
                                                    p.type = CMD_DOOR_LOCK;
                                                    p.len = 1;
                                                    p.data[0] = 1;
@@ -107,11 +107,11 @@ void CarControlScreen::update()
 
 void CarControlScreen::onEnter()
 {
-  fullPacket fp;
-  memcpy(fp.mac, car_addr, 6);
+  WirelessFrame fp;
+  TransportAddress source = TransportAddress::fromMac(car_addr);
   fp.direction = PacketDirection::SEND;
-  fp.p.type = CMD_RELAY_ALL;
-  fp.p.len = 0;
+  fp.packet.type = CMD_RELAY_ALL;
+  fp.packet.len = 0;
 
-  wireless.send(&fp);
+  wireless.sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
 }

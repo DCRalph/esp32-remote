@@ -1,4 +1,7 @@
 #include "Popup.h"
+#include "MenuInput.h"
+#include "display_config.h"
+#include "ScreenManager.h"
 
 Popup::Popup(String _title, String _message) : title(_title), message(_message)
 {
@@ -18,7 +21,8 @@ void Popup::draw()
 
 void Popup::update()
 {
-  if (ClickButtonUP.clicks != 0 || ClickButtonDOWN.clicks != 0)
+  MenuInput::update();
+  if (MenuInput::getSelectClicks() != 0 || MenuInput::getBackClicks() != 0)
   {
     screenManager.closePopup();
   }

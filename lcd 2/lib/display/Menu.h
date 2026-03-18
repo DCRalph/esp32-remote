@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config.h"
-#include "display/Display.h"
+#include "display_config.h"
+#include "Display.h"
 
 #include <vector>
 

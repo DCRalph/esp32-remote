@@ -1,8 +1,6 @@
 // Display facade implementation.
 #include "Display.h"
-
 #include "ScreenManager.h"
-#include "IO/Battery.h"
 
 Display::Display() : driver(nullptr), screenManager(nullptr), showMenuBar(true) {}
 
@@ -194,7 +192,7 @@ void Display::drawTopBar()
 
   drawString(name, 10, 10);
   char buf[20];
-  sprintf(buf, "%i%%", battery.getPercentageI());
+  sprintf(buf, "%i%%", getBatteryPercentage());
 
   setTextDatum(MR_DATUM);
   drawString(buf, LCD_WIDTH - 10, 10);

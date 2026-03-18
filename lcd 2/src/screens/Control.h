@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "display/Display.h"
+#include "Display.h"
 #include "IO/Wireless.h"
 
 class ControlScreen : public Screen
@@ -18,34 +18,34 @@ public:
 
   MenuItemAction flashItemPreset1 = MenuItemAction("Flash 5 30", 2, [&]()
                                                    {
-                                                     data_packet p;
+                                                     TransportPacket p;
                                                      p.type = 0x30;
                                                      p.len = 2;
                                                      p.data[0] = 5;       // 5 flashes
                                                      p.data[1] = 30 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
                                                      //
                                                    });
 
   MenuItemAction flashItemPreset2 = MenuItemAction("Flash 2 40", 2, [&]()
                                                    {
-                                                     data_packet p;
+                                                     TransportPacket p;
                                                      p.type = 0x30;
                                                      p.len = 2;
                                                      p.data[0] = 2;       // 3 flashes
                                                      p.data[1] = 40 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
                                                      //
                                                    });
 
   MenuItemAction flashItemPreset3 = MenuItemAction("Flash 8 50", 2, [&]()
                                                    {
-                                                     data_packet p;
+                                                     TransportPacket p;
                                                      p.type = 0x30;
                                                      p.len = 2;
                                                      p.data[0] = 8;       // 3 flashes
                                                      p.data[1] = 50 / 10; // 10; // 40ms
-                                                     wireless.send(&p, car_addr);
+                                                     wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
                                                      //
                                                    });
 
