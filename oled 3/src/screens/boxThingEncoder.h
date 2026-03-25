@@ -37,19 +37,17 @@ void BoxThingEncoderScreen::onRecv(fullPacket *fp)
 void BoxThingEncoderScreen::draw()
 {
   display.noTopBar();
-  display.sprite.setTextSize(4);
-  display.sprite.setTextDatum(TC_DATUM);
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Encoder", LCD_WIDTH / 2, 60);
+  display.setTextSize(4);
+  display.setTextDatum(TC_DATUM);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Encoder", LCD_WIDTH / 2, 60);
 
   char buf[20];
   sprintf(buf, "%d", lastClicks);
-  display.sprite.drawString(buf, LCD_WIDTH / 2, 100);
+  display.drawString(buf, LCD_WIDTH / 2, 100);
 
   sprintf(buf, "%d", encCount);
-  display.sprite.drawString(buf, LCD_WIDTH / 2, 140);
-
-  display.push();
+  display.drawString(buf, LCD_WIDTH / 2, 140);
 }
 
 void BoxThingEncoderScreen::update()

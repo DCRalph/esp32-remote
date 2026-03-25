@@ -5,11 +5,13 @@
 #include <vector>
 
 #include "IO/Battery.h"
-#include "IO/buttons.h"
+#include "IO/Buttons.h"
 #include "IO/Wireless.h"
 
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
+#include "IO/AmoledDisplayDriver.h"
+#include "MenuInput.h"
 
 #include "screens/Error.h"
 
@@ -42,6 +44,12 @@
 #include "IO/GPIO.h"
 
 WiFiClient espClient;
+AmoledDisplayDriverContext displayDriverContext;
+
+int getBatteryPercentage()
+{
+  return battery.getPercentageI();
+}
 
 ErrorScreen errorScreen("Error");
 
@@ -134,7 +142,17 @@ void setup()
   battery.init();
   battery.update();
 
-  display.init();
+  DisplayConfig displayConfig = AmoledDisplayDriver::makeConfig(&displayDriverContext, LCD_WIDTH, LCD_HEIGHT, TFT_ROT, 16);
+  display.begin(displayConfig, &screenManager);
+  screenManager.init(display);
+
+  MenuInputConfig menuInputConfig;
+  menuInputConfig.mode = MenuInputMode::Buttons2;
+  menuInputConfig.navigationClicks = 1;
+  menuInputConfig.defaultSelectClicks = 2;
+  menuInputConfig.getUpClicks = []() { return (int)ClickButtonUP.clicks; };
+  menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
+  MenuInput::configure(menuInputConfig);
 
   // setup screens
   screenManager.addScreen(&errorScreen);
@@ -201,11 +219,11 @@ bool sleepLoop()
   {
     display.clearScreen();
 
-    display.sprite.setTextSize(4);
-    display.sprite.setTextDatum(TC_DATUM);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString("Sleeping...", LCD_WIDTH / 2, 60);
-    display.sprite.drawString("Release to cancel", LCD_WIDTH / 2, 160);
+    display.setTextSize(4);
+    display.setTextDatum(TC_DATUM);
+    display.setTextColor(TFT_WHITE);
+    display.drawString("Sleeping...", LCD_WIDTH / 2, 60);
+    display.drawString("Release to cancel", LCD_WIDTH / 2, 160);
 
     char buf[20];
     long msToGo = sleepCountdownTime - (millis() - sleepCountdownMillis);
@@ -214,7 +232,7 @@ bool sleepLoop()
       sprintf(buf, "in %.1f S", float(msToGo) / 1000);
     else
       sprintf(buf, "Now!");
-    display.sprite.drawString(buf, LCD_WIDTH / 2, 100);
+    display.drawString(buf, LCD_WIDTH / 2, 100);
 
     u8_t percent = map(msToGo, 0, sleepCountdownTime - sleepDisplayTime, 0, 100);
     int x = map(percent, 0, 100, 0, LCD_WIDTH - 44);
@@ -223,10 +241,10 @@ bool sleepLoop()
     u8_t g = map(percent, 0, 100, 100, 255);
     u8_t b = 0;
 
-    u16_t color = display.tft.color565(r, g, b);
+    u16_t color = display.color565(r, g, b);
 
-    display.sprite.drawRoundRect(20, 5, LCD_WIDTH - 40, 50, 20, TFT_WHITE);
-    display.sprite.fillRoundRect(22, 6, x, 48, 20, color);
+    display.drawRoundRect(20, 5, LCD_WIDTH - 40, 50, 20, TFT_WHITE);
+    display.fillRoundRect(22, 6, x, 48, 20, color);
 
     display.push();
   }
@@ -260,7 +278,7 @@ void loop()
     buttons.update();
 
     frameTime = millis();
-    display.display();
+    display.render();
     lastFrameTime = millis() - frameTime;
   }
 }

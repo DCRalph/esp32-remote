@@ -1,16 +1,17 @@
 #include "ScreenManager.h"
 
-static const char* TAG = "ScreenManager";
+static const char *TAG = "ScreenManager";
 
-ScreenManager::ScreenManager()
+ScreenManager::ScreenManager() : display(nullptr)
 {
   currentScreen = -1;
   popupActive = false;
 }
 
-void ScreenManager::init()
+void ScreenManager::init(Display &displayRef)
 {
-  // Serial.println("\t[INFO] [SCREEN MANAGER] Initialized");
+  display = &displayRef;
+  displayRef.setScreenManager(this);
   ESP_LOGI(TAG, "Initialized");
 }
 
@@ -29,7 +30,6 @@ void ScreenManager::setScreen(int screen)
 {
   if (screen == currentScreen)
   {
-    // Serial.println("[WARN] [SCREEN MANAGER] Screen already set");
     ESP_LOGW(TAG, "Screen already set");
     return;
   }
@@ -37,16 +37,13 @@ void ScreenManager::setScreen(int screen)
   if (currentScreen != -1)
   {
     screens[currentScreen]->onExit();
-    
   }
 
   currentScreen = screen;
 
-  // Serial.println("[INFO] [SCREEN MANAGER] >> " + screens[screen]->name);
   ESP_LOGI(TAG, ">> %s", screens[screen]->name.c_str());
 
   updateHistory();
-
   screens[screen]->onEnter();
 }
 
@@ -60,16 +57,12 @@ void ScreenManager::setScreen(String screenName)
       return;
     }
   }
-  // Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
   ESP_LOGW(TAG, "Screen not found");
 }
 
 void ScreenManager::addScreen(Screen *screen)
 {
   screens.push_back(screen);
-
-  // String msg = "\t[INFO] [SCREEN MANAGER] " + screen->name + " added";
-  // Serial.println(msg);
   ESP_LOGI(TAG, "Added: %s", screen->name.c_str());
 }
 
@@ -88,7 +81,6 @@ void ScreenManager::removeScreen(String screenName)
       return;
     }
   }
-  // Serial.println("[WARN] [SCREEN MANAGER] Screen not found");
   ESP_LOGW(TAG, "Screen not found");
 }
 
@@ -114,12 +106,9 @@ void ScreenManager::back(void)
     screenHistory.pop_back();
 
     screens[currentScreen]->onExit();
-
     currentScreen = screenHistory.back();
 
-    // Serial.println("[INFO] [SCREEN MANAGER] << " + screens[currentScreen]->name);
     ESP_LOGI(TAG, "<< %s", screens[currentScreen]->name.c_str());
-
     screens[currentScreen]->onEnter();
   }
 }
@@ -137,27 +126,6 @@ void ScreenManager::updateHistory(void)
   {
     screenHistory.erase(screenHistory.begin());
   }
-
-  // for (int i = 0; i < screenHistory.size(); i++)
-  // {
-  //   Serial.print(screenHistory[i]);
-  //   Serial.print(" ");
-  // }
-  // Serial.print(" ");
-
-  // for (int i = 0; i < screenHistory.size(); i++)
-  // {
-  //   if (screenHistory[i] == currentScreen)
-  //   {
-  //     screenHistory.erase(screenHistory.begin() + i);
-  //   }
-  // }
-
-  // for (int i = 0; i < screenHistory.size(); i++)
-  // {
-  //   Serial.print(screenHistory[i]);
-  //   Serial.print(" ");
-  // }
 }
 
 void ScreenManager::showPopup(Popup *popup)
@@ -171,8 +139,10 @@ void ScreenManager::closePopup(void)
   popupActive = false;
 }
 
-void ScreenManager::drawPopup(void){
-  if(popupActive){
+void ScreenManager::drawPopup(void)
+{
+  if (popupActive)
+  {
     this->popup->draw();
     this->popup->update();
   }

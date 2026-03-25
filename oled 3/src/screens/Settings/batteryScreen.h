@@ -16,7 +16,7 @@ public:
 
 void BatteryScreen::draw()
 {
-  display.sprite.setTextDatum(TL_DATUM);
+  display.setTextDatum(TL_DATUM);
 
   uint16_t x = 450;
   uint16_t y = 60;
@@ -37,30 +37,30 @@ void BatteryScreen::draw()
   else if (percent < 50)
     color = TFT_ORANGE;
 
-  display.sprite.setTextSize(6);
-  display.sprite.setTextColor(color);
-  display.sprite.drawString("Battery", 10, 50);
+  display.setTextSize(6);
+  display.setTextColor(color);
+  display.drawString("Battery", 10, 50);
 
-  display.sprite.drawRoundRect(x - (w / 2), y, w, h, cornerRadius, TFT_WHITE); // battery outline
-  display.sprite.fillRect(x - (nibW / 2), y - nibH, nibW, nibH, TFT_WHITE);    // battery top
+  display.drawRoundRect(x - (w / 2), y, w, h, cornerRadius, TFT_WHITE);
+  display.fillRect(x - (nibW / 2), y - nibH, nibW, nibH, TFT_WHITE);
 
   uint16_t x1 = x - (w / 2) + gap;
   uint16_t y1 = y - gap + (h - height);
   uint16_t w1 = w - gap * 2;
   uint16_t h1 = height;
 
-  display.sprite.fillRoundRect(x1, y1, w1, h1, cornerRadius, color); // battery fill
+  display.fillRoundRect(x1, y1, w1, h1, cornerRadius, color);
 
-  display.sprite.setTextSize(4);
-  display.sprite.setTextColor(TFT_WHITE);
+  display.setTextSize(4);
+  display.setTextColor(TFT_WHITE);
 
   char buf[10];
 
   sprintf(buf, "%.2fV", battery.getVoltage());
-  display.sprite.drawString(buf, 10, 120);
+  display.drawString(buf, 10, 120);
 
   sprintf(buf, "%i%%", battery.getPercentageI());
-  display.sprite.drawString(buf, 10, 160);
+  display.drawString(buf, 10, 160);
 }
 
 void BatteryScreen::update()

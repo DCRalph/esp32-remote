@@ -31,13 +31,13 @@ public:
                  float value, float vMin, float vMax, uint32_t color, const char *label, const char *unit)
   {
     // Background arc
-    display.sprite.drawSmoothArc(cx, cy, rOuter, rInner, startAngle, endAngle, TFT_DARKGREY, TFT_BLACK, false);
+    display.drawSmoothArc(cx, cy, rOuter, rInner, startAngle, endAngle, TFT_DARKGREY, TFT_BLACK, false);
 
     // Value arc
     float t = constrain((value - vMin) / (vMax - vMin), 0.0f, 1.0f);
     int sweepCW = (endAngle + 360 - startAngle) % 360; // clockwise sweep length
     int valueAngle = (startAngle + (int)(t * sweepCW)) % 360;
-    display.sprite.drawSmoothArc(cx, cy, rOuter, rInner, startAngle, valueAngle, color, TFT_BLACK, true);
+    display.drawSmoothArc(cx, cy, rOuter, rInner, startAngle, valueAngle, color, TFT_BLACK, true);
 
     // Needle
     float theta = valueAngle * DEG_TO_RAD;
@@ -49,21 +49,21 @@ public:
     int ny0 = cy + (int)(ny * (rInner + 2));
     int nx1 = cx + (int)(nx * needleLen);
     int ny1 = cy + (int)(ny * needleLen);
-    display.sprite.drawLine(nx0, ny0, nx1, ny1, TFT_WHITE);
+    display.drawLine(nx0, ny0, nx1, ny1, TFT_WHITE);
 
     // Label and value
-    display.sprite.setTextDatum(MC_DATUM);
-    display.sprite.setTextSize(2);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString(label, cx, cy + rOuter + 12);
+    display.setTextDatum(MC_DATUM);
+    display.setTextSize(2);
+    display.setTextColor(TFT_WHITE);
+    display.drawString(label, cx, cy + rOuter + 12);
 
-    display.sprite.setTextSize(3);
+    display.setTextSize(3);
     char buf[16];
     if (unit && unit[0] != '\0')
       snprintf(buf, sizeof(buf), "%.0f %s", value, unit);
     else
       snprintf(buf, sizeof(buf), "%.0f", value);
-    display.sprite.drawString(buf, cx, cy - 6);
+    display.drawString(buf, cx, cy - 6);
   }
 
   void drawRpmGauge(int cx, int cy, int rOuter, int rInner)
@@ -74,15 +74,15 @@ public:
     int redStartAngle = (gaugeStart + (int)(sweepCW * redlineStartFrac)) % 360;
 
     // Full arc base
-    display.sprite.drawSmoothArc(cx, cy, rOuter, rInner, gaugeStart, gaugeEnd, TFT_DARKGREY, TFT_BLACK, false);
+    display.drawSmoothArc(cx, cy, rOuter, rInner, gaugeStart, gaugeEnd, TFT_DARKGREY, TFT_BLACK, false);
     // Redline background zone
-    display.sprite.drawSmoothArc(cx, cy, rOuter, rInner, redStartAngle, gaugeEnd, TFT_RED, TFT_BLACK, false);
+    display.drawSmoothArc(cx, cy, rOuter, rInner, redStartAngle, gaugeEnd, TFT_RED, TFT_BLACK, false);
 
     // Value arc with dynamic color: normal cyan, red if in redline fraction
     float t = constrain((rpm - rpmMin) / (rpmMax - rpmMin), 0.0f, 1.0f);
     int valueAngle = (gaugeStart + (int)(t * sweepCW)) % 360;
     uint32_t valueColor = (t >= redlineStartFrac) ? TFT_RED : TFT_CYAN;
-    display.sprite.drawSmoothArc(cx, cy, rOuter, rInner, gaugeStart, valueAngle, valueColor, TFT_BLACK, true);
+    display.drawSmoothArc(cx, cy, rOuter, rInner, gaugeStart, valueAngle, valueColor, TFT_BLACK, true);
 
     // Needle
     float theta = valueAngle * DEG_TO_RAD;
@@ -93,18 +93,18 @@ public:
     int ny0 = cy + (int)(ny * (rInner + 2));
     int nx1 = cx + (int)(nx * needleLen);
     int ny1 = cy + (int)(ny * needleLen);
-    display.sprite.drawLine(nx0, ny0, nx1, ny1, TFT_WHITE);
+    display.drawLine(nx0, ny0, nx1, ny1, TFT_WHITE);
 
     // Label and value
-    display.sprite.setTextDatum(MC_DATUM);
-    display.sprite.setTextSize(2);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString("RPM", cx, cy + rOuter + 12);
+    display.setTextDatum(MC_DATUM);
+    display.setTextSize(2);
+    display.setTextColor(TFT_WHITE);
+    display.drawString("RPM", cx, cy + rOuter + 12);
 
-    display.sprite.setTextSize(3);
+    display.setTextSize(3);
     char buf[16];
     snprintf(buf, sizeof(buf), "%.0f", rpm);
-    display.sprite.drawString(buf, cx, cy - 6);
+    display.drawString(buf, cx, cy - 6);
   }
 
   void draw() override
@@ -121,10 +121,10 @@ public:
     // Test mode indicator
     if (testMode)
     {
-      display.sprite.setTextDatum(TR_DATUM);
-      display.sprite.setTextSize(2);
-      display.sprite.setTextColor(TFT_YELLOW);
-      display.sprite.drawString("TEST", LCD_WIDTH - 6, 6);
+      display.setTextDatum(TR_DATUM);
+      display.setTextSize(2);
+      display.setTextColor(TFT_YELLOW);
+      display.drawString("TEST", LCD_WIDTH - 6, 6);
     }
   }
 

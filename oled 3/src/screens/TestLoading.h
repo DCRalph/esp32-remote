@@ -28,13 +28,13 @@ public:
     // Foreground spinning arc (anti-aliased)
     int startA = base % 360;
     int endA = (base + sweep) % 360; // ensure proper wrap across 360
-    display.sprite.drawSmoothArc(cx, cy, outerR, innerR, startA, endA, TFT_CYAN, TFT_BLACK, true);
+    display.drawSmoothArc(cx, cy, outerR, innerR, startA, endA, TFT_CYAN, TFT_BLACK, true);
 
     // Optional center text
-    display.sprite.setTextDatum(TC_DATUM);
-    display.sprite.setTextSize(2);
-    display.sprite.setTextColor(TFT_WHITE);
-    display.sprite.drawString("Loading...", LCD_WIDTH / 2, cy + outerR + 20);
+    display.setTextDatum(TC_DATUM);
+    display.setTextSize(2);
+    display.setTextColor(TFT_WHITE);
+    display.drawString("Loading...", LCD_WIDTH / 2, cy + outerR + 20);
   }
 
   void update() override

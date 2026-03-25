@@ -26,34 +26,34 @@ String formatBytes(size_t bytes) {
 
 void SystemInfoScreen::draw()
 {
-  display.sprite.setTextDatum(TL_DATUM); // Top left datum
-  display.sprite.fillScreen(TFT_BLACK); // Clear the screen
+  display.setTextDatum(TL_DATUM);
+  display.fillScreen(TFT_BLACK);
   
-  display.sprite.setTextSize(3);
+  display.setTextSize(3);
 
   // Heap Size
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Heap Size:", 10, 50);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getHeapSize()), 230, 50); // Position the value next to the label
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Heap Size:", 10, 50);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getHeapSize()), 230, 50);
 
   // Free Heap
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Free Heap:", 10, 80);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getFreeHeap()), 230, 80);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Free Heap:", 10, 80);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getFreeHeap()), 230, 80);
 
   // PSRAM Size
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("PSRAM Size:", 10, 110);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getPsramSize()), 230, 110);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("PSRAM Size:", 10, 110);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getPsramSize()), 230, 110);
 
   // Free PSRAM
-  display.sprite.setTextColor(TFT_WHITE);
-  display.sprite.drawString("Free PSRAM:", 10, 140);
-  display.sprite.setTextColor(TFT_CYAN);
-  display.sprite.drawString(formatBytes(ESP.getFreePsram()), 230, 140);
+  display.setTextColor(TFT_WHITE);
+  display.drawString("Free PSRAM:", 10, 140);
+  display.setTextColor(TFT_CYAN);
+  display.drawString(formatBytes(ESP.getFreePsram()), 230, 140);
 
 }
 

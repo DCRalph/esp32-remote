@@ -1,6 +1,23 @@
 {
   "files.associations": {
-    "ios": "cpp"
+    "ios": "cpp",
+    "__bit_reference": "cpp",
+    "__hash_table": "cpp",
+    "__split_buffer": "cpp",
+    "__tree": "cpp",
+    "array": "cpp",
+    "map": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp",
+    "initializer_list": "cpp",
+    "deque": "cpp",
+    "forward_list": "cpp",
+    "list": "cpp",
+    "regex": "cpp",
+    "set": "cpp",
+    "unordered_set": "cpp"
   },
   "idf.pythonInstallPath": "/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/bin/python3"
 }

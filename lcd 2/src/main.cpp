@@ -126,7 +126,7 @@ void setup()
   // WiFi.begin(WIFI_SSID, WIFI_PASS);
   // WiFi.setAutoReconnect(true);
 
-  wireless.setup();
+  // wireless.setup();
 
   auto syncMgr = SyncManager::getInstance();
 
