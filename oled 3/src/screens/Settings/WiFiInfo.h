@@ -1,13 +1,13 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
 #include "IO/Buttons.h"
 
 class WiFiInfoScreen : public Screen
 {
 public:
-  WiFiInfoScreen(String _name) : Screen(_name){};
+  WiFiInfoScreen(String _name) : Screen(_name) {};
 
   void draw() override;
   void update() override;

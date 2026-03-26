@@ -30,19 +30,66 @@ enum class MenuSize
 
 namespace MenuStyle
 {
-  /** Max menu rows shown per page for each `MenuSize` preset. */
-  constexpr uint8_t itemsPerPage(MenuSize size) noexcept
+  /** First Y coordinate used for menu rows (below top bar); must match `Menu::draw`. */
+  constexpr uint16_t kContentTopY = 22;
+
+  /**
+   * When `display.height()` is not yet known (e.g. static init before `Display::begin`),
+   * assume this height so paging is non-degenerate until the first `draw()` sync.
+   */
+  constexpr uint16_t kFallbackDisplayHeight = 240;
+
+  constexpr int lineHeight(MenuSize size) noexcept
   {
     switch (size)
     {
     case MenuSize::Small:
-      return 10;
+      return 12;
     case MenuSize::Medium:
-      return 7;
+      return 20;
     case MenuSize::Large:
-      return 5;
+    default:
+      return 28;
     }
-    return 3;
+  }
+
+  struct DrawStyle
+  {
+    uint8_t textSize;
+    int lineHeight;
+    uint8_t radius;
+  };
+
+  constexpr DrawStyle drawStyle(MenuSize size) noexcept
+  {
+    const int lh = lineHeight(size);
+    switch (size)
+    {
+    case MenuSize::Small:
+      return {1, lh, 2};
+    case MenuSize::Medium:
+      return {2, lh, 3};
+    case MenuSize::Large:
+    default:
+      return {3, lh, 4};
+    }
+  }
+
+  /**
+   * How many menu rows fit on screen for the given density preset and display height.
+   * Uses the same row height as menu drawing (`drawStyle`) and the content top offset.
+   */
+  constexpr uint8_t itemsPerPage(MenuSize size, uint16_t displayHeight) noexcept
+  {
+    const uint16_t h = displayHeight == 0 ? kFallbackDisplayHeight : displayHeight;
+    if (h <= kContentTopY)
+      return 1;
+    const int avail = static_cast<int>(h) - static_cast<int>(kContentTopY);
+    const int row = lineHeight(size);
+    const int n = row > 0 ? (avail / row) : 1;
+    if (n < 1)
+      return 1;
+    return static_cast<uint8_t>(n > 255 ? 255 : n);
   }
 }
 
@@ -259,8 +306,11 @@ private:
   uint8_t topItem = 0;
 
   MenuSize menuSize = MenuSize::Large;
+  bool manualItemsPerPage = false;
   Menu *activeSubmenu = nullptr;
   Menu *parentMenu = nullptr;
+
+  void syncItemsPerPageWithDisplay();
 
 public:
   std::vector<MenuItem *> items;

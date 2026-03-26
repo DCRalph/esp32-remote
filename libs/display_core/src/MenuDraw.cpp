@@ -11,29 +11,7 @@ namespace
   constexpr uint16_t kMenuActiveBg = TFT_WHITE;
   constexpr uint16_t kMenuActiveText = TFT_BLACK;
 
-  struct MenuDrawStyle
-  {
-    uint8_t textSize;
-    int lineHeight;
-    uint8_t radius;
-  };
-
-  MenuDrawStyle getStyle(MenuSize size)
-  {
-    switch (size)
-    {
-    case MenuSize::Small:
-      return {1, 12, 2};
-    case MenuSize::Medium:
-      return {2, 20, 3};
-    case MenuSize::Large:
-      return {3, 28, 4};
-    default:
-      return {2, 20, 3};
-    }
-  }
-
-  int calcTextY(int y, const MenuDrawStyle &style)
+  int calcTextY(int y, const MenuStyle::DrawStyle &style)
   {
     return y + (style.lineHeight - display.fontHeight()) / 2;
   }
@@ -43,7 +21,7 @@ void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   int maxX = display.width();
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
-  MenuDrawStyle style = getStyle(size);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(size);
 
   display.setTextSize(style.textSize);
   display.setTextDatum(TL_DATUM);
@@ -66,7 +44,7 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   int maxX = display.width();
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
-  MenuDrawStyle style = getStyle(size);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(size);
 
   display.setTextSize(style.textSize);
   display.setTextDatum(TL_DATUM);
@@ -93,7 +71,7 @@ void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   int maxX = display.width();
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
-  MenuDrawStyle style = getStyle(size);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(size);
 
   display.setTextSize(style.textSize);
   display.setTextDatum(TL_DATUM);
@@ -119,7 +97,7 @@ void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   int maxX = display.width();
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
-  MenuDrawStyle style = getStyle(size);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(size);
 
   if (!_active && selected)
   {
@@ -157,7 +135,7 @@ void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
 {
   int maxX = display.width();
   MenuSize size = parent ? parent->getMenuSize() : MenuSize::Large;
-  MenuDrawStyle style = getStyle(size);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(size);
   String dispText = getName();
   String optionText = getSelectedOption();
 
@@ -187,6 +165,8 @@ void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
 
 void Menu::draw()
 {
+  syncItemsPerPageWithDisplay();
+
   int maxX = display.width();
   int maxY = display.height();
   if (activeSubmenu)
@@ -195,9 +175,9 @@ void Menu::draw()
     return;
   }
 
-  MenuDrawStyle style = getStyle(menuSize);
+  MenuStyle::DrawStyle style = MenuStyle::drawStyle(menuSize);
   int lineHeight = style.lineHeight;
-  int startY = 22;
+  int startY = MenuStyle::kContentTopY;
 
   uint8_t itemMap[numItems];
 

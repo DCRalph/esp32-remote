@@ -8,8 +8,8 @@
 #include "IO/Buttons.h"
 #include "Wireless.h"
 
-#include "IO/Display.h"
-#include "IO/ScreenManager.h"
+#include <Display.h>
+#include <ScreenManager.h>
 #include "IO/AmoledDisplayDriver.h"
 #include "MenuInput.h"
 
@@ -152,6 +152,7 @@ void setup()
   menuInputConfig.defaultSelectClicks = 2;
   menuInputConfig.getUpClicks = []() { return (int)ClickButtonUP.clicks; };
   menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
+  menuInputConfig.getSelectClicks = []() { return (int)ClickButtonTRIGGER.clicks; };
   MenuInput::configure(menuInputConfig);
 
   // setup screens

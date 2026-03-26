@@ -1,7 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
 #include "IO/Buttons.h"
 
 class TestLoadingScreen : public Screen

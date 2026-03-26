@@ -1,9 +1,10 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/Buttons.h"
-#include "Wireless.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
+#include <Wireless.h>
 
 class SendScreen : public Screen
 {

@@ -1,7 +1,7 @@
 // #pragma once
 
 // #include "config.h"
-// #include "IO/Display.h"
+// #include <Display.h>
 // #include "IO/Wireless.h"
 
 // static void relayChangeCb(uint8_t cmd, bool *global)
@@ -54,7 +54,6 @@
 //   MenuItemToggle relay4Item = MenuItemToggle("R 4", &globalRelay4, false);
 //   MenuItemToggle relay5Item = MenuItemToggle("R 5", &globalRelay5, false);
 //   MenuItemToggle relay6Item = MenuItemToggle("R 6", &globalRelay6, false);
-  
 
 //   void draw() override;
 //   void update() override;

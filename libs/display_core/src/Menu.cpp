@@ -467,7 +467,26 @@ Menu::Menu(MenuSize _size)
 
 void Menu::setItemsPerPage(uint8_t _itemsPerPage)
 {
+  manualItemsPerPage = true;
   maxItemsPerPage = _itemsPerPage;
+  numItemsPerPage = numItems < maxItemsPerPage ? numItems : maxItemsPerPage;
+}
+
+void Menu::syncItemsPerPageWithDisplay()
+{
+  if (manualItemsPerPage)
+    return;
+
+  uint16_t h = display.height();
+  if (h == 0)
+    return;
+
+  uint8_t want = MenuStyle::itemsPerPage(menuSize, h);
+  if (want == maxItemsPerPage)
+    return;
+
+  maxItemsPerPage = want;
+  numItemsPerPage = numItems < maxItemsPerPage ? numItems : maxItemsPerPage;
 }
 
 uint8_t Menu::getItemsPerPage()
@@ -478,7 +497,8 @@ uint8_t Menu::getItemsPerPage()
 void Menu::setMenuSize(MenuSize _size)
 {
   menuSize = _size;
-  maxItemsPerPage = MenuStyle::itemsPerPage(_size);
+  manualItemsPerPage = false;
+  maxItemsPerPage = MenuStyle::itemsPerPage(_size, display.height());
 
   numItems = items.size();
   numItemsPerPage = numItems < maxItemsPerPage ? numItems : maxItemsPerPage;

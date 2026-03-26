@@ -37,6 +37,7 @@ static void pollInputs()
   {
     int up = s_config.getUpClicks ? s_config.getUpClicks() : 0;
     int down = s_config.getDownClicks ? s_config.getDownClicks() : 0;
+    int select = s_config.getSelectClicks ? s_config.getSelectClicks() : 0;
     int nav = s_config.navigationClicks > 0 ? s_config.navigationClicks : 1;
     if (down == nav)
       s_cachedNavDelta = 1;
@@ -46,6 +47,8 @@ static void pollInputs()
       s_cachedSelectClicks = down;
     else if (up > nav)
       s_cachedSelectClicks = up;
+    if (select > 0)
+      s_cachedSelectClicks = select;
     break;
   }
   case MenuInputMode::Buttons3:

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
 #include "IO/Buttons.h"
 #include "IO/GPIO.h"
 
@@ -10,7 +12,7 @@ class HomeScreen : public Screen
 public:
   HomeScreen(String _name);
 
-  Menu menu = Menu();
+  Menu menu = Menu(MenuSize::Large);
 
   MenuItemNavigate ControlMenuItem = MenuItemNavigate("Control", "Control");
   MenuItemNavigate settingsMenuItem = MenuItemNavigate("Settings", "Settings");

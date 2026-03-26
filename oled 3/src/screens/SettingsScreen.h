@@ -1,7 +1,9 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
 #include "IO/Buttons.h"
 
 static const char *TAG = "Settings";
@@ -22,6 +24,7 @@ public:
   MenuItemNavigate systemInfoItem = MenuItemNavigate("System Info", "System Info");
   MenuItemNavigate wifiItem = MenuItemNavigate("Wi-Fi Info", "Wi-Fi info");
   MenuItemNavigate rssiItem = MenuItemNavigate("RSSI", "RSSI");
+  MenuItemNavigate meshItem = MenuItemNavigate("Engine", "Engine");
 
   MenuItemToggle rainbowModeItem = MenuItemToggle("Rainbow Mode", &rainbowMode, false);
 

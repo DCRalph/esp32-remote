@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
 #include "IO/Buttons.h"
 #include "IO/Battery.h"
 

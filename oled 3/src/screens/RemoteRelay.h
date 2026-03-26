@@ -1,7 +1,7 @@
 // #pragma once
 
 // #include "config.h"
-// #include "IO/Display.h"
+// #include <Display.h>
 // #include "IO/Buttons.h"
 // #include "IO/Wireless.h"
 
@@ -98,10 +98,12 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
+#include <Wireless.h>
 #include "IO/GPIO.h"
 // #include "IO/myespnow.h"
-#include "Wireless.h"
 
 static void relayChangeCb(uint8_t cmd, bool *global)
 {

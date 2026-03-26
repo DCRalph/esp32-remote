@@ -1,13 +1,15 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
 #include "IO/Buttons.h"
 
 class ErrorScreen : public Screen
 {
 public:
-  ErrorScreen(String _name) : Screen(_name){};
+  ErrorScreen(String _name) : Screen(_name) {};
 
   void draw() override;
   void update() override;

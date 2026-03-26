@@ -1,8 +1,10 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
-#include "Wireless.h"
+#include <Display.h>
+#include <ScreenManager.h>
+#include <Menu.h>
+#include <Wireless.h>
 #include "IO/GPIO.h"
 
 class ControlScreen : public Screen

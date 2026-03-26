@@ -1,25 +1,31 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
 #include "IO/Buttons.h"
 
 class SystemInfoScreen : public Screen
 {
 public:
-  SystemInfoScreen(String _name) : Screen(_name){};
+  SystemInfoScreen(String _name) : Screen(_name) {};
 
   void draw() override;
   void update() override;
 };
 
 // Helper function to convert bytes to a human-readable format (KB or MB)
-String formatBytes(size_t bytes) {
-  if (bytes < 1024) {
+String formatBytes(size_t bytes)
+{
+  if (bytes < 1024)
+  {
     return String(bytes) + " B";
-  } else if (bytes < (1024 * 1024)) {
+  }
+  else if (bytes < (1024 * 1024))
+  {
     return String(bytes / 1024.0, 2) + " KB";
-  } else {
+  }
+  else
+  {
     return String(bytes / 1024.0 / 1024.0, 2) + " MB";
   }
 }
@@ -28,7 +34,7 @@ void SystemInfoScreen::draw()
 {
   display.setTextDatum(TL_DATUM);
   display.fillScreen(TFT_BLACK);
-  
+
   display.setTextSize(3);
 
   // Heap Size
@@ -54,7 +60,6 @@ void SystemInfoScreen::draw()
   display.drawString("Free PSRAM:", 10, 140);
   display.setTextColor(TFT_CYAN);
   display.drawString(formatBytes(ESP.getFreePsram()), 230, 140);
-
 }
 
 void SystemInfoScreen::update()

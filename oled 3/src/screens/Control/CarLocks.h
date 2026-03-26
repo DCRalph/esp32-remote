@@ -1,7 +1,7 @@
 // #pragma once
 
 // #include "config.h"
-// #include "IO/Display.h"
+// #include <Display.h>
 // #include "IO/Buttons.h"
 // #include "IO/Wireless.h"
 // #include "IO/Popup.h"
@@ -25,7 +25,7 @@
 //   display.sprite.setTextDatum(TL_DATUM);
 //   display.sprite.setTextColor(TFT_WHITE);
 //   display.sprite.setTextSize(4);
-  
+
 //   display.sprite.drawString("Lock", 90, LCD_HEIGHT - 80);
 
 //   display.sprite.drawString("Unlock", 280, LCD_HEIGHT - 80);

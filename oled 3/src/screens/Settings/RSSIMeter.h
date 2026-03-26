@@ -1,13 +1,13 @@
 #pragma once
 
 #include "config.h"
-#include "IO/Display.h"
+#include <Display.h>
 #include "IO/Buttons.h"
 
 class RSSIMeter : public Screen
 {
 public:
-  RSSIMeter(String _name) : Screen(_name){};
+  RSSIMeter(String _name) : Screen(_name) {};
 
   void draw() override;
   void update() override;
