@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 // #include "IO/myespnow.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 
 class EspnowSwitchScreen : public Screen
 {
@@ -30,7 +30,7 @@ void EspnowSwitchScreen::draw()
 
   display.u8g2.setFont(u8g2_font_koleeko_tf);
 
-  sprintf(buffer, "Res: %s", wireless.lastStatus == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
+  sprintf(buffer, "Res: %s", wireless.getLastStatus() == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
   display.u8g2.drawStr(0, 24, buffer);
 
   sprintf(buffer, "%s", state == 1 ? "Locking" : state == 2 ? "Unlocking"
@@ -47,7 +47,7 @@ void EspnowSwitchScreen::update()
 
   if (ClickButtonEnc.clicks == 2)
   {
-    data_packet p;
+    TransportPacket p{};
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 0; // lock
@@ -60,7 +60,7 @@ void EspnowSwitchScreen::update()
 
   if (ClickButtonEnc.clicks == 3)
   {
-    data_packet p;
+    TransportPacket p{};
     p.type = 11; // car locks
     p.len = 1;
     p.data[0] = 1; // unlock

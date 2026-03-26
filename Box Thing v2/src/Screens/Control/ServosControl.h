@@ -3,7 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 #include "IO/ScreenManager.h"
 #include "IO/Menu.h"
 
@@ -69,15 +69,15 @@ void ServoControlScreen::update() {
     servoData.servoX = servoX;
     servoData.servoY = servoY;
 
-    // Prepare a fullPacket for transmission
-    fullPacket fp;
+    // Prepare a WirelessFrame for transmission
+    WirelessFrame fp;
     memcpy(fp.mac, peer_addr, 6);
     fp.direction = PacketDirection::SEND;
-    fp.p.type = 0xB1; // Use a unique type identifier for servo data
-    fp.p.len = sizeof(ServoDataStruct);
+    fp.packet.type = 0xB1; // Use a unique type identifier for servo data
+    fp.packet.len = static_cast<uint16_t>(sizeof(ServoDataStruct));
 
     // Copy servo data into packet payload
-    memcpy(fp.p.data, &servoData, sizeof(ServoDataStruct));
+    memcpy(fp.packet.data, &servoData, sizeof(ServoDataStruct));
 
     // Send the packet
     wireless.send(&fp);

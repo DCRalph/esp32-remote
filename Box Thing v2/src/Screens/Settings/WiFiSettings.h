@@ -3,7 +3,6 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
 
 #include "IO/Menu.h"
 
@@ -68,7 +67,7 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
 
                            if (wireless.isSetupDone()) // espnow is on
                            {
-                             wireless.unSetup();
+                             teardownMeshTransport();
                              preferences.putBool("espnowOn", false);
                            }
 
@@ -83,7 +82,7 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
                                {
                                  if (wireless.isSetupDone()) // espnow is on
                                  {
-                                   wireless.unSetup();
+                                   teardownMeshTransport();
                                    preferences.putBool("espnowOn", false);
                                  }
                                  else
@@ -95,7 +94,7 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
                                    }
 
                                    wm.disconnect();
-                                   wireless.setup();
+                                   beginMeshTransport();
                                    preferences.putBool("espnowOn", true);
                                  }
 
@@ -114,7 +113,7 @@ WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
                                  {
                                    if (wireless.isSetupDone()) // espnow is on
                                    {
-                                     wireless.unSetup();
+                                     teardownMeshTransport();
                                    }
                                    wm.disconnect();
                                    wm.startConfigPortal(AP_SSID);

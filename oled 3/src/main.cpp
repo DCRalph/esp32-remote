@@ -7,39 +7,14 @@
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
 #include "Wireless.h"
+#include <Mesh.h>
 
 #include <Display.h>
 #include <ScreenManager.h>
 #include "IO/AmoledDisplayDriver.h"
 #include "MenuInput.h"
 
-#include "screens/Error.h"
-
-// /
 #include "screens/Home.h"
-#include "screens/Control.h"
-#include "screens/boxThingEncoder.h"
-
-// /settings
-#include "screens/SettingsScreen.h"
-#include "screens/Settings/RSSIMeter.h"
-#include "screens/Settings/batteryScreen.h"
-#include "screens/Settings/WiFiInfo.h"
-#include "screens/Settings/SystemInfoScreen.h"
-
-// /control
-#include "screens/Send.h"
-// #include "screens/Control/CarLocks.h"
-// #include "screens/Control/Car.h"
-// #include "screens/Control/CarFlash.h"
-
-// /remoteRelay
-#include "screens/RemoteRelay.h"
-
-// Test
-#include "screens/TestLoading.h"
-// Engine
-#include "screens/Engine.h"
 
 #include "IO/GPIO.h"
 
@@ -50,30 +25,6 @@ int getBatteryPercentage()
 {
   return battery.getPercentageI();
 }
-
-ErrorScreen errorScreen("Error");
-
-// /
-HomeScreen homeScreen("Home");
-ControlScreen controlScreen("Control");
-BoxThingEncoderScreen boxThingEncoderScreen("BoxThingEncoder");
-
-// /settings
-Settings settings("Settings");
-RSSIMeter rssiMeter("RSSI");
-BatteryScreen batteryScreen("Battery");
-WiFiInfoScreen WiFiInfo("Wi-Fi info");
-SystemInfoScreen systemInfoScreen("System Info");
-
-// /control
-// CarLocksScreen carLocksScreen("CarLocks");
-// CarControlScreen carScreen("Car");
-// CarFlashScreen carFlashScreen("CarFlash");
-
-// /remoteRelay
-RemoteRelayScreen remoteRelayScreen("RemoteRelay");
-TestLoadingScreen testLoadingScreen("Test Loading");
-EngineScreen engineScreen("Engine");
 
 unsigned long long prevMillis1;
 int interval1 = 500;
@@ -122,16 +73,14 @@ void onWirelessRecv(const TransportAddress &, const TransportPacket &pkt)
     globalRelay6 = pkt.data[5];
   }
 
-  else if (pkt.type == 0xa3)
-  {
-    boxThingEncoderScreen.onRecvPacket(pkt);
-  }
 }
 
 void setup()
 {
   initConfig();
   configureDeepSleep();
+
+  Serial.begin(115200);
 
   GpIO::initIO();
   led.On();
@@ -150,44 +99,40 @@ void setup()
   menuInputConfig.mode = MenuInputMode::Buttons2;
   menuInputConfig.navigationClicks = 1;
   menuInputConfig.defaultSelectClicks = 2;
-  menuInputConfig.getUpClicks = []() { return (int)ClickButtonUP.clicks; };
-  menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
-  menuInputConfig.getSelectClicks = []() { return (int)ClickButtonTRIGGER.clicks; };
+  menuInputConfig.getUpClicks = []()
+  { return (int)ClickButtonUP.clicks; };
+  menuInputConfig.getDownClicks = []()
+  { return (int)ClickButtonDOWN.clicks; };
+  menuInputConfig.getSelectClicks = []()
+  { return (int)ClickButtonTRIGGER.clicks; };
   MenuInput::configure(menuInputConfig);
 
-  // setup screens
-  screenManager.addScreen(&errorScreen);
+  screenManager.setScreen(&HomeScreen);
 
-  // /
-  screenManager.addScreen(&homeScreen);
-  screenManager.addScreen(&controlScreen);
-  screenManager.addScreen(&boxThingEncoderScreen);
+  auto syncMgr = SyncManager::getInstance();
 
-  // /settings
-  screenManager.addScreen(&rssiMeter);
-  screenManager.addScreen(&settings);
-  screenManager.addScreen(&batteryScreen);
-  screenManager.addScreen(&WiFiInfo);
-  screenManager.addScreen(&systemInfoScreen);
+  syncMgr->setTransport(&wireless);
+  syncMgr->setDeviceIdProvider([]() -> uint32_t
+                               { return 0x69; });
 
-  // /control
-  // screenManager.addScreen(&carLocksScreen);
-  // screenManager.addScreen(&carScreen);
-  // screenManager.addScreen(&carFlashScreen);
+  syncMgr->setModePersistence(
+      []() -> uint8_t
+      {
+        if (!preferences.isKey("meshSyncMode"))
+          return static_cast<uint8_t>(SyncMode::JOIN);
+        return preferences.getUChar("meshSyncMode", static_cast<uint8_t>(SyncMode::JOIN));
+      },
+      [](uint8_t m)
+      {
+        preferences.putUChar("meshSyncMode", m);
+      });
 
-  // /remoteRelay
-  screenManager.addScreen(&remoteRelayScreen);
-  screenManager.addScreen(&testLoadingScreen);
-  screenManager.addScreen(&engineScreen);
-
-  wireless.begin();
-  wireless.setReceiveCallback(onWirelessRecv);
+  syncMgr->begin();
 
   prevMillis1 = millis();
 
   led.Off();
   btnLed.Off();
-  screenManager.setScreen("Home");
   buttons.update();
 
   xTaskCreatePinnedToCore(
@@ -266,12 +211,13 @@ void loop()
 {
   fps++;
 
-  wireless.loop();
+  SyncManager::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {
     prevMillis1 = millis();
     battery.update();
+    ESP_LOGI("Loop", "Battery: %fV", battery.getVoltage());
   }
 
   if (!sleepLoop() && millis() - lastDraw > (1000 / 30))

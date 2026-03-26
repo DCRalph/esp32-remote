@@ -14,26 +14,7 @@
 #include "TFTDisplayDriver.h"
 #include "ScreenManager.h"
 
-#include "screens/Error.h"
-
 #include "screens/Home.h"
-#include "screens/MenuTest.h"
-
-#include "screens/SettingsScreen.h"
-#include "screens/Settings/RSSIMeter.h"
-#include "screens/Settings/batteryScreen.h"
-#include "screens/Settings/WiFiInfo.h"
-#include "screens/Settings/SystemInfoScreen.h"
-#include "screens/Settings/MeshScreen.h"
-
-#include "screens/Send.h"
-
-#include "screens/Control.h"
-
-// /control
-#include "screens/Control/CarLocks.h"
-#include "screens/Control/Car.h"
-#include "screens/Control/CarFlash.h"
 
 WiFiClient espClient;
 
@@ -43,26 +24,6 @@ int getBatteryPercentage()
 {
   return battery.getPercentageI();
 }
-
-ErrorScreen errorScreen("Error");
-HomeScreen homeScreen("Home");
-MenuTestScreen menuTestScreen("Menu Test");
-
-Settings settings("Settings");
-RSSIMeter rssiMeter("RSSI");
-BatteryScreen batteryScreen("Battery");
-WiFiInfoScreen WiFiInfo("Wi-Fi info");
-SystemInfoScreen systemInfoScreen("System Info");
-MeshScreen meshScreen("Mesh");
-
-SendScreen sendScreen("Send");
-
-ControlScreen controlScreen("Control");
-
-// /control
-CarLocksScreen carLocksScreen("CarLocks");
-CarControlScreen carScreen("Car");
-CarFlashScreen carFlashScreen("CarFlash");
 
 unsigned long long prevMillis1;
 int interval1 = 200;
@@ -107,35 +68,7 @@ void setup()
   menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
   MenuInput::configure(menuInputConfig);
 
-  // setup screens
-  screenManager.addScreen(&errorScreen);
-  screenManager.addScreen(&homeScreen);
-  screenManager.addScreen(&menuTestScreen);
-
-  // /settings
-  screenManager.addScreen(&rssiMeter);
-  screenManager.addScreen(&settings);
-  screenManager.addScreen(&batteryScreen);
-  screenManager.addScreen(&WiFiInfo);
-  screenManager.addScreen(&systemInfoScreen);
-  screenManager.addScreen(&meshScreen);
-
-  screenManager.addScreen(&sendScreen);
-
-  screenManager.addScreen(&controlScreen);
-
-  // /control
-  screenManager.addScreen(&carLocksScreen);
-  screenManager.addScreen(&carScreen);
-  screenManager.addScreen(&carFlashScreen);
-
-  screenManager.setScreen("Home");
-
-  // WiFi.mode(WIFI_STA);
-  // WiFi.begin(WIFI_SSID, WIFI_PASS);
-  // WiFi.setAutoReconnect(true);
-
-  // wireless.setup();
+  screenManager.setScreen(&HomeScreen);
 
   auto syncMgr = SyncManager::getInstance();
 
@@ -143,8 +76,7 @@ void setup()
 
   syncMgr->setDeviceIdProvider([]() -> uint32_t
                                {
-                                 return 0x69;
-                                 //
+                                 return 0x67;
                                });
 
   syncMgr->setModePersistence(
@@ -160,35 +92,6 @@ void setup()
       });
 
   syncMgr->begin();
-
-  // WiFi.mode(WIFI_STA);
-  // esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
-
-  // WiFi.disconnect();
-  // if (esp_now_init() == ESP_OK)
-  // {
-  //   Serial.println("ESPNow Init Success");
-  // }
-  // else
-  // {
-  //   Serial.println("ESPNow Init Failed");
-  //   // Retry InitESPNow, add a counte and then restart?
-  //   // InitESPNow();
-  //   // or Simply Restart
-  //   ESP.restart();
-  // }
-
-  // memcpy(peerInfo.peer_addr, peer_addr, 6);
-  // peerInfo.channel = 1;
-  // peerInfo.encrypt = false;
-  // // peerInfo.ifidx = WIFI_IF_STA;
-
-  // if (esp_now_add_peer(&peerInfo) != ESP_OK)
-  // {
-  //   Serial.println("Failed to add peer");
-  // }
-
-  // esp_now_register_send_cb(OnDataSent);
 
   prevMillis1 = millis();
 }
@@ -252,6 +155,7 @@ bool sleepLoop()
 void loop()
 {
 
+
   buttons.update();
   SyncManager::getInstance()->loop();
 
@@ -259,8 +163,6 @@ void loop()
   {
     prevMillis1 = millis();
     battery.update();
-
-    // Serial.println(battery.getVoltage());
 
     String voltageS = (String)battery.getVoltage();
   }

@@ -134,7 +134,7 @@ MenuItemAction::MenuItemAction(String _name, int8_t _clicksToRun, std::function<
   addFunc(_clicksToRun, _func);
 }
 
-MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_name)
+MenuItemNavigate::MenuItemNavigate(String _name, const Screen2 *_target) : MenuItem(_name)
 {
   type = MenuItemType::Navigate;
   target = _target;
@@ -143,7 +143,7 @@ MenuItemNavigate::MenuItemNavigate(String _name, String _target) : MenuItem(_nam
           { screenManager.setScreen(target); });
 }
 
-void MenuItemNavigate::addRoute(int8_t _clicksToRun, String _target)
+void MenuItemNavigate::addRoute(int8_t _clicksToRun, const Screen2 *_target)
 {
   addFunc(_clicksToRun, [this, _target]()
           { screenManager.setScreen(_target); });
@@ -162,7 +162,9 @@ MenuItemBack::MenuItemBack() : MenuItem("Back")
             else
             {
               screenManager.back();
-            } });
+            }
+            //
+          });
 }
 
 MenuItemToggle::MenuItemToggle(String _name, bool *_value, bool _isMutable) : MenuItem(_name)
@@ -176,8 +178,7 @@ MenuItemToggle::MenuItemToggle(String _name, bool *_value, bool _isMutable) : Me
             if (isMutable)
               *value = !*value;
             if (onChange != nullptr)
-              onChange();
-          });
+              onChange(); });
 }
 
 void MenuItemToggle::setOnChange(std::function<void()> _onChange)
@@ -206,8 +207,7 @@ MenuItemString::MenuItemString(String _name, String *_value) : MenuItem(_name)
   type = MenuItemType::String;
   value = _value;
 
-  addFunc(MENU_DEFUALT_CLICKS, [this]()
-          {});
+  addFunc(MENU_DEFUALT_CLICKS, [this]() {});
 }
 
 void MenuItemString::setValue(String _value)

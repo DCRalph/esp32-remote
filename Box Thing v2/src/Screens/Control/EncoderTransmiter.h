@@ -4,7 +4,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 // #include "IO/myespnow.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 
 class EncoderTransmiterScreen : public Screen
 {
@@ -57,14 +57,15 @@ void EncoderTransmiterScreen::update()
     uint8_t encCountArr[8];
     memcpy(encCountArr, &encCount, 8);
 
-    fullPacket fp;
-    memcpy(fp.mac, peer_addr, 6);
+    WirelessFrame fp;
+    memcpy(fp.mac, TransportAddress::broadcast().getMac(), 6);
+    // fp.mac = TransportAddress::broadcast().getMac();
     fp.direction = PacketDirection::SEND;
-    fp.p.type = 0xa3;
-    fp.p.len = 9;
+    fp.packet.type = 0xa3;
+    fp.packet.len = 9;
 
-    memcpy(fp.p.data, encCountArr, 8);
-    fp.p.data[8] = nextClicks;
+    memcpy(fp.packet.data, encCountArr, 8);
+    fp.packet.data[8] = nextClicks;
 
     wireless.send(&fp);
     nextClicks = 0;

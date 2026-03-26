@@ -3,7 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 #include "IO/Menu.h"
 
 static uint8_t led_controller_addrs[8][8] = {
@@ -221,7 +221,7 @@ struct SyncCreateGroupCmd
   uint32_t groupId; // 0 = auto-generate, otherwise use specified ID
 };
 
-struct SyncModeCmd
+struct CarSyncModeCmd
 {
   uint8_t mode;
 };
@@ -241,7 +241,7 @@ struct SyncDetailedStatus
   int syncMode; // 0=SOLO, 1=JOIN, 2=HOST
 };
 
-enum class SyncMode
+enum class CarSyncMode
 {
   SOLO,
   JOIN,
@@ -500,7 +500,7 @@ public:
   // Selection tracking and state
   uint32_t selectedDeviceId = 0;
   uint32_t selectedGroupId = 0;
-  SyncMode currentSyncMode = SyncMode::SOLO;
+  CarSyncMode currentSyncMode = CarSyncMode::SOLO;
 
   // timing
   uint64_t lastSyncUpdate = 0;
@@ -529,7 +529,7 @@ public:
   void joinSyncGroup(uint32_t groupId);
   void joinSelectedGroup();
   void leaveSyncGroup();
-  void setSyncMode(SyncMode mode);
+  void setSyncMode(CarSyncMode mode);
   void requestSyncMode();
 
   // UI update methods
@@ -724,7 +724,7 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
   // Set up sync mode callback
   syncModeItem.setOnChange([&]()
                            {
-                             currentSyncMode = static_cast<SyncMode>(syncModeItem.getCurrentIndex());
+                             currentSyncMode = static_cast<CarSyncMode>(syncModeItem.getCurrentIndex());
                              setSyncMode(currentSyncMode); });
 
   // Set up device selection callbacks
@@ -757,14 +757,14 @@ CarControlScreen::CarControlScreen(String _name) : Screen(_name)
 
   modeSelectItem.setOnChange([&]()
                              {
-                               fullPacket fp;
-                               memset(&fp, 0, sizeof(fullPacket));
+                               WirelessFrame fp;
+                               memset(&fp, 0, sizeof(WirelessFrame));
 
                                fp.direction = PacketDirection::SEND;
                                memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-                               fp.p.type = CAR_CMD_SET_MODE;
-                               fp.p.len = 1;
-                               fp.p.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
+                               fp.packet.type = CAR_CMD_SET_MODE;
+                               fp.packet.len = 1;
+                               fp.packet.data[0] = static_cast<uint8_t>(modeSelectItem.getCurrentIndex());
                                wireless.send(&fp); });
 
   testEffect1Item.setOnChange([&]()
@@ -1008,23 +1008,23 @@ void CarControlScreen::update()
   {
     lastPing = millis();
 
-    fullPacket fp;
-    memset(&fp, 0, sizeof(fullPacket));
+    WirelessFrame fp;
+    memset(&fp, 0, sizeof(WirelessFrame));
     fp.direction = PacketDirection::SEND;
     memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-    fp.p.type = CAR_CMD_PING;
-    fp.p.len = 0;
+    fp.packet.type = CAR_CMD_PING;
+    fp.packet.len = 0;
 
     wireless.send(&fp);
 
     if (statsActive)
     {
-      fullPacket fp2;
-      memset(&fp2, 0, sizeof(fullPacket));
+      WirelessFrame fp2;
+      memset(&fp2, 0, sizeof(WirelessFrame));
       fp2.direction = PacketDirection::SEND;
       memcpy(fp2.mac, led_controller_addrs[led_controller_addr_index], 6);
-      fp2.p.type = CAR_CMD_GET_STATS;
-      fp2.p.len = 0;
+      fp2.packet.type = CAR_CMD_GET_STATS;
+      fp2.packet.len = 0;
 
       wireless.send(&fp2);
     }
@@ -1034,12 +1034,12 @@ void CarControlScreen::update()
 void CarControlScreen::onEnter()
 {
   // Ping response handler
-  wireless.addOnReceiveFor(CAR_CMD_PING, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CAR_CMD_PING, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
 
                              PingCmd pCmd;
-                             memcpy(&pCmd, fp->p.data, sizeof(PingCmd));
+                             memcpy(&pCmd, fp->packet.data, sizeof(PingCmd));
 
                              mode = pCmd.mode;
                              modeSelectItem.setCurrentIndex((uint8_t)mode);
@@ -1056,22 +1056,22 @@ void CarControlScreen::onEnter()
                            });
 
   // Set mode response handler
-  wireless.addOnReceiveFor(CAR_CMD_SET_MODE, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CAR_CMD_SET_MODE, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
 
-                             mode = static_cast<ApplicationMode>(fp->p.data[0]);
+                             mode = static_cast<ApplicationMode>(fp->packet.data[0]);
                              modeSelectItem.setCurrentIndex((uint8_t)mode);
                              //
                            });
 
   // Get effects response handler
-  wireless.addOnReceiveFor(CAR_CMD_GET_EFFECTS, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CAR_CMD_GET_EFFECTS, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
 
                              EffectsCmd eCmd;
-                             memcpy(&eCmd, fp->p.data, sizeof(EffectsCmd));
+                             memcpy(&eCmd, fp->packet.data, sizeof(EffectsCmd));
 
                              leftIndicatorEffectActive = eCmd.leftIndicator;
                              rightIndicatorEffectActive = eCmd.rightIndicator;
@@ -1110,12 +1110,12 @@ void CarControlScreen::onEnter()
                            });
 
   // Get inputs response handler
-  wireless.addOnReceiveFor(CAR_CMD_GET_INPUTS, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CAR_CMD_GET_INPUTS, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
 
                              InputsCmd iCmd;
-                             memcpy(&iCmd, fp->p.data, sizeof(InputsCmd));
+                             memcpy(&iCmd, fp->packet.data, sizeof(InputsCmd));
 
                              accOn = iCmd.accOn;
                              indicatorLeft = iCmd.indicatorLeft;
@@ -1128,18 +1128,18 @@ void CarControlScreen::onEnter()
                            });
 
   // Get stats response handler
-  wireless.addOnReceiveFor(CAR_CMD_GET_STATS, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CAR_CMD_GET_STATS, [&](WirelessFrame *fp)
                            {
-                             memcpy(&stats, fp->p.data, sizeof(AppStats));
+                             memcpy(&stats, fp->packet.data, sizeof(AppStats));
 
                              //
                            });
 
   // Sync management response handlers
-  wireless.addOnReceiveFor(CMD_SYNC_GET_DEVICES, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_GET_DEVICES, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             memcpy(&syncDevices, fp->p.data, sizeof(SyncDevicesResponse)); 
+                             memcpy(&syncDevices, fp->packet.data, sizeof(SyncDevicesResponse)); 
                              
                              // Log received devices data
                              String logMsg = "=== SYNC DEVICES RECEIVED ===\n";
@@ -1161,10 +1161,10 @@ void CarControlScreen::onEnter()
                              
                              updateDevicesDisplay(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUPS, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUPS, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             memcpy(&syncGroups, fp->p.data, sizeof(SyncGroupsResponse));
+                             memcpy(&syncGroups, fp->packet.data, sizeof(SyncGroupsResponse));
                              
                              // Log received groups data
                              String logMsg = "=== SYNC GROUPS RECEIVED ===\n";
@@ -1187,10 +1187,10 @@ void CarControlScreen::onEnter()
                              
                              updateGroupsDisplay(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUP_INFO, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_GET_GROUP_INFO, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             memcpy(&syncCurrentGroup, fp->p.data, sizeof(SyncCurrentGroupInfo));
+                             memcpy(&syncCurrentGroup, fp->packet.data, sizeof(SyncCurrentGroupInfo));
                              
                              // Log received group info data
                              String logMsg = "=== SYNC GROUP INFO RECEIVED ===\n";
@@ -1217,10 +1217,10 @@ void CarControlScreen::onEnter()
                              updateCurrentGroupDisplay();
                              updateGroupMembersDisplay(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_GET_STATUS, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_GET_STATUS, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             memcpy(&syncStatus, fp->p.data, sizeof(SyncDetailedStatus));
+                             memcpy(&syncStatus, fp->packet.data, sizeof(SyncDetailedStatus));
                              
                              // Log received status data
                              String logMsg = "=== SYNC STATUS RECEIVED ===\n";
@@ -1239,7 +1239,7 @@ void CarControlScreen::onEnter()
                              
                              updateThisDeviceDisplay(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_JOIN_GROUP, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_JOIN_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
                              display.showNotification("Joined group!", 1500);
@@ -1247,7 +1247,7 @@ void CarControlScreen::onEnter()
                              requestSyncStatus();
                              requestSyncGroupInfo(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_LEAVE_GROUP, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_LEAVE_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
                              display.showNotification("Left group!", 1500);
@@ -1255,7 +1255,7 @@ void CarControlScreen::onEnter()
                              memset(&syncCurrentGroup, 0, sizeof(syncCurrentGroup));
                              requestSyncStatus(); });
 
-  wireless.addOnReceiveFor(CMD_SYNC_CREATE_GROUP, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_CREATE_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
                              display.showNotification("Group created!", 1500);
@@ -1264,20 +1264,20 @@ void CarControlScreen::onEnter()
                              requestSyncGroupInfo(); });
 
   // Set sync mode response handler
-  wireless.addOnReceiveFor(CMD_SYNC_SET_MODE, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_SET_MODE, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             uint8_t currentMode = fp->p.data[0];
+                             uint8_t currentMode = fp->packet.data[0];
                              display.showNotification("Sync mode set!", 1500);
                              // Could update UI to reflect new mode if needed
                            });
 
   // Get sync mode response handler
-  wireless.addOnReceiveFor(CMD_SYNC_GET_MODE, [&](fullPacket *fp)
+  wireless.addOnReceiveFor(CMD_SYNC_GET_MODE, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             uint8_t mode = fp->p.data[0];
-                             currentSyncMode = static_cast<SyncMode>(mode);
+                             uint8_t mode = fp->packet.data[0];
+                             currentSyncMode = static_cast<CarSyncMode>(mode);
                              syncModeItem.setCurrentIndex(mode); });
 
   led_controller_addr_index = preferences.getUInt("ctrlr_addr_idx", 0);
@@ -1292,11 +1292,11 @@ void CarControlScreen::onEnter()
 
 void CarControlScreen::sendEffects()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CAR_CMD_SET_EFFECTS;
+  fp.packet.type = CAR_CMD_SET_EFFECTS;
 
   EffectsCmd eCmd = {0};
 
@@ -1329,31 +1329,31 @@ void CarControlScreen::sendEffects()
   eCmd.colorFade = colorFadeEffectActive;
   eCmd.commit = commitEffectActive;
 
-  fp.p.len = sizeof(eCmd);
-  memcpy(fp.p.data, &eCmd, sizeof(eCmd));
+  fp.packet.len = sizeof(eCmd);
+  memcpy(fp.packet.data, &eCmd, sizeof(eCmd));
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::getEffects()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CAR_CMD_GET_EFFECTS;
-  fp.p.len = 0;
+  fp.packet.type = CAR_CMD_GET_EFFECTS;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::sendInputs()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CAR_CMD_SET_INPUTS;
+  fp.packet.type = CAR_CMD_SET_INPUTS;
 
   InputsCmd iCmd = {0};
   iCmd.accOn = accOn;
@@ -1363,37 +1363,37 @@ void CarControlScreen::sendInputs()
   iCmd.brake = brake;
   iCmd.reverse = reverse;
 
-  fp.p.len = sizeof(iCmd);
-  memcpy(fp.p.data, &iCmd, sizeof(iCmd));
+  fp.packet.len = sizeof(iCmd);
+  memcpy(fp.packet.data, &iCmd, sizeof(iCmd));
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::getInputs()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CAR_CMD_GET_INPUTS;
-  fp.p.len = 0;
+  fp.packet.type = CAR_CMD_GET_INPUTS;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::triggerSequence(uint8_t seq)
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CAR_CMD_TRIGGER_SEQUENCE;
+  fp.packet.type = CAR_CMD_TRIGGER_SEQUENCE;
 
   TriggerSequenceCmd tCmd = {0};
   tCmd.sequence = seq;
 
-  fp.p.len = sizeof(tCmd);
-  memcpy(fp.p.data, &tCmd, sizeof(tCmd));
+  fp.packet.len = sizeof(tCmd);
+  memcpy(fp.packet.data, &tCmd, sizeof(tCmd));
 
   wireless.send(&fp);
 }
@@ -1415,94 +1415,94 @@ void CarControlScreen::syncRefreshData(bool showNotification)
 
 void CarControlScreen::leaveSyncGroup()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_LEAVE_GROUP;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_LEAVE_GROUP;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::syncCreateGroup(uint32_t groupId)
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_CREATE_GROUP;
+  fp.packet.type = CMD_SYNC_CREATE_GROUP;
 
   SyncCreateGroupCmd cmd = {0};
   cmd.groupId = groupId; // 0 = auto-generate
 
-  fp.p.len = sizeof(cmd);
-  memcpy(fp.p.data, &cmd, sizeof(cmd));
+  fp.packet.len = sizeof(cmd);
+  memcpy(fp.packet.data, &cmd, sizeof(cmd));
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::requestSyncDevices()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_DEVICES;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_GET_DEVICES;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::requestSyncGroups()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_GROUPS;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_GET_GROUPS;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::requestSyncGroupInfo()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_GROUP_INFO;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_GET_GROUP_INFO;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::requestSyncStatus()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_STATUS;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_GET_STATUS;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::joinSyncGroup(uint32_t groupId)
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_JOIN_GROUP;
+  fp.packet.type = CMD_SYNC_JOIN_GROUP;
 
   SyncJoinGroupCmd cmd = {0};
   cmd.groupId = groupId;
 
-  fp.p.len = sizeof(cmd);
-  memcpy(fp.p.data, &cmd, sizeof(cmd));
+  fp.packet.len = sizeof(cmd);
+  memcpy(fp.packet.data, &cmd, sizeof(cmd));
 
   wireless.send(&fp);
 }
@@ -1520,31 +1520,31 @@ void CarControlScreen::joinSelectedGroup()
   }
 }
 
-void CarControlScreen::setSyncMode(SyncMode mode)
+void CarControlScreen::setSyncMode(CarSyncMode mode)
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_SET_MODE;
+  fp.packet.type = CMD_SYNC_SET_MODE;
 
-  SyncModeCmd cmd = {0};
+  CarSyncModeCmd cmd = {0};
   cmd.mode = static_cast<uint8_t>(mode);
 
-  fp.p.len = sizeof(cmd);
-  memcpy(fp.p.data, &cmd, sizeof(cmd));
+  fp.packet.len = sizeof(cmd);
+  memcpy(fp.packet.data, &cmd, sizeof(cmd));
 
   wireless.send(&fp);
 }
 
 void CarControlScreen::requestSyncMode()
 {
-  fullPacket fp;
-  memset(&fp, 0, sizeof(fullPacket));
+  WirelessFrame fp;
+  memset(&fp, 0, sizeof(WirelessFrame));
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, led_controller_addrs[led_controller_addr_index], 6);
-  fp.p.type = CMD_SYNC_GET_MODE;
-  fp.p.len = 0;
+  fp.packet.type = CMD_SYNC_GET_MODE;
+  fp.packet.len = 0;
 
   wireless.send(&fp);
 }

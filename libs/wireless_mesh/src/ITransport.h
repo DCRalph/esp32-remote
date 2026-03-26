@@ -30,6 +30,11 @@ struct TransportAddress
     return addr;
   }
 
+  uint8_t *getMac()
+  {
+    return bytes.data();
+  }
+
   static constexpr TransportAddress broadcast()
   {
     return TransportAddress{{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};

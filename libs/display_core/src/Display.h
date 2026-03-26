@@ -88,8 +88,6 @@ struct DisplayConfig
   DisplayDriverOps ops;
 };
 
-class Screen;
-
 class Display
 {
 public:
@@ -138,22 +136,6 @@ private:
   DisplayConfig config;
   ScreenManager *screenManager;
   bool showMenuBar;
-};
-
-class Screen
-{
-public:
-  String name;
-
-  uint16_t topBarColor = TFT_BLUE;
-  uint16_t topBarTextColor = TFT_BLACK;
-
-  Screen(String _name);
-
-  virtual void draw();
-  virtual void update();
-  virtual void onEnter();
-  virtual void onExit();
 };
 
 extern Display display;

@@ -10,7 +10,8 @@
 #include "IO/GPIO.h"
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
+#include <Mesh.h>
 #include "IO/Battery.h"
 #include "IO/Haptic.h"
 #include "IO/PartitionTable.h"
@@ -106,17 +107,46 @@ void setupWiFi()
   }
 }
 
-void espNowCb(fullPacket *fp)
+void espNowCb(WirelessFrame *frame)
 {
-  if (fp->p.type == CMD_PING)
+  if (frame->packet.type == CMD_PING)
   {
     remoteRelay.lastConfirmedPing = millis();
   }
 }
 
+void beginMeshTransport()
+{
+  auto *sync = SyncManager::getInstance();
+  sync->setTransport(&wireless);
+  sync->setDeviceIdProvider([]()
+                             {
+                               uint64_t mac = ESP.getEfuseMac();
+                               return static_cast<uint32_t>(mac ^ (mac >> 32));
+                             });
+  sync->setModePersistence(
+      []()
+      {
+        if (!preferences.isKey("meshSyncMode"))
+          return static_cast<uint8_t>(SyncMode::JOIN);
+        return preferences.getUChar("meshSyncMode", static_cast<uint8_t>(SyncMode::JOIN));
+      },
+      [](uint8_t m)
+      {
+        preferences.putUChar("meshSyncMode", m);
+      });
+  sync->begin();
+}
+
+void teardownMeshTransport()
+{
+  wireless.unSetup();
+  SyncManager::getInstance()->setTransport(nullptr);
+}
+
 void setupESPNOW()
 {
-  wireless.setup();
+  beginMeshTransport();
   ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::EspNowStarted);
 }
 
@@ -252,6 +282,8 @@ void loop()
 
   if (!wireless.isSetupDone())
     wm.process();
+  else
+    SyncManager::getInstance()->loop();
 
   if (otaSetup)
     ArduinoOTA.handle();

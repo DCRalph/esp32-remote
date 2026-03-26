@@ -221,9 +221,7 @@ void Display::drawTopBar()
   setTextColor(screenManager->getScreenTopBarTextColor());
   setTextDatum(ML_DATUM);
 
-  String name = screenManager->getCurrentScreen()->name;
-
-  drawString(name, 10, 10);
+  drawString(String(screenManager->getCurrentScreen()->name), 10, 10);
   char buf[20];
   sprintf(buf, "%i%%", getBatteryPercentage());
 
@@ -255,27 +253,6 @@ void Display::render()
     screenManager->update();
 
   push();
-}
-
-Screen::Screen(String _name)
-{
-  name = _name;
-}
-
-void Screen::draw()
-{
-}
-
-void Screen::update()
-{
-}
-
-void Screen::onEnter()
-{
-}
-
-void Screen::onExit()
-{
 }
 
 Display display;

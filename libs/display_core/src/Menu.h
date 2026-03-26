@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Display.h"
+#include "ScreenTypes.h"
 
 #include <vector>
 
@@ -148,11 +149,11 @@ public:
 class MenuItemNavigate : public MenuItem
 {
 private:
-  String target;
+  const Screen2 *target = nullptr;
 
 public:
-  MenuItemNavigate(String _name, String _target);
-  void addRoute(int8_t _clicksToRun, String _target);
+  MenuItemNavigate(String _name, const Screen2 *_target);
+  void addRoute(int8_t _clicksToRun, const Screen2 *_target);
 };
 
 class MenuItemBack : public MenuItem

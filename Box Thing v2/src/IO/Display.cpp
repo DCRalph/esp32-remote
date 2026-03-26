@@ -1,5 +1,5 @@
 #include "Display.h"
-#include "Wireless.h"
+#include <Wireless.h>
 
 Display::Display()
 {

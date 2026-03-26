@@ -3,6 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/GPIO.h"
+#include <Wireless.h>
 
 class WiFiInfoScreen : public Screen
 {
@@ -55,7 +56,7 @@ void WiFiInfoScreen::draw()
 
     display.u8g2.setFont(u8g2_font_profont12_tf);
 
-    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, wireless.lastStatus);
+    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, static_cast<int>(wireless.getLastStatus()));
     display.u8g2.drawStr(0, 64, buffer);
   }
   else
@@ -67,7 +68,7 @@ void WiFiInfoScreen::draw()
 
     display.u8g2.setFont(u8g2_font_profont12_tf);
 
-    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, wireless.lastStatus);
+    sprintf(buffer, "ch: %d status: %d", ESP_NOW_CHANNEL, static_cast<int>(wireless.getLastStatus()));
     display.u8g2.drawStr(0, 64, buffer);
   }
 }

@@ -103,7 +103,7 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 // #include "IO/myespnow.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 
 static void fireRelay(int relay)
 {
@@ -111,13 +111,13 @@ static void fireRelay(int relay)
 
   relays[relay] = true;
 
-  fullPacket fp;
+  WirelessFrame fp;
   fp.direction = PacketDirection::SEND;
   memcpy(fp.mac, remote_addr, 6);
-  fp.p.type = CMD_FIRE;
-  fp.p.len = 8;
+  fp.packet.type = CMD_FIRE;
+  fp.packet.len = 8;
 
-  memcpy(fp.p.data, relays, 8);
+  memcpy(fp.packet.data, relays, 8);
 
   wireless.send(&fp);
 }
@@ -142,11 +142,11 @@ public:
 
   MenuItemAction testItem = MenuItemAction("Test", 1, [&]()
                                            {
-                                             fullPacket fp;
+                                             WirelessFrame fp;
                                              fp.direction = PacketDirection::SEND;
                                              memcpy(fp.mac, remote_addr, 6);
-                                             fp.p.type = CMD_TEST;
-                                             fp.p.len = 0;
+                                             fp.packet.type = CMD_TEST;
+                                             fp.packet.len = 0;
 
                                              wireless.send(&fp); });
 
@@ -232,18 +232,18 @@ RemoteRelayScreen::RemoteRelayScreen(String _name) : Screen(_name)
 
   armItem.setOnChange([&]()
                       {
-                        fullPacket fp;
+                        WirelessFrame fp;
                         fp.direction = PacketDirection::SEND;
                         memcpy(fp.mac, remote_addr, 6);
-                        fp.p.len = 0;
+                        fp.packet.len = 0;
 
                         if (armed)
                         {
-                          fp.p.type = CMD_ARM;
+                          fp.packet.type = CMD_ARM;
                         }
                         else
                         {
-                          fp.p.type = CMD_DISARM;
+                          fp.packet.type = CMD_DISARM;
                         }
 
                         wireless.send(&fp);
@@ -276,11 +276,11 @@ void RemoteRelayScreen::update()
   {
     lastPing = millis();
 
-    fullPacket fp;
+    WirelessFrame fp;
     fp.direction = PacketDirection::SEND;
     memcpy(fp.mac, remote_addr, 6);
-    fp.p.type = CMD_PING;
-    fp.p.len = 0;
+    fp.packet.type = CMD_PING;
+    fp.packet.len = 0;
 
     wireless.send(&fp);
   }

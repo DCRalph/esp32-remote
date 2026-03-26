@@ -76,3 +76,7 @@ extern uint64_t screenUpdateDrawTime;
 static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 
 void initConfig();
+
+/** Start ESP-NOW + mesh (SyncManager); pair with `teardownMeshTransport` when disabling. */
+void beginMeshTransport();
+void teardownMeshTransport();
