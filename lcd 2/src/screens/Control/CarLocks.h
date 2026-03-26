@@ -3,7 +3,7 @@
 #include "config.h"
 #include "Display.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 class CarLocksScreen : public Screen
 {

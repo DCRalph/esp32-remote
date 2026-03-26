@@ -3,7 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 class SendScreen : public Screen
 {
@@ -19,13 +19,13 @@ public:
 
   MenuItemAction sendItem = MenuItemAction("Send", 2, [&]()
                                            {
-                                             data_packet p;
-                                             p.type = 43;
-                                             p.len = 5;
+                                             TransportPacket pkt{};
+                                             pkt.type = 43;
+                                             pkt.len = 5;
 
-                                             memcpy(p.data, "Hello", 5);
+                                             memcpy(pkt.data, "Hello", 5);
 
-                                             wireless.send(&p, peer_addr);
+                                             wireless.send(&pkt, peer_addr);
                                              //
                                            });
 

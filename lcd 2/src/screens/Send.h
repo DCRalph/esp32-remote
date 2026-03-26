@@ -3,8 +3,8 @@
 #include "config.h"
 #include "Display.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
-#include "IO/Mesh.h"
+#include "Wireless.h"
+#include "Mesh.h"
 
 auto syncMgr = SyncManager::getInstance();
 

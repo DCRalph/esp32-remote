@@ -2,7 +2,7 @@
 
 #include "config.h"
 #include "IO/Display.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 #include "IO/GPIO.h"
 
 class ControlScreen : public Screen
@@ -19,34 +19,34 @@ public:
 
   MenuItemAction flashItemPreset1 = MenuItemAction("Flash 5 30", 2, [&]()
                                                    {
-                                                     data_packet p;
-                                                     p.type = 0x30;
-                                                     p.len = 2;
-                                                     p.data[0] = 5;       // 5 flashes
-                                                     p.data[1] = 30 / 10; // 10; // 40ms
-                                                     wireless.send(&p, remote_addr);
+                                                     TransportPacket pkt{};
+                                                     pkt.type = 0x30;
+                                                     pkt.len = 2;
+                                                     pkt.data[0] = 5;       // 5 flashes
+                                                     pkt.data[1] = 30 / 10; // 10; // 40ms
+                                                     wireless.send(&pkt, remote_addr);
                                                      //
                                                    });
 
   MenuItemAction flashItemPreset2 = MenuItemAction("Flash 2 40", 2, [&]()
                                                    {
-                                                     data_packet p;
-                                                     p.type = 0x30;
-                                                     p.len = 2;
-                                                     p.data[0] = 2;       // 3 flashes
-                                                     p.data[1] = 40 / 10; // 10; // 40ms
-                                                     wireless.send(&p, remote_addr);
+                                                     TransportPacket pkt{};
+                                                     pkt.type = 0x30;
+                                                     pkt.len = 2;
+                                                     pkt.data[0] = 2;       // 3 flashes
+                                                     pkt.data[1] = 40 / 10; // 10; // 40ms
+                                                     wireless.send(&pkt, remote_addr);
                                                      //
                                                    });
 
   MenuItemAction flashItemPreset3 = MenuItemAction("Flash 8 50", 2, [&]()
                                                    {
-                                                     data_packet p;
-                                                     p.type = 0x30;
-                                                     p.len = 2;
-                                                     p.data[0] = 8;       // 3 flashes
-                                                     p.data[1] = 50 / 10; // 10; // 40ms
-                                                     wireless.send(&p, remote_addr);
+                                                     TransportPacket pkt{};
+                                                     pkt.type = 0x30;
+                                                     pkt.len = 2;
+                                                     pkt.data[0] = 8;       // 3 flashes
+                                                     pkt.data[1] = 50 / 10; // 10; // 40ms
+                                                     wireless.send(&pkt, remote_addr);
                                                      //
                                                    });
 

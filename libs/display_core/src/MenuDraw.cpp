@@ -27,8 +27,9 @@ namespace
     case MenuSize::Medium:
       return {2, 20, 3};
     case MenuSize::Large:
-    default:
       return {3, 28, 4};
+    default:
+      return {2, 20, 3};
     }
   }
 
@@ -49,12 +50,12 @@ void MenuItem::draw(uint8_t _x, uint8_t _y, bool _active)
 
   if (_active)
   {
-    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, bgColor);
+    display.setTextColor(activeTextColor, bgColor);
   }
   else
   {
-    display.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(textColor, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
@@ -72,12 +73,12 @@ void MenuItemToggle::draw(uint8_t _x, uint8_t _y, bool _active)
 
   if (_active)
   {
-    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, bgColor);
+    display.setTextColor(activeTextColor, bgColor);
   }
   else
   {
-    display.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(textColor, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
@@ -99,12 +100,12 @@ void MenuItemString::draw(uint8_t _x, uint8_t _y, bool _active)
 
   if (_active)
   {
-    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, bgColor);
+    display.setTextColor(activeTextColor, bgColor);
   }
   else
   {
-    display.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(textColor, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
@@ -132,17 +133,17 @@ void MenuItemNumber<T>::draw(uint8_t _x, uint8_t _y, bool _active)
 
   if (_active && selected)
   {
-    display.drawRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuText);
-    display.setTextColor(kMenuText, kMenuBg);
+    display.drawRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, textColor);
+    display.setTextColor(textColor, kMenuBg);
   }
   else if (_active)
   {
-    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, bgColor);
+    display.setTextColor(activeTextColor, bgColor);
   }
   else
   {
-    display.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(textColor, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);
@@ -165,17 +166,17 @@ void MenuItemSelect::draw(uint8_t _x, uint8_t _y, bool _active)
 
   if (_active && selected)
   {
-    display.drawRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuText);
-    display.setTextColor(kMenuText, kMenuBg);
+    display.drawRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, textColor);
+    display.setTextColor(textColor, kMenuBg);
   }
   else if (_active)
   {
-    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, kMenuActiveBg);
-    display.setTextColor(kMenuActiveText, kMenuActiveBg);
+    display.fillRoundRect(_x, _y, maxX - 4, style.lineHeight, style.radius, bgColor);
+    display.setTextColor(activeTextColor, bgColor);
   }
   else
   {
-    display.setTextColor(kMenuText, kMenuBg);
+    display.setTextColor(textColor, kMenuBg);
   }
 
   int textY = calcTextY(_y, style);

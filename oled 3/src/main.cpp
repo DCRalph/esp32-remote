@@ -6,7 +6,7 @@
 
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 #include "IO/Display.h"
 #include "IO/ScreenManager.h"
@@ -97,34 +97,34 @@ void fpsTaskFunction(void *pvParameters)
   }
 }
 
-void espNowCb(fullPacket *fp)
+void onWirelessRecv(const TransportAddress &, const TransportPacket &pkt)
 {
-  if (fp->p.type == CMD_RELAY_1_GET)
-    globalRelay1 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_2_GET)
-    globalRelay2 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_3_GET)
-    globalRelay3 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_4_GET)
-    globalRelay4 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_5_GET)
-    globalRelay5 = fp->p.data[0];
-  else if (fp->p.type == CMD_RELAY_6_GET)
-    globalRelay6 = fp->p.data[0];
+  if (pkt.type == CMD_RELAY_1_GET)
+    globalRelay1 = pkt.data[0];
+  else if (pkt.type == CMD_RELAY_2_GET)
+    globalRelay2 = pkt.data[0];
+  else if (pkt.type == CMD_RELAY_3_GET)
+    globalRelay3 = pkt.data[0];
+  else if (pkt.type == CMD_RELAY_4_GET)
+    globalRelay4 = pkt.data[0];
+  else if (pkt.type == CMD_RELAY_5_GET)
+    globalRelay5 = pkt.data[0];
+  else if (pkt.type == CMD_RELAY_6_GET)
+    globalRelay6 = pkt.data[0];
 
-  else if (fp->p.type == CMD_RELAY_ALL)
+  else if (pkt.type == CMD_RELAY_ALL)
   {
-    globalRelay1 = fp->p.data[0];
-    globalRelay2 = fp->p.data[1];
-    globalRelay3 = fp->p.data[2];
-    globalRelay4 = fp->p.data[3];
-    globalRelay5 = fp->p.data[4];
-    globalRelay6 = fp->p.data[5];
+    globalRelay1 = pkt.data[0];
+    globalRelay2 = pkt.data[1];
+    globalRelay3 = pkt.data[2];
+    globalRelay4 = pkt.data[3];
+    globalRelay5 = pkt.data[4];
+    globalRelay6 = pkt.data[5];
   }
 
-  else if (fp->p.type == 0xa3)
+  else if (pkt.type == 0xa3)
   {
-    boxThingEncoderScreen.onRecv(fp);
+    boxThingEncoderScreen.onRecvPacket(pkt);
   }
 }
 
@@ -179,8 +179,8 @@ void setup()
   screenManager.addScreen(&testLoadingScreen);
   screenManager.addScreen(&engineScreen);
 
-  wireless.setup();
-  wireless.setRecvCb(espNowCb);
+  wireless.begin();
+  wireless.setReceiveCallback(onWirelessRecv);
 
   prevMillis1 = millis();
 
@@ -264,6 +264,8 @@ bool sleepLoop()
 void loop()
 {
   fps++;
+
+  wireless.loop();
 
   if (millis() - prevMillis1 > interval1)
   {

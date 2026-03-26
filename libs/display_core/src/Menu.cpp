@@ -7,6 +7,10 @@ MenuItem::MenuItem(String _name)
 {
   type = MenuItemType::None;
   name = _name;
+  parent = nullptr;
+  textColor = TFT_WHITE;
+  activeTextColor = TFT_BLACK;
+  bgColor = TFT_WHITE;
 }
 
 void MenuItem::addFunc(int8_t _clicksToRun, std::function<void()> _func)
@@ -474,22 +478,7 @@ uint8_t Menu::getItemsPerPage()
 void Menu::setMenuSize(MenuSize _size)
 {
   menuSize = _size;
-
-  switch (_size)
-  {
-  case MenuSize::Small:
-    maxItemsPerPage = 6;
-    break;
-  case MenuSize::Medium:
-    maxItemsPerPage = 7;
-    break;
-  case MenuSize::Large:
-    maxItemsPerPage = 3;
-    break;
-  default:
-    maxItemsPerPage = 3;
-    break;
-  }
+  maxItemsPerPage = MenuStyle::itemsPerPage(_size);
 
   numItems = items.size();
   numItemsPerPage = numItems < maxItemsPerPage ? numItems : maxItemsPerPage;

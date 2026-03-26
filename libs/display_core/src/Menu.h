@@ -28,6 +28,24 @@ enum class MenuSize
   Small
 };
 
+namespace MenuStyle
+{
+  /** Max menu rows shown per page for each `MenuSize` preset. */
+  constexpr uint8_t itemsPerPage(MenuSize size) noexcept
+  {
+    switch (size)
+    {
+    case MenuSize::Small:
+      return 10;
+    case MenuSize::Medium:
+      return 7;
+    case MenuSize::Large:
+      return 5;
+    }
+    return 3;
+  }
+}
+
 struct ActionFunction
 {
   std::function<void()> func;
@@ -58,8 +76,11 @@ public:
   void setName(String _name);
   String getName();
   MenuItemType getType();
+  /** Text (and value) color when the row is not highlighted. */
   void setTextColor(u16_t _color);
+  /** Text color when the row is the active selection (on the highlight bar). */
   void setActiveTextColor(u16_t _color);
+  /** Fill color of the active-selection highlight bar. */
   void setBgColor(u16_t _color);
   void setHidden(bool _hidden);
   bool isHidden();

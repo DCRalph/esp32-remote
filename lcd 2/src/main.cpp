@@ -6,8 +6,8 @@
 
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
-#include "IO/Mesh.h"
+#include "Wireless.h"
+#include "Mesh.h"
 
 #include "Display.h"
 #include "MenuInput.h"
@@ -24,6 +24,7 @@
 #include "screens/Settings/batteryScreen.h"
 #include "screens/Settings/WiFiInfo.h"
 #include "screens/Settings/SystemInfoScreen.h"
+#include "screens/Settings/MeshScreen.h"
 
 #include "screens/Send.h"
 
@@ -36,7 +37,7 @@
 
 WiFiClient espClient;
 
-TFTDisplayDriver displayDriver;
+TFTDisplayDriverContext displayDriverContext;
 
 int getBatteryPercentage()
 {
@@ -52,6 +53,7 @@ RSSIMeter rssiMeter("RSSI");
 BatteryScreen batteryScreen("Battery");
 WiFiInfoScreen WiFiInfo("Wi-Fi info");
 SystemInfoScreen systemInfoScreen("System Info");
+MeshScreen meshScreen("Mesh");
 
 SendScreen sendScreen("Send");
 
@@ -88,7 +90,13 @@ void setup()
 
   battery.init();
 
-  display.begin(&displayDriver, &screenManager);
+  const DisplayConfig displayConfig = TFTDisplayDriver::makeConfig(
+      &displayDriverContext,
+      LCD_WIDTH,
+      LCD_HEIGHT,
+      TFT_ROT,
+      16);
+  display.begin(displayConfig, &screenManager);
   screenManager.init(display);
 
   MenuInputConfig menuInputConfig;
@@ -110,6 +118,7 @@ void setup()
   screenManager.addScreen(&batteryScreen);
   screenManager.addScreen(&WiFiInfo);
   screenManager.addScreen(&systemInfoScreen);
+  screenManager.addScreen(&meshScreen);
 
   screenManager.addScreen(&sendScreen);
 
@@ -138,8 +147,19 @@ void setup()
                                  //
                                });
 
+  syncMgr->setModePersistence(
+      []() -> uint8_t
+      {
+        if (!preferences.isKey("meshSyncMode"))
+          return static_cast<uint8_t>(SyncMode::JOIN);
+        return preferences.getUChar("meshSyncMode", static_cast<uint8_t>(SyncMode::JOIN));
+      },
+      [](uint8_t m)
+      {
+        preferences.putUChar("meshSyncMode", m);
+      });
+
   syncMgr->begin();
-  syncMgr->setSyncMode(SyncMode::JOIN);
 
   // WiFi.mode(WIFI_STA);
   // esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);

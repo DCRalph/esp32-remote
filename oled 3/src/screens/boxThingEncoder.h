@@ -3,7 +3,7 @@
 #include "config.h"
 #include "IO/Display.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 class BoxThingEncoderScreen : public Screen
 {
@@ -14,7 +14,7 @@ public:
   int8_t clicks = 0;
   int8_t lastClicks = 0;
 
-  void onRecv(fullPacket *fp);
+  void onRecvPacket(const TransportPacket &pkt);
 
   void draw() override;
   void update() override;
@@ -24,10 +24,10 @@ BoxThingEncoderScreen::BoxThingEncoderScreen(String _name) : Screen(_name)
 {
 }
 
-void BoxThingEncoderScreen::onRecv(fullPacket *fp)
+void BoxThingEncoderScreen::onRecvPacket(const TransportPacket &pkt)
 {
-  memcpy(&encCount, fp->p.data, 8);
-  memcpy(&clicks, fp->p.data + 8, 1);
+  memcpy(&encCount, pkt.data, 8);
+  memcpy(&clicks, pkt.data + 8, 1);
   if (clicks != 0)
   {
     lastClicks = clicks;

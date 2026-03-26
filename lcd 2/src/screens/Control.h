@@ -2,7 +2,7 @@
 
 #include "config.h"
 #include "Display.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 class ControlScreen : public Screen
 {

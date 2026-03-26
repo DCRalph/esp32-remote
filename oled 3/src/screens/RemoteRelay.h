@@ -101,18 +101,16 @@
 #include "IO/Display.h"
 #include "IO/GPIO.h"
 // #include "IO/myespnow.h"
-#include "IO/Wireless.h"
+#include "Wireless.h"
 
 static void relayChangeCb(uint8_t cmd, bool *global)
 {
-  fullPacket fp;
-  memcpy(fp.mac, remote_addr, 6);
-  fp.direction = PacketDirection::SEND;
-  fp.p.type = cmd;
-  fp.p.len = 1;
-  fp.p.data[0] = !*global;
+  TransportPacket pkt{};
+  pkt.type = cmd;
+  pkt.len = 1;
+  pkt.data[0] = static_cast<uint8_t>(!*global);
 
-  wireless.send(&fp);
+  wireless.send(&pkt, remote_addr);
 }
 
 class RemoteRelayScreen : public Screen
@@ -195,13 +193,11 @@ void RemoteRelayScreen::update()
   {
     lastFetch = millis();
 
-    fullPacket fp;
-    memcpy(fp.mac, remote_addr, 6);
-    fp.direction = PacketDirection::SEND;
-    fp.p.type = CMD_RELAY_ALL;
-    fp.p.len = 0;
+    TransportPacket pkt{};
+    pkt.type = CMD_RELAY_ALL;
+    pkt.len = 0;
 
-    wireless.send(&fp);
+    wireless.send(&pkt, remote_addr);
   }
 
   if (menu.items[menu.getActive()] == &relay1Item)
@@ -227,13 +223,11 @@ void RemoteRelayScreen::update()
 void RemoteRelayScreen::onEnter()
 {
 
-  fullPacket fp;
-  memcpy(fp.mac, remote_addr, 6);
-  fp.direction = PacketDirection::SEND;
-  fp.p.type = CMD_RELAY_ALL;
-  fp.p.len = 0;
+  TransportPacket pkt{};
+  pkt.type = CMD_RELAY_ALL;
+  pkt.len = 0;
 
-  wireless.send(&fp);
+  wireless.send(&pkt, remote_addr);
 }
 
 void RemoteRelayScreen::onExit()
