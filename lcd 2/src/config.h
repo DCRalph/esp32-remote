@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#include "secrets.h"
 
 #include <Preferences.h>
 
@@ -11,9 +10,9 @@
 #include <esp_wifi.h>
 
 extern Preferences preferences;
+extern bool wifiConnectedAtSomePoint;
 
 #define ESP_NOW_CHANNEL 1
-#define DEBUG_ESP_NOW
 
 #define BAUD_RATE 115200
 

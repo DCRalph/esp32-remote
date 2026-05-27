@@ -22,7 +22,7 @@ namespace ControlScreenNamespace
                                              p.len = 2;
                                              p.data[0] = 5;
                                              p.data[1] = 30 / 10;
-                                             wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
+                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
                                            }};
     static MenuItemAction flashItemPreset2{"Flash 2 40", 2, [&]()
                                            {
@@ -31,7 +31,7 @@ namespace ControlScreenNamespace
                                              p.len = 2;
                                              p.data[0] = 2;
                                              p.data[1] = 40 / 10;
-                                             wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
+                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
                                            }};
     static MenuItemAction flashItemPreset3{"Flash 8 50", 2, [&]()
                                            {
@@ -40,7 +40,7 @@ namespace ControlScreenNamespace
                                              p.len = 2;
                                              p.data[0] = 8;
                                              p.data[1] = 50 / 10;
-                                             wireless.sendPacket(p, TransportAddress::fromMac(car_addr));
+                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
                                            }};
 
     static bool initialized = false;

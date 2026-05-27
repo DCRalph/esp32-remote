@@ -17,7 +17,7 @@ namespace CarScreenNamespace
     fp.packet.type = cmd;
     fp.packet.data[0] = !*global;
 
-    wireless.sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
+    Wireless::getInstance()->sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
   }
 
   namespace
@@ -31,7 +31,7 @@ namespace CarScreenNamespace
                                          p.type = CMD_DOOR_LOCK;
                                          p.len = 1;
                                          p.data[0] = 0;
-                                         wireless.send(&p, car_addr);
+                                         Wireless::getInstance()->send(&p, car_addr);
                                        }};
 
     static MenuItemAction unlockDoorItem{"Unlock Door", 2, []()
@@ -40,7 +40,7 @@ namespace CarScreenNamespace
                                            p.type = CMD_DOOR_LOCK;
                                            p.len = 1;
                                            p.data[0] = 1;
-                                           wireless.send(&p, car_addr);
+                                           Wireless::getInstance()->send(&p, car_addr);
                                          }};
 
     static MenuItemNavigate carFlashItem{"Flash", &CarFlashScreen};
@@ -112,7 +112,7 @@ namespace CarScreenNamespace
     fp.packet.type = CMD_RELAY_ALL;
     fp.packet.len = 0;
 
-    wireless.sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
+    Wireless::getInstance()->sendPacket(fp.packet, TransportAddress::fromMac(car_addr));
   }
 
 } // namespace CarScreenNamespace

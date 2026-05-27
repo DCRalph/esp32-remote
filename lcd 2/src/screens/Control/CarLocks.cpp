@@ -37,7 +37,7 @@ namespace CarLocksScreenNamespace
       p.len = 1;
       p.data[0] = 0;
 
-      wireless.send(&p, car_addr);
+      Wireless::getInstance()->send(&p, car_addr);
     }
 
     if (ClickButtonDOWN.clicks == -1)
@@ -47,7 +47,7 @@ namespace CarLocksScreenNamespace
       p.len = 1;
       p.data[0] = 1;
 
-      wireless.send(&p, car_addr);
+      Wireless::getInstance()->send(&p, car_addr);
     }
 
     if (ClickButtonDOWN.clicks == 1)

@@ -1,8 +1,0 @@
-{
-  "name": "display_core",
-  "version": "0.1.0",
-  "build": {
-    "includeDir": "src",
-    "srcDir": "src"
-  }
-}

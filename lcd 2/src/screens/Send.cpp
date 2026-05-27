@@ -37,7 +37,7 @@ namespace SendScreenNamespace
 
                                      memcpy(p.data, "Hello", 5);
 
-                                     wireless.sendPacket(p, TransportAddress::fromMac(peer_addr));
+                                     Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(peer_addr));
                                    }};
 
     static MenuItemAction sendTriggerItem{"Trigger", 2, [&]()

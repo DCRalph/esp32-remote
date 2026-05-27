@@ -12,6 +12,7 @@
 #include "MenuTest.h"
 #include "Send.h"
 #include "SettingsScreen.h"
+#include "CompanionScreen.h"
 
 namespace HomeScreenNamespace
 {
@@ -22,6 +23,7 @@ namespace HomeScreenNamespace
     static MenuItemNavigate controlMenuItem{"Control", &ControlScreen};
     static MenuItemNavigate settingsMenuItem{"Settings", &SettingsScreen};
     static MenuItemNavigate sendMenuItem{"Send", &SendScreen};
+    static MenuItemNavigate companionMenuItem{"Companion", &CompanionScreen};
     static MenuItemNavigate menuTestItem{"Menu Test", &MenuTestScreen};
     static MenuItemAction testPopupItem{"Test Popup", 2, []()
                                         {
@@ -48,6 +50,7 @@ namespace HomeScreenNamespace
 
       menu.addMenuItem(&settingsMenuItem);
       menu.addMenuItem(&sendMenuItem);
+      menu.addMenuItem(&companionMenuItem);
       menu.addMenuItem(&menuTestItem);
       menu.addMenuItem(&testPopupItem);
       menu.addMenuItem(&testPopupItem2);

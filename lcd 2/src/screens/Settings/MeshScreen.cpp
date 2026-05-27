@@ -193,7 +193,7 @@ namespace MeshScreenNamespace
         strTime_.setTextColor(TFT_GREEN);
       }
 
-      sRadio_ = wireless.isSetupDone() ? "ESP-NOW ready" : "ESP-NOW off";
+      sRadio_ = Wireless::getInstance()->isSetupDone() ? "ESP-NOW ready" : "ESP-NOW off";
 
       sDiscCounts_ = "P" + String(peersCached_.size()) + " G" + String(advertsCached_.size());
 
@@ -255,7 +255,7 @@ namespace MeshScreenNamespace
                                                       i = 0;
                                                     const DiscoveredDevice &d = peersCached_[(size_t)i];
                                                     String msg = "ID " + fmtHex32(d.deviceId) + "\n";
-                                                    msg += "MAC " + fmtMac(d.mac) + "\n";
+                                                    msg += "MAC " + fmtMac(d.address.data()) + "\n";
                                                     msg += syncMgr_->getSyncModeString(d.syncMode) + "\n";
                                                     msg += ageMs(d.lastSeen);
                                                     screenManager.showPopup(new Popup("Peer", msg)); });
@@ -272,7 +272,7 @@ namespace MeshScreenNamespace
                                                        const GroupAdvert &g = advertsCached_[(size_t)i];
                                                        String msg = "Grp " + fmtHex32(g.groupId) + "\n";
                                                        msg += "Master " + fmtHex32(g.masterDeviceId) + "\n";
-                                                       msg += "MAC " + fmtMac(g.masterMac) + "\n";
+                                                       msg += "MAC " + fmtMac(g.masterAddress.data()) + "\n";
                                                        msg += ageMs(g.lastSeen);
                                                        screenManager.showPopup(new Popup("Advert", msg)); });
       propsSummary_ = std::make_unique<MenuItemAction>("Summary popup", 2, []()

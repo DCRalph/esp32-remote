@@ -25,7 +25,7 @@ namespace CarFlashScreenNamespace
                                             p.data[0] = count;
                                             p.data[1] = uint8_t(delay / 10);
 
-                                            wireless.send(&p, car_addr);
+                                            Wireless::getInstance()->send(&p, car_addr);
                                           }};
 
     static MenuItemNumber<uint8_t> relay1FlashCountItem{"Count", &count, 1, 100};

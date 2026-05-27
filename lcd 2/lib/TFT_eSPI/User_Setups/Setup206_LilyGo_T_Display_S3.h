@@ -44,4 +44,4 @@
 #define LOAD_FONT8
 #define LOAD_GFXFF
 
-#define SMOOTH_FONT
+// #define SMOOTH_FONT  // needs SPIFFS; not used in this project

@@ -3,6 +3,13 @@
 #include "config.h"
 
 #include <WiFi.h>
+#include <dcr_HttpRequest.h>
+#include <dcr_NetLink.h>
+#include <dcr_logger.h>
+#include <dcr_console.h>
+#include <dcr_fatalHandler.h>
+#include <dcr_files.h>
+#include <dcr_taskManager.h>
 
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
@@ -15,8 +22,8 @@
 #include "ScreenManager.h"
 
 #include "screens/Home.h"
-
-WiFiClient espClient;
+#include "companion/CompanionHttp.h"
+#include "companion/CompanionRadio.h"
 
 TFTDisplayDriverContext displayDriverContext;
 
@@ -37,6 +44,19 @@ void setup()
 {
   initConfig();
   // pinMode(LED_PIN, OUTPUT);
+
+  Serial.begin(115200); // usb serial
+  Serial.setTimeout(10);
+
+  Console::addStream(&Serial);
+
+  Files::init(); // <files/Files.h>
+  // Logger::SetLevel(LogLevel::Trace);
+  Logger::SetLevel(LogLevel::Debug);
+  // Logger::SetLevel(LogLevel::Info);
+  Logger::InstallLogHook();
+  FatalHandler::install();
+  taskManager.begin();
 
   pinMode(15, OUTPUT);
   digitalWrite(15, HIGH);
@@ -62,22 +82,22 @@ void setup()
 
   MenuInputConfig menuInputConfig;
   menuInputConfig.mode = MenuInputMode::Buttons2;
-  menuInputConfig.navigationClicks = 1;   // 1 click = up/down
+  menuInputConfig.navigationClicks = 1;    // 1 click = up/down
   menuInputConfig.defaultSelectClicks = 2; // 2 clicks = default action (e.g. select / run default route)
-  menuInputConfig.getUpClicks = []() { return (int)ClickButtonUP.clicks; };
-  menuInputConfig.getDownClicks = []() { return (int)ClickButtonDOWN.clicks; };
+  menuInputConfig.getUpClicks = []()
+  { return (int)ClickButtonUP.clicks; };
+  menuInputConfig.getDownClicks = []()
+  { return (int)ClickButtonDOWN.clicks; };
   MenuInput::configure(menuInputConfig);
 
   screenManager.setScreen(&HomeScreen);
 
   auto syncMgr = SyncManager::getInstance();
 
-  syncMgr->setTransport(&wireless);
+  syncMgr->setTransport(Wireless::getInstance());
 
   syncMgr->setDeviceIdProvider([]() -> uint32_t
-                               {
-                                 return 0x67;
-                               });
+                               { return 0x67; });
 
   syncMgr->setModePersistence(
       []() -> uint8_t
@@ -93,12 +113,29 @@ void setup()
 
   syncMgr->begin();
 
+  NetLinkCallbacks netCallbacks;
+  netCallbacks.isBleActive = []()
+  { return false; };
+  netCallbacks.isCellularPreferred = []()
+  { return false; };
+  netCallbacks.currentUnixTime = [](bool &timeOk)
+  {
+    timeOk = false;
+    return (uint32_t)(millis() / 1000);
+  };
+  netLink.setCallbacks(netCallbacks);
+
+  netLink.setFactoryCredentials("Kaitiaki", "Solv-it32");
+
+  netLink.init();
+  HTTP::init();
+  HTTP::setUserAgent("ProlinkDisplay/1.0");
+
   prevMillis1 = millis();
 }
 
 bool sleepLoop()
 {
-
   if (ClickButtonUP.depressed)
   {
     if (!sleepCountdown)
@@ -154,10 +191,12 @@ bool sleepLoop()
 
 void loop()
 {
-
-
   buttons.update();
-  SyncManager::getInstance()->loop();
+  netLink.loop();
+  if (CompanionHttp::isActive())
+    CompanionHttp::loop();
+  if (!CompanionRadio::isMeshSuspended())
+    SyncManager::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {

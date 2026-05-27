@@ -1,6 +1,7 @@
 #include "config.h"
 
 Preferences preferences;
+bool wifiConnectedAtSomePoint = false;
 
 bool globalRelay1 = false;
 bool globalRelay2 = false;
