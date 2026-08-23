@@ -1,53 +1,76 @@
-#include "UpdateProgress.h"
+#include "Screens/UpdateProgress.h"
 
-UpdateProgressScreen::UpdateProgressScreen(String _name) : Screen(_name)
+#include <Display.h>
+
+#include "IO/U8g2DisplayDriver.h"
+
+namespace
 {
-  progress = 0;
-  state = UpdateProgressState::GETTING_READY;
-}
-
-void UpdateProgressScreen::draw()
-{
-  display.noTopBar();
-
-  display.u8g2.setFont(u8g2_font_logisoso24_tr);
-  display.u8g2.setDrawColor(1);
-
-  display.drawCenteredText(24, "Updating");
-
-  switch (state)
+  enum class State
   {
-  case UpdateProgressState::GETTING_READY: // Getting ready
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.drawCenteredText(64, "Getting ready...");
-    break;
+    GettingReady,
+    Updating,
+    ShowingMessage
+  };
 
-  case UpdateProgressState::UPDATING: // Updating
-    display.u8g2.setFont(u8g2_font_koleeko_tf);
-    display.drawCenteredText(44, String(progress) + "%");
+  State gState = State::GettingReady;
+  uint8_t gProgress = 0;
+  String gMessage;
 
-    display.u8g2.drawFrame(0, 48, 127, 16);
-    display.u8g2.drawBox(2, 50, map(progress, 0, 100, 0, 123), 12);
-    break;
+  void draw()
+  {
+    display.noTopBar();
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TC_DATUM);
 
-  case UpdateProgressState::SHOWING_MESSAGE: // Showing message
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.drawCenteredText(50, msg);
-    break;
+    const int centreX = display.width() / 2;
 
-  default:
-    break;
+    display.setTextSize(U8G2_TEXT_TITLE_XL);
+    display.drawString("Updating", centreX, 0);
+
+    switch (gState)
+    {
+    case State::GettingReady:
+      display.setTextSize(U8G2_TEXT_TITLE);
+      display.drawString("Getting ready...", centreX, 48);
+      break;
+
+    case State::Updating:
+      display.setTextSize(U8G2_TEXT_BAR);
+      display.drawString(String(gProgress) + "%", centreX, 36);
+
+      display.drawRect(0, 48, 127, 16, TFT_WHITE);
+      display.fillRect(2, 50, map(gProgress, 0, 100, 0, 123), 12, TFT_WHITE);
+      break;
+
+    case State::ShowingMessage:
+      display.setTextSize(U8G2_TEXT_TITLE);
+      display.drawString(gMessage, centreX, 34);
+      break;
+    }
+  }
+
+  void update()
+  {
   }
 }
 
-void UpdateProgressScreen::setProgress(uint8_t _progress)
+void UpdateProgress::setProgress(uint8_t progress)
 {
-  state = UpdateProgressState::UPDATING;
-  progress = _progress;
+  gState = State::Updating;
+  gProgress = progress;
 }
 
-void UpdateProgressScreen::setMessage(String _msg)
+void UpdateProgress::setMessage(String message)
 {
-  state = UpdateProgressState::SHOWING_MESSAGE;
-  msg = _msg;
+  gState = State::ShowingMessage;
+  gMessage = message;
 }
+
+const Screen2 UpdateProgressScreen2 = {
+    .name = "Update",
+    .draw = draw,
+    .update = update,
+    .onEnter = nullptr,
+    .onExit = nullptr,
+};

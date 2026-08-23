@@ -1,10 +1,14 @@
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include <Display.h>
+#include <ScreenManager.h>
 
-enum StartUpState
+#include "config.h"
+#include "IO/GPIO.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
+
+enum class StartUpState
 {
   StartUp,
   ConnectingWifi,
@@ -12,108 +16,77 @@ enum StartUpState
   EspNowStarted
 };
 
-class StartUpScreen : public Screen
+namespace StartUp
 {
-private:
-  StartUpState state;
-  int stage;
-
-public:
-  StartUpScreen(String _name);
-
-  void draw() override;
-  void update() override;
-
-  void setState(StartUpState _state);
+  void setState(StartUpState state);
   StartUpState getState();
-
-  void setStage(int _stage);
-  int getStage();
-};
-
-StartUpScreen::StartUpScreen(String _name) : Screen(_name)
-{
-  state = StartUpState::StartUp;
-  stage = 0;
+  void setStage(int stage);
 }
 
-void StartUpScreen::setState(StartUpState _state)
+namespace
 {
-  state = _state;
-}
+  StartUpState gStartUpState = StartUpState::StartUp;
+  int gStartUpStage = 0;
 
-StartUpState StartUpScreen::getState()
-{
-  return state;
-}
-
-void StartUpScreen::setStage(int _stage)
-{
-  stage = _stage;
-}
-
-int StartUpScreen::getStage()
-{
-  return stage;
-}
-
-void StartUpScreen::draw()
-{
-  display.noTopBar();
-
-  switch (state)
+  void startUpDraw()
   {
-  case StartUpState::StartUp:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
+    display.noTopBar();
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TC_DATUM);
+    display.setTextSize(U8G2_TEXT_TITLE);
 
-    display.drawCenteredText(30, "Starting up...");
-    display.drawCenteredText(54, "Stage " + String(stage));
+    const int centreX = display.width() / 2;
 
-    break;
-
-  case StartUpState::ConnectingWifi:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(30, "Connecting to");
-    display.drawCenteredText(48, "WiFi...");
-
-    break;
-
-  case StartUpState::ApStarted:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(30, "AP Started");
-
-    display.u8g2.setFont(u8g2_font_profont12_tf);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(64, "Press to continue...");
-
-    break;
-
-  case StartUpState::EspNowStarted:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(30, "ESP-NOW Started");
-
-    break;
-
-  default:
-    break;
-  }
-}
-
-void StartUpScreen::update()
-{
-  if (state == StartUpState::ApStarted)
-  {
-    if (ClickButtonEnc.clicks == 1)
+    switch (gStartUpState)
     {
-      screenManager.setScreen("Home");
+    case StartUpState::StartUp:
+      display.drawString("Starting up...", centreX, 14);
+      display.drawString("Stage " + String(gStartUpStage), centreX, 38);
+      break;
+
+    case StartUpState::ConnectingWifi:
+      display.drawString("Connecting to", centreX, 14);
+      display.drawString("WiFi...", centreX, 32);
+      break;
+
+    case StartUpState::ApStarted:
+      display.drawString("AP Started", centreX, 14);
+      display.setTextSize(U8G2_TEXT_MONO12);
+      display.drawString("Press to continue...", centreX, 55);
+      break;
+
+    case StartUpState::EspNowStarted:
+      display.drawString("ESP-NOW Started", centreX, 14);
+      break;
     }
   }
+
+  void startUpUpdate()
+  {
+    if (gStartUpState == StartUpState::ApStarted && ClickButtonEnc.clicks == 1)
+      screenManager.setScreen(&HomeScreen2);
+  }
 }
+
+void StartUp::setState(StartUpState state)
+{
+  gStartUpState = state;
+}
+
+StartUpState StartUp::getState()
+{
+  return gStartUpState;
+}
+
+void StartUp::setStage(int stage)
+{
+  gStartUpStage = stage;
+}
+
+const Screen2 StartUpScreen2 = {
+    .name = "Start Up",
+    .draw = startUpDraw,
+    .update = startUpUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
+};

@@ -1,61 +1,49 @@
 #pragma once
 
+#include <Display.h>
+#include <ScreenManager.h>
+
 #include "config.h"
-#include "IO/Display.h"
 #include "IO/GPIO.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
 
-class IOTestScreen : public Screen
+namespace
 {
-public:
-  IOTestScreen(String _name);
+  int gIoTestLastClicks = 0;
 
-  void draw() override;
-  void update() override;
+  void ioTestDraw()
+  {
+    if (ClickButtonEnc.clicks != 0)
+      gIoTestLastClicks = ClickButtonEnc.clicks;
 
-  int lastEncoderClicks;
+    display.setTextSize(U8G2_TEXT_TITLE);
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TL_DATUM);
+
+    char buffer[64];
+
+    snprintf(buffer, sizeof(buffer), "Enc: %d:%d", (int)encoder.getCount(), (int)encoderGetCount());
+    display.drawString(buffer, 0, 12);
+
+    snprintf(buffer, sizeof(buffer), "Btn: %d : %d", ClickButtonEnc.depressed, gIoTestLastClicks);
+    display.drawString(buffer, 0, 30);
+  }
+
+  void ioTestUpdate()
+  {
+    if (ClickButtonEnc.clicks == 1)
+      screenManager.back();
+
+    if (ClickButtonEnc.clicks == 3)
+      encoder.clearCount();
+  }
+}
+
+const Screen2 IOTestScreen2 = {
+    .name = "IO Test",
+    .draw = ioTestDraw,
+    .update = ioTestUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-IOTestScreen::IOTestScreen(String _name) : Screen(_name)
-{
-  lastEncoderClicks = 0;
-}
-
-void IOTestScreen::draw()
-{
-  if (ClickButtonEnc.clicks != 0)
-  {
-    lastEncoderClicks = ClickButtonEnc.clicks;
-  }
-
-  display.u8g2.setFont(u8g2_font_logisoso16_tf);
-  display.u8g2.setDrawColor(1);
-
-  Serial.println(encoder.getCount());
-  Serial.println(encoderGetCount());
-
-  int count1 = encoder.getCount();
-  int count2 = encoderGetCount();
-
-  char buffer[64];
-  sprintf(buffer, "Enc: %i:%i", count1, count2);
-  display.u8g2.drawStr(0, 28, buffer);
-
-  sprintf(buffer, "Btn: %d : %d", ClickButtonEnc.depressed, lastEncoderClicks);
-  display.u8g2.drawStr(0, 46, buffer);
-
-  // sprintf(buffer, "Switch: %s", switchPin.read() ? "ON" : "OFF");
-  // display.u8g2.drawStr(0, 64, buffer);
-}
-
-void IOTestScreen::update()
-{
-  if (ClickButtonEnc.clicks == 1)
-  {
-    screenManager.back();
-  }
-
-  if (ClickButtonEnc.clicks == 3)
-  {
-    encoder.clearCount();
-  }
-}

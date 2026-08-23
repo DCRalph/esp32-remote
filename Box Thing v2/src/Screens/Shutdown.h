@@ -1,126 +1,91 @@
 #pragma once
 
+#include <Display.h>
+#include <ScreenManager.h>
+
 #include "config.h"
-#include "IO/Display.h"
 #include "IO/GPIO.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
 
-enum ShutdownState
+namespace
 {
-  Countdown,
-  Shutdown_Warning,
-  Shutdown
+  enum class ShutdownState
+  {
+    Countdown,
+    Warning,
+    Shutdown
+  };
+
+  constexpr long kShutdownCountdownMs = 1500;
+
+  ShutdownState gShutdownState = ShutdownState::Countdown;
+  unsigned long gShutdownStartTime = 0;
+
+  void shutdownDraw()
+  {
+    display.noTopBar();
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TC_DATUM);
+
+    const int centreX = display.width() / 2;
+
+    if (gShutdownState == ShutdownState::Countdown)
+    {
+      display.setTextSize(U8G2_TEXT_TITLE);
+      display.drawString("Shutting down", centreX, 4);
+
+      display.setTextSize(U8G2_TEXT_BAR);
+      display.drawString("Press to cancel", centreX, 36);
+
+      uint8_t progress = map(millis() - gShutdownStartTime, 0, kShutdownCountdownMs, 100, 0);
+      progress = constrain(progress, 0, 100);
+
+      display.drawRect(0, 48, 127, 16, TFT_WHITE);
+      display.fillRect(2, 50, map(progress, 0, 100, 0, 123), 12, TFT_WHITE);
+      return;
+    }
+
+    display.setTextSize(U8G2_TEXT_TITLE);
+    display.drawString("Shutting down", centreX, 14);
+  }
+
+  void shutdownUpdate()
+  {
+    const unsigned long elapsed = millis() - gShutdownStartTime;
+
+    switch (gShutdownState)
+    {
+    case ShutdownState::Countdown:
+      if (elapsed > kShutdownCountdownMs)
+        gShutdownState = ShutdownState::Warning;
+      else if (ClickButtonEnc.clicks == 1)
+        screenManager.back();
+      break;
+
+    case ShutdownState::Warning:
+      if (elapsed > kShutdownCountdownMs + 500)
+        gShutdownState = ShutdownState::Shutdown;
+      break;
+
+    case ShutdownState::Shutdown:
+      debugI("Shutting down...");
+      latch.Off();
+      break;
+    }
+  }
+
+  void shutdownOnEnter()
+  {
+    gShutdownState = ShutdownState::Countdown;
+    gShutdownStartTime = millis();
+  }
+}
+
+const Screen2 ShutdownScreen2 = {
+    .name = "Shutdown",
+    .draw = shutdownDraw,
+    .update = shutdownUpdate,
+    .onEnter = shutdownOnEnter,
+    .onExit = nullptr,
 };
-
-class ShutdownScreen : public Screen
-{
-private:
-  ShutdownState state;
-  unsigned long startTime = 0;
-  long countdown = 1500;
-  uint8_t progress;
-
-public:
-  ShutdownScreen(String _name);
-
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-
-  void setState(ShutdownState _state);
-  ShutdownState getState();
-};
-
-ShutdownScreen::ShutdownScreen(String _name) : Screen(_name)
-{
-  state = ShutdownState::Countdown;
-}
-
-void ShutdownScreen::onEnter()
-{
-  state = ShutdownState::Countdown;
-  startTime = millis();
-}
-
-void ShutdownScreen::setState(ShutdownState _state)
-{
-  state = _state;
-}
-
-ShutdownState ShutdownScreen::getState()
-{
-  return state;
-}
-
-void ShutdownScreen::draw()
-{
-  display.noTopBar();
-
-  switch (state)
-  {
-  case ShutdownState::Countdown:
-
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.drawCenteredText(20, "Shutting down");
-
-    display.u8g2.setFont(u8g2_font_koleeko_tf);
-    display.drawCenteredText(44, "Press to cancel");
-
-    progress = map(millis() - startTime, 0, countdown, 100, 0);
-    progress = constrain(progress, 0, 100);
-
-    display.u8g2.drawFrame(0, 48, 127, 16);
-    display.u8g2.drawBox(2, 50, map(progress, 0, 100, 0, 123), 12);
-
-    break;
-
-  case ShutdownState::Shutdown_Warning:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(30, "Shutting down");
-
-    break;
-
-  case ShutdownState::Shutdown:
-    display.u8g2.setFont(u8g2_font_logisoso16_tr);
-    display.u8g2.setDrawColor(1);
-
-    display.drawCenteredText(30, "Shutting down");
-
-    break;
-
-  default:
-    break;
-  }
-}
-
-void ShutdownScreen::update()
-{
-  if (state == ShutdownState::Countdown)
-  {
-    if (millis() - startTime > countdown)
-    {
-      setState(ShutdownState::Shutdown_Warning);
-    }
-
-    if (ClickButtonEnc.clicks == 1)
-    {
-      screenManager.back();
-    }
-  }
-
-  if (state == ShutdownState::Shutdown_Warning)
-  {
-    if (millis() - startTime > countdown + 500)
-    {
-      setState(ShutdownState::Shutdown);
-    }
-  }
-
-  if (state == ShutdownState::Shutdown)
-  {
-    // Shutdown
-    Serial.println("Shutting down...");
-    latch.Off();
-  }
-}

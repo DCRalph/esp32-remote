@@ -1,291 +1,126 @@
-// #pragma once
-
-// #include "config.h"
-// #include "IO/Display.h"
-// #include "IO/GPIO.h"
-// // #include "IO/myespnow.h"
-// #include "IO/Wireless.h"
-
-// class RemoteRelayScreen : public Screen
-// {
-// public:
-//   RemoteRelayScreen(String _name);
-
-//   Menu menu = Menu();
-
-//   MenuItemBack backItem;
-
-//   bool connectionPing = false;
-//   uint64_t lastPing = 0;
-
-//   u8_t peer_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
-
-//   MenuItemToggle connectionItem = MenuItemToggle("Conn", &connectionPing, false);
-
-//   MenuItemAction testItem = MenuItemAction("Send", 1, [&]()
-//                                            {
-//                                              data_packet p;
-//                                              p.type = 43;
-//                                              p.len = 5;
-
-//                                              memcpy(p.data, "Hello", 5);
-
-//                                              wireless.send(&p, peer_addr);
-//                                              //
-//                                            });
-
-//     MenuItemAction relay1 = MenuItemAction("Relay 1", 1, [&]()
-//                                          {
-//                                            data_packet p;
-//                                            p.type = 11;
-//                                            p.len = 0;
-
-//                                            wireless.send(&p, peer_addr);
-//                                            //
-//                                          });
-
-//   MenuItemAction relay2 = MenuItemAction("Relay 2", 1, [&]()
-//                                          {
-//                                            data_packet p;
-//                                            p.type = 12;
-//                                            p.len = 0;
-
-//                                            wireless.send(&p, peer_addr);
-//                                            //
-//                                          });
-
-//   void draw() override;
-//   void update() override;
-//   void onExit() override;
-// };
-
-// RemoteRelayScreen::RemoteRelayScreen(String _name) : Screen(_name)
-// {
-
-//   menu.addMenuItem(&backItem);
-//   menu.addMenuItem(&connectionItem);
-//   menu.addMenuItem(&testItem);
-//   menu.addMenuItem(&relay1);
-//   menu.addMenuItem(&relay2);
-// }
-
-// void RemoteRelayScreen::draw()
-// {
-//   // display.noTopBar();
-//   menu.draw();
-// }
-
-// void RemoteRelayScreen::update()
-// {
-//   menu.update();
-
-//   if (millis() - lastPing > 100)
-//   {
-//     lastPing = millis();
-
-//     connectionPing = wireless.lastStatus == ESP_OK;
-
-//     data_packet p;
-//     p.type = 0xa0;
-//     p.len = 0;
-
-//     wireless.send(&p, peer_addr);
-//   }
-// }
-
-// void RemoteRelayScreen::onExit()
-// {
-// }
-
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-// #include "IO/myespnow.h"
+#include <Menu.h>
 #include <Wireless.h>
 
-static void fireRelay(int relay)
+#include "config.h"
+#include "Screens/Screens.h"
+
+namespace RemoteRelay
 {
-  bool relays[8] = {false, false, false, false, false, false, false, false};
-
-  relays[relay] = true;
-
-  WirelessFrame fp;
-  fp.direction = PacketDirection::SEND;
-  memcpy(fp.mac, remote_addr, 6);
-  fp.packet.type = CMD_FIRE;
-  fp.packet.len = 8;
-
-  memcpy(fp.packet.data, relays, 8);
-
-  wireless.send(&fp);
+  /** Called from the ESP-NOW receive hook when the relay board answers a ping. */
+  void notePingReply();
 }
 
-class RemoteRelayScreen : public Screen
+namespace
 {
-public:
-  RemoteRelayScreen(String _name);
+  uint64_t gRelayLastPing = 0;
+  uint64_t gRelayLastConfirmedPing = 0;
+  bool gRelayConnected = false;
+  bool gRelayLastConnected = false;
+  bool gRelayArmed = false;
 
-  Menu menu = Menu();
-
-  MenuItemBack backItem;
-
-  uint64_t lastPing = 0;
-  uint64_t lastConfirmedPing = 0;
-  bool connected = false;
-  bool lastConnected = false;
-
-  bool armed = false;
-
-  MenuItemToggle connectionItem = MenuItemToggle("Conn", &connected, false);
-
-  MenuItemAction testItem = MenuItemAction("Test", 1, [&]()
-                                           {
-                                             WirelessFrame fp;
-                                             fp.direction = PacketDirection::SEND;
-                                             memcpy(fp.mac, remote_addr, 6);
-                                             fp.packet.type = CMD_TEST;
-                                             fp.packet.len = 0;
-
-                                             wireless.send(&fp); });
-
-  MenuItemToggle armItem = MenuItemToggle("Armed", &armed);
-
-  MenuItemAction fire1Item = MenuItemAction("Fire 1", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(0);
-                                              //
-                                            });
-
-  MenuItemAction fire2Item = MenuItemAction("Fire 2", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(1);
-                                              //
-                                            });
-
-  MenuItemAction fire3Item = MenuItemAction("Fire 3", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(2);
-                                              //
-                                            });
-
-  MenuItemAction fire4Item = MenuItemAction("Fire 4", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(3);
-                                              //
-                                            });
-
-  MenuItemAction fire5Item = MenuItemAction("Fire 5", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(4);
-                                              //
-                                            });
-
-  MenuItemAction fire6Item = MenuItemAction("Fire 6", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(5);
-                                              //
-                                            });
-
-  MenuItemAction fire7Item = MenuItemAction("Fire 7", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(6);
-                                              //
-                                            });
-
-  MenuItemAction fire8Item = MenuItemAction("Fire 8", 1, [&]()
-                                            {
-                                              if (connected && armed)
-                                                fireRelay(7);
-                                              //
-                                            });
-
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-};
-
-RemoteRelayScreen::RemoteRelayScreen(String _name) : Screen(_name)
-{
-  menu.addMenuItem(&backItem);
-
-  menu.addMenuItem(&connectionItem);
-  menu.addMenuItem(&armItem);
-  menu.addMenuItem(&testItem);
-
-  menu.addMenuItem(&fire1Item);
-  menu.addMenuItem(&fire2Item);
-  menu.addMenuItem(&fire3Item);
-  menu.addMenuItem(&fire4Item);
-  menu.addMenuItem(&fire5Item);
-  menu.addMenuItem(&fire6Item);
-  menu.addMenuItem(&fire7Item);
-  menu.addMenuItem(&fire8Item);
-
-  armItem.setOnChange([&]()
-                      {
-                        WirelessFrame fp;
-                        fp.direction = PacketDirection::SEND;
-                        memcpy(fp.mac, remote_addr, 6);
-                        fp.packet.len = 0;
-
-                        if (armed)
-                        {
-                          fp.packet.type = CMD_ARM;
-                        }
-                        else
-                        {
-                          fp.packet.type = CMD_DISARM;
-                        }
-
-                        wireless.send(&fp);
-                        //
-                      });
-}
-
-void RemoteRelayScreen::draw()
-{
-  menu.draw();
-}
-
-void RemoteRelayScreen::update()
-{
-  menu.update();
-
-  connected = millis() - lastConfirmedPing < 1000;
-
-  if (connected != lastConnected)
+  /** Send a zero-payload command to the relay board. */
+  void relaySendCommand(uint8_t type)
   {
-    lastConnected = connected;
+    wireless.sendTyped(type, remote_addr);
+  }
 
-    if (!connected)
+  void relayFire(int relay)
+  {
+    if (!gRelayConnected || !gRelayArmed)
+      return;
+
+    bool relays[8] = {false, false, false, false, false, false, false, false};
+    relays[relay] = true;
+
+    wireless.sendTyped(CMD_FIRE, relays, remote_addr);
+  }
+
+  Menu relayMenu;
+
+  MenuItemBack relayBackItem;
+  MenuItemToggle relayConnectionItem("Conn", &gRelayConnected, false);
+  MenuItemToggle relayArmItem("Armed", &gRelayArmed);
+  MenuItemAction relayTestItem("Test", 1, []()
+                               { relaySendCommand(CMD_TEST); });
+
+  MenuItemAction relayFire1Item("Fire 1", 1, []()
+                                { relayFire(0); });
+  MenuItemAction relayFire2Item("Fire 2", 1, []()
+                                { relayFire(1); });
+  MenuItemAction relayFire3Item("Fire 3", 1, []()
+                                { relayFire(2); });
+  MenuItemAction relayFire4Item("Fire 4", 1, []()
+                                { relayFire(3); });
+  MenuItemAction relayFire5Item("Fire 5", 1, []()
+                                { relayFire(4); });
+  MenuItemAction relayFire6Item("Fire 6", 1, []()
+                                { relayFire(5); });
+  MenuItemAction relayFire7Item("Fire 7", 1, []()
+                                { relayFire(6); });
+  MenuItemAction relayFire8Item("Fire 8", 1, []()
+                                { relayFire(7); });
+
+  [[maybe_unused]] const bool relayMenuBuilt = []()
+  {
+    relayMenu.addMenuItem(&relayBackItem);
+
+    relayMenu.addMenuItem(&relayConnectionItem);
+    relayMenu.addMenuItem(&relayArmItem);
+    relayMenu.addMenuItem(&relayTestItem);
+
+    relayMenu.addMenuItem(&relayFire1Item);
+    relayMenu.addMenuItem(&relayFire2Item);
+    relayMenu.addMenuItem(&relayFire3Item);
+    relayMenu.addMenuItem(&relayFire4Item);
+    relayMenu.addMenuItem(&relayFire5Item);
+    relayMenu.addMenuItem(&relayFire6Item);
+    relayMenu.addMenuItem(&relayFire7Item);
+    relayMenu.addMenuItem(&relayFire8Item);
+
+    relayArmItem.setOnChange([]()
+                             { relaySendCommand(gRelayArmed ? CMD_ARM : CMD_DISARM); });
+    return true;
+  }();
+
+  void relayDraw()
+  {
+    relayMenu.draw();
+  }
+
+  void relayUpdate()
+  {
+    relayMenu.update();
+
+    gRelayConnected = millis() - gRelayLastConfirmedPing < 1000;
+
+    if (gRelayConnected != gRelayLastConnected)
     {
-      armed = false;
+      gRelayLastConnected = gRelayConnected;
+
+      // Never leave the board armed once the link drops.
+      if (!gRelayConnected)
+        gRelayArmed = false;
+    }
+
+    if (millis() - gRelayLastPing > 200)
+    {
+      gRelayLastPing = millis();
+      relaySendCommand(CMD_PING);
     }
   }
-
-  if (millis() - lastPing > 200)
-  {
-    lastPing = millis();
-
-    WirelessFrame fp;
-    fp.direction = PacketDirection::SEND;
-    memcpy(fp.mac, remote_addr, 6);
-    fp.packet.type = CMD_PING;
-    fp.packet.len = 0;
-
-    wireless.send(&fp);
-  }
 }
 
-void RemoteRelayScreen::onEnter()
+void RemoteRelay::notePingReply()
 {
+  gRelayLastConfirmedPing = millis();
 }
+
+const Screen2 RemoteRelayScreen2 = {
+    .name = "Relay",
+    .draw = relayDraw,
+    .update = relayUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
+};

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-#include "Setup/InitOTA.h"
+#include <Menu.h>
+#include <dcr_TaskManager.h>
 
-#include "IO/Menu.h"
+#include "config.h"
+#include "IO/GPIO.h"
+#include "Screens/Screens.h"
+#include "Setup/InitOTA.h"
 
 static String formatBytes(size_t bytes, bool _short = false)
 {
@@ -48,112 +49,108 @@ static String formatBytes(size_t bytes, bool _short = false)
   }
 }
 
-class DebugScreen : public Screen
+namespace
 {
-public:
-  DebugScreen(String _name);
+  long gDebugBootCount = 0;
+  bool gDebugLedState = false;
+  bool gDebugOtaState = false;
 
-  long bootCount;
-  bool ledState = false;
-  bool otaSetupTmp = false;
+  String gDebugTotalMem = "0";
+  String gDebugFreeMem = "0";
+  String gDebugUsedMem = "0";
 
-  uint64_t totalMem = 0;
-  uint64_t freeMem = 0;
-  uint64_t usedMem = 0;
+  // dcr_taskManager replaces the old per-phase render timers, which dcr_display's
+  // render() does not expose.
+  int gDebugCpu0 = 0;
+  int gDebugCpu1 = 0;
+  int gDebugTaskCount = 0;
 
-  String totalMemStr = "0";
-  String freeMemStr = "0";
-  String usedMemStr = "0";
+  Menu debugMenu(MenuSize::Medium);
 
-  Menu menu = Menu(MenuSize::Medium);
+  MenuItemBack debugBackItem;
+  MenuItemNavigate debugIoTestItem("IO Test", &IOTestScreen2);
+  MenuItemNavigate debugBatteryItem("Battery", &BatteryScreen2);
+  MenuItemToggle debugLedItem("LED", &gDebugLedState);
+  MenuItemNumber<long> debugBootCountItem("Boot", &gDebugBootCount);
+  MenuItemToggle debugOtaItem("OTA", &gDebugOtaState);
 
-  MenuItemBack backItem;
+  MenuItemNumber<uint32_t> debugFpsItem("FPS", &lastFps);
+  MenuItemNumber<uint32_t> debugFrameTimeItem("F Time", &lastFrameTime);
 
-  MenuItemNavigate ioTestItem = MenuItemNavigate("IO Test", "IO Test");
+  MenuItemNumber<int> debugCpu0Item("CPU0 %", &gDebugCpu0);
+  MenuItemNumber<int> debugCpu1Item("CPU1 %", &gDebugCpu1);
+  MenuItemNumber<int> debugTaskCountItem("Tasks", &gDebugTaskCount);
 
-  MenuItemNavigate batteryItem = MenuItemNavigate("Battery", "Battery");
+  MenuItemString debugTotalMemItem("tmem", &gDebugTotalMem);
+  MenuItemString debugFreeMemItem("fmem", &gDebugFreeMem);
+  MenuItemString debugUsedMemItem("umem", &gDebugUsedMem);
 
-  MenuItemToggle ledItem = MenuItemToggle("LED", &ledState);
+  [[maybe_unused]] const bool debugMenuBuilt = []()
+  {
+    debugMenu.addMenuItem(&debugBackItem);
+    debugMenu.addMenuItem(&debugIoTestItem);
+    debugMenu.addMenuItem(&debugBatteryItem);
+    debugMenu.addMenuItem(&debugLedItem);
+    debugMenu.addMenuItem(&debugBootCountItem);
+    debugMenu.addMenuItem(&debugOtaItem);
 
-  MenuItemNumber<long> bootCountItem = MenuItemNumber<long>("Boot", &bootCount);
+    debugMenu.addMenuItem(&debugFpsItem);
+    debugMenu.addMenuItem(&debugFrameTimeItem);
 
-  MenuItemToggle otaItem = MenuItemToggle("OTA", &otaSetupTmp);
+    debugMenu.addMenuItem(&debugCpu0Item);
+    debugMenu.addMenuItem(&debugCpu1Item);
+    debugMenu.addMenuItem(&debugTaskCountItem);
 
-  MenuItemNumber<uint32_t> fpsItem = MenuItemNumber<uint32_t>("FPS", &lastFps);
-  MenuItemNumber<uint32_t> frameTimeItem = MenuItemNumber<uint32_t>("F Time", &lastFrameTime);
+    debugMenu.addMenuItem(&debugTotalMemItem);
+    debugMenu.addMenuItem(&debugFreeMemItem);
+    debugMenu.addMenuItem(&debugUsedMemItem);
 
-  MenuItemNumber<uint64_t> clearBufferTimeItem = MenuItemNumber<uint64_t>("clrbuf", &clearBufferTime);
-  MenuItemNumber<uint64_t> screenManagerDrawTimeItem = MenuItemNumber<uint64_t>("smd", &screenManagerDrawTime);
-  MenuItemNumber<uint64_t> drawTopBarTimeItem = MenuItemNumber<uint64_t>("dtb", &drawTopBarTime);
-  MenuItemNumber<uint64_t> sendBufferTimeItem = MenuItemNumber<uint64_t>("sb", &sendBufferTime);
-  MenuItemNumber<uint64_t> screenUpdateDrawTimeItem = MenuItemNumber<uint64_t>("sud", &screenUpdateDrawTime);
+    debugLedItem.setOnChange([]()
+                             { led.Write(gDebugLedState); });
 
-  MenuItemString totalMemItem = MenuItemString("tmem", &totalMemStr);
-  MenuItemString freeMemItem = MenuItemString("fmem", &freeMemStr);
-  MenuItemString usedMemItem = MenuItemString("umem", &usedMemStr);
+    debugOtaItem.setOnChange([]()
+                             {
+                               if (!otaSetup)
+                                 InitOta();
+                               gDebugOtaState = true;
+                               //
+                             });
+    return true;
+  }();
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
+  void debugDraw()
+  {
+    debugMenu.draw();
+  }
+
+  void debugUpdate()
+  {
+    debugMenu.update();
+
+    const uint64_t totalMem = ESP.getHeapSize();
+    const uint64_t freeMem = ESP.getFreeHeap();
+
+    gDebugTotalMem = formatBytes(totalMem, true);
+    gDebugFreeMem = formatBytes(freeMem, true);
+    gDebugUsedMem = formatBytes(totalMem - freeMem, true);
+
+    gDebugCpu0 = (int)taskManager.getCpuUsagePercent(0);
+    gDebugCpu1 = (int)taskManager.getCpuUsagePercent(1);
+    gDebugTaskCount = (int)taskManager.snapshotTasks().size();
+  }
+
+  void debugOnEnter()
+  {
+    gDebugBootCount = preferences.getLong("bootCount", 0);
+    gDebugLedState = led.read();
+    gDebugOtaState = otaSetup;
+  }
+}
+
+const Screen2 DebugScreen2 = {
+    .name = "Debug",
+    .draw = debugDraw,
+    .update = debugUpdate,
+    .onEnter = debugOnEnter,
+    .onExit = nullptr,
 };
-
-DebugScreen::DebugScreen(String _name) : Screen(_name)
-{
-
-  menu.addMenuItem(&backItem);
-  menu.addMenuItem(&ioTestItem);
-  menu.addMenuItem(&batteryItem);
-  menu.addMenuItem(&ledItem);
-  menu.addMenuItem(&bootCountItem);
-  menu.addMenuItem(&otaItem);
-
-  menu.addMenuItem(&fpsItem);
-  menu.addMenuItem(&frameTimeItem);
-
-  menu.addMenuItem(&clearBufferTimeItem);
-  menu.addMenuItem(&screenManagerDrawTimeItem);
-  menu.addMenuItem(&drawTopBarTimeItem);
-  menu.addMenuItem(&sendBufferTimeItem);
-  menu.addMenuItem(&screenUpdateDrawTimeItem);
-
-  menu.addMenuItem(&totalMemItem);
-  menu.addMenuItem(&freeMemItem);
-  menu.addMenuItem(&usedMemItem);
-
-  ledItem.setOnChange([&]()
-                      { led.Write(ledState); });
-
-  otaItem.setOnChange([&]()
-                      {
-    if (!otaSetup){
-      InitOta();
-    }
-    otaSetupTmp = true; });
-}
-
-void DebugScreen::draw()
-{
-  menu.draw();
-}
-
-void DebugScreen::update()
-{
-  menu.update();
-
-  totalMem = ESP.getHeapSize();
-  freeMem = ESP.getFreeHeap();
-  usedMem = totalMem - freeMem;
-
-  totalMemStr = formatBytes(totalMem, true);
-  freeMemStr = formatBytes(freeMem, true);
-  usedMemStr = formatBytes(usedMem, true);
-}
-
-void DebugScreen::onEnter()
-{
-
-  bootCount = preferences.getLong("bootCount", 0);
-  ledState = led.read();
-
-  otaSetupTmp = otaSetup;
-}

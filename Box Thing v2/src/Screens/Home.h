@@ -1,53 +1,45 @@
 #pragma once
 
+#include <Menu.h>
+#include <ScreenManager.h>
+
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include "Screens/Screens.h"
 
-#include "IO/Menu.h"
-
-class HomeScreen : public Screen
+namespace
 {
-public:
-  HomeScreen(String _name);
+  Menu homeMenu(MenuSize::Large);
 
-  Menu menu = Menu(MenuSize::Large);
+  MenuItemNavigate homeSwitchMenuItem("Control", &SwitchMenuScreen2);
+  MenuItemNavigate homeSettingsItem("Settings", &SettingsScreen2);
+  MenuItemAction homePowerOffItem("Power Off", -1, []()
+                                  { screenManager.setScreen(&ShutdownScreen2); });
 
-  MenuItemNavigate switchMenuItem = MenuItemNavigate("Control", "Switch Menu");
+  [[maybe_unused]] const bool homeMenuBuilt = []()
+  {
+    homeMenu.addMenuItem(&homeSwitchMenuItem);
+    homeMenu.addMenuItem(&homeSettingsItem);
+    homeMenu.addMenuItem(&homePowerOffItem);
 
-  MenuItemNavigate settingsItem = MenuItemNavigate("Settings", "Settings");
+    homeSettingsItem.addRoute(2, &DebugScreen2);
+    return true;
+  }();
 
-  MenuItemAction powerOffItem = MenuItemAction(
-      "Power Off", -1, []()
-      { screenManager.setScreen("Shutdown"); });
+  void homeDraw()
+  {
+    homeMenu.draw();
+  }
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-  uint8_t active;
+  void homeUpdate()
+  {
+    homeMenu.update();
+  }
+}
+
+const Screen2 HomeScreen2 = {
+    .name = "Home",
+    .draw = homeDraw,
+    .update = homeUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-HomeScreen::HomeScreen(String _name) : Screen(_name)
-{
-  active = 1;
-
-  menu.addMenuItem(&switchMenuItem);
-  menu.addMenuItem(&settingsItem);
-  menu.addMenuItem(&powerOffItem);
-
-  settingsItem.addRoute(2, "Debug");
-}
-
-void HomeScreen::draw()
-{
-  menu.draw();
-}
-
-void HomeScreen::update()
-{
-  menu.update();
-}
-
-void HomeScreen::onEnter()
-{
-}

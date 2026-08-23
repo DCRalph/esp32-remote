@@ -1,34 +1,40 @@
+// Starting point for a new screen.
+//
+// Copy this file, rename the symbols, declare the Screen2 in Screens/Screens.h,
+// and include it from main.cpp. Screen headers are included exactly once, so
+// definitions may live here rather than in a .cpp.
 #pragma once
 
+#include <Display.h>
+#include <ScreenManager.h>
+
 #include "config.h"
-#include "IO/Display.h"
 #include "IO/GPIO.h"
+#include "IO/TopBar.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
 
-class templateScreen : public Screen
+namespace
 {
-public:
-  templateScreen(String _name);
-
-  void draw() override;
-  void update() override;
-};
-
-templateScreen::templateScreen(String _name) : Screen(_name)
-{
-}
-
-void templateScreen::draw()
-{
-  display.u8g2.setFont(u8g2_font_profont12_tf);
-  display.u8g2.setDrawColor(1);
-  display.u8g2.drawStr(0, 8, "Template");
-  display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);
-}
-
-void templateScreen::update()
-{
-  if (ClickButtonEnc.clicks == 1)
+  void templateDraw()
   {
-    screenManager.back();
+    display.setTextSize(U8G2_TEXT_MONO12);
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TL_DATUM);
+    display.drawString("Template", 0, TopBar::kHeight);
+  }
+
+  void templateUpdate()
+  {
+    if (ClickButtonEnc.clicks == 1)
+      screenManager.back();
   }
 }
+
+const Screen2 TemplateScreen2 = {
+    .name = "Template",
+    .draw = templateDraw,
+    .update = templateUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
+};
