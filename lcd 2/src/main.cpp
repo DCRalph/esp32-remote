@@ -125,7 +125,7 @@ void setup()
   };
   netLink.setCallbacks(netCallbacks);
 
-  netLink.setFactoryCredentials("Kaitiaki", "Solv-it32");
+  netLink.setFactoryCredentials("dj", "bushdid912");
 
   netLink.init();
   HTTP::init();
