@@ -1,82 +1,68 @@
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-// #include "IO/myespnow.h"
+#include <Display.h>
+#include <ScreenManager.h>
 #include <Wireless.h>
 
-class EncoderTransmiterScreen : public Screen
+#include "config.h"
+#include "IO/GPIO.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
+
+namespace
 {
-public:
-  EncoderTransmiterScreen(String _name);
+  uint64_t gEncoderTxLastSend = 0;
+  int8_t gEncoderTxNextClicks = 0;
 
-  // 84:fc:e6:64:9b:f0
-  uint8_t peer_addr[6] = {0x84, 0xfc, 0xe6, 0x64, 0x9b, 0xf0};
-
-  uint64_t lastSend = 0;
-  int8_t nextClicks = 0;
-
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-  void onExit() override;
-};
-
-EncoderTransmiterScreen::EncoderTransmiterScreen(String _name) : Screen(_name)
-{
-}
-
-void EncoderTransmiterScreen::draw()
-{
-  display.u8g2.setFont(u8g2_font_profont10_tf);
-  display.u8g2.drawStr(0, 30, "Encoder Transmiter");
-  // press encoder 2 times and hold to exit
-  display.u8g2.drawStr(0, 50, "Press encoder 2 times");
-  display.u8g2.drawStr(0, 60, "and hold to exit");
-}
-
-void EncoderTransmiterScreen::update()
-{
-
-  if (ClickButtonEnc.clicks == -2)
+  void encoderTxDraw()
   {
-    screenManager.back();
+    display.setTextSize(U8G2_TEXT_MONO10);
+    display.setTextColor(TFT_WHITE);
+    display.setTextDatum(TL_DATUM);
+
+    display.drawString("Encoder Transmiter", 0, 22);
+    display.drawString("Press encoder 2 times", 0, 42);
+    display.drawString("and hold to exit", 0, 52);
   }
 
-  if (ClickButtonEnc.clicks != 0)
+  void encoderTxUpdate()
   {
-    nextClicks = ClickButtonEnc.clicks;
-  }
+    if (ClickButtonEnc.clicks == -2)
+      screenManager.back();
 
-  if (millis() - lastSend > 10)
-  {
-    lastSend = millis();
+    if (ClickButtonEnc.clicks != 0)
+      gEncoderTxNextClicks = ClickButtonEnc.clicks;
 
-    uint64_t encCount = encoderGetCount();
-    uint8_t encCountArr[8];
-    memcpy(encCountArr, &encCount, 8);
+    if (millis() - gEncoderTxLastSend <= 10)
+      return;
 
-    WirelessFrame fp;
-    memcpy(fp.mac, TransportAddress::broadcast().getMac(), 6);
-    // fp.mac = TransportAddress::broadcast().getMac();
+    gEncoderTxLastSend = millis();
+
+    const uint64_t encCount = encoderGetCount();
+
+    WirelessFrame fp{};
+    memcpy(fp.mac, wireless.broadcastAddress().data(), 6);
     fp.direction = PacketDirection::SEND;
     fp.packet.type = 0xa3;
     fp.packet.len = 9;
 
-    memcpy(fp.packet.data, encCountArr, 8);
-    fp.packet.data[8] = nextClicks;
+    memcpy(fp.packet.data, &encCount, 8);
+    fp.packet.data[8] = gEncoderTxNextClicks;
 
     wireless.send(&fp);
-    nextClicks = 0;
+    gEncoderTxNextClicks = 0;
+  }
+
+  void encoderTxOnEnter()
+  {
+    encoderClearCount();
   }
 }
 
-void EncoderTransmiterScreen::onEnter()
-{
-  encoderClearCount();
-}
-
-void EncoderTransmiterScreen::onExit()
-{
-}
+const Screen2 EncoderTransmiterScreen2 = {
+    .name = "Encoder",
+    .draw = encoderTxDraw,
+    .update = encoderTxUpdate,
+    .onEnter = encoderTxOnEnter,
+    .onExit = nullptr,
+};

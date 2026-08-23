@@ -4,3 +4,4 @@
 *.pio
 *.vscode/
 .vscode
+libs/

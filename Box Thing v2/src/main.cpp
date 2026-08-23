@@ -1,76 +1,73 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <ESPmDNS.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
+#include <Display.h>
+#include <Menu.h>
+#include <MenuInput.h>
+#include <Mesh.h>
+#include <ScreenManager.h>
+#include <Wireless.h>
+
+#include <dcr_Console.h>
+#include <dcr_FatalHandler.h>
+#include <dcr_Files.h>
+#include <dcr_HttpRequest.h>
+#include <dcr_Logger.h>
+#include <dcr_NetLink.h>
+#include <dcr_TaskManager.h>
 
 #include "config.h"
 #include "Setup/InitOTA.h"
 
-#include "IO/GPIO.h"
-#include "IO/Display.h"
-#include "IO/ScreenManager.h"
-#include <Wireless.h>
-#include <Mesh.h>
 #include "IO/Battery.h"
+#include "IO/GPIO.h"
 #include "IO/Haptic.h"
 #include "IO/PartitionTable.h"
+#include "IO/TopBar.h"
+#include "IO/U8g2DisplayDriver.h"
+
+#include "Screens/Screens.h"
 
 #include "Screens/StartUp.h"
 #include "Screens/UpdateProgress.h"
+
 #include "Screens/Shutdown.h"
 
-#include "Screens/Debug/Debug.h"
-#include "Screens/Debug/IOTest.h"
 #include "Screens/Debug/Battery.h"
+#include "Screens/Debug/IOTest.h"
+#include "Screens/Debug/Debug.h"
+
+#include "Screens/Control/Car.h"
+#include "Screens/Control/EncoderTransmiter.h"
+#include "Screens/Control/EspnowSwitch.h"
+#include "Screens/Control/RemoteRelay.h"
+#include "Screens/Control/ServosControl.h"
+
+#include "Screens/Settings/GeneralSettings.h"
+#include "Screens/Settings/WiFi/WiFiInfo.h"
+#include "Screens/Settings/WiFi/WiFiPassword.h"
+#include "Screens/Settings/WiFi/WiFiScan.h"
+#include "Screens/Settings/WiFiSettings.h"
 
 #include "Screens/Home.h"
 #include "Screens/SwitchMenu.h"
 #include "Screens/Settings.h"
 
-#include "Screens/Control/EspnowSwitch.h"
-#include "Screens/Control/Car.h"
-// #include "Screens/Control/CarFlash.h"
-#include "Screens/Control/RemoteRelay.h"
-#include "Screens/Control/EncoderTransmiter.h"
-#include "Screens/Control/ServosControl.h"
+#undef LOG_TAG
+#define LOG_TAG "MAIN"
 
-#include "Screens/Settings/GeneralSettings.h"
-#include "Screens/Settings/WiFiSettings.h"
+U8g2DisplayDriverContext displayDriverContext;
 
-#include "Screens/Settings/WiFi/WiFiInfo.h"
-
-StartUpScreen startUp("Start Up");
-UpdateProgressScreen updateProgress("Update Progress");
-ShutdownScreen shutdown("Shutdown");
-
-// #### /Debug
-DebugScreen debug("Debug");
-IOTestScreen ioTest("IO Test");
-BatteryScreen battery("Battery");
-
-// #### /
-HomeScreen homeScreen("Home");
-SwitchMenuScreen switchMenu("Switch Menu");
-SettingsScreen settings("Settings");
-
-// #### /Control
-EspnowSwitchScreen espnowSwitch("Espnow Switch");
-CarControlScreen carControl("Car Control");
-// CarFlashScreen carFlash("Car Flash");
-RemoteRelayScreen remoteRelay("Remote Relay");
-EncoderTransmiterScreen encoderTransmiter("Encoder Transmiter");
-ServoControlScreen servosControl("Servos Control");
-
-// #### /Settings
-GeneralSettingsScreen generalSettings("General Settings");
-WiFiSettingsScreen wifiSettings("WiFi Settings");
-
-// #### /Settings/WiFi
-WiFiInfoScreen wifiInfo("WiFi Info");
+/** dcr_display asks the application for this to draw the battery percentage. */
+int getBatteryPercentage()
+{
+  return batteryGetPercentageSmooth();
+}
 
 unsigned long batteryLoopMs = 0;
-char buffer[100];
 
 TaskHandle_t fpsTask;
 uint64_t lastDraw = 0;
@@ -81,38 +78,15 @@ void fpsTaskFunction(void *pvParameters)
   {
     lastFps = fps;
     fps = 0;
+    taskManager.noteHeartbeat();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
-
-void setupWiFi()
-{
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ConnectingWifi);
-  display.display();
-
-  Serial.println("[INFO] [SETUP] WiFi...");
-  WiFi.mode(WIFI_STA);
-
-  wm.setConfigPortalBlocking(false);
-
-  if (wm.autoConnect(AP_SSID))
-  {
-    Serial.println("[INFO] [SETUP] Connected");
-  }
-  else
-  {
-    Serial.println("[INFO] [SETUP] Config portal running");
-    ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::ApStarted);
-    display.display();
   }
 }
 
 void espNowCb(WirelessFrame *frame)
 {
   if (frame->packet.type == CMD_PING)
-  {
-    remoteRelay.lastConfirmedPing = millis();
-  }
+    RemoteRelay::notePingReply();
 }
 
 void beginMeshTransport()
@@ -120,10 +94,10 @@ void beginMeshTransport()
   auto *sync = SyncManager::getInstance();
   sync->setTransport(&wireless);
   sync->setDeviceIdProvider([]()
-                             {
-                               uint64_t mac = ESP.getEfuseMac();
-                               return static_cast<uint32_t>(mac ^ (mac >> 32));
-                             });
+                            {
+                              uint64_t mac = ESP.getEfuseMac();
+                              return static_cast<uint32_t>(mac ^ (mac >> 32));
+                            });
   sync->setModePersistence(
       []()
       {
@@ -144,83 +118,92 @@ void teardownMeshTransport()
   SyncManager::getInstance()->setTransport(nullptr);
 }
 
+void setupWiFi()
+{
+  StartUp::setState(StartUpState::ConnectingWifi);
+  display.render();
+
+  debugI("WiFi...");
+
+  NetLinkCallbacks callbacks;
+  callbacks.isBleActive = []()
+  { return false; };
+  callbacks.isCellularPreferred = []()
+  { return false; };
+  callbacks.currentUnixTime = [](bool &timeOk)
+  {
+    timeOk = false;
+    return (uint32_t)(millis() / 1000);
+  };
+  callbacks.onConnected = [](const WiFiDetails &details)
+  {
+    debugI("Connected to %s as %s", details.ssid.c_str(), details.ip.toString().c_str());
+  };
+  callbacks.onConnectFailed = [](const String &reason)
+  {
+    debugW("Connect failed: %s", reason.c_str());
+  };
+  netLink.setCallbacks(callbacks);
+
+  netLink.init();
+
+  HTTP::init();
+  HTTP::setUserAgent("BoxThingV2/1.0");
+}
+
 void setupESPNOW()
 {
   beginMeshTransport();
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setState(StartUpState::EspNowStarted);
+  StartUp::setState(StartUpState::EspNowStarted);
 }
 
-void initScreens()
+/** Configure the encoder as dcr_display's menu input, with haptics on the way. */
+void setupMenuInput()
 {
-  screenManager.addScreen(&startUp);
+  MenuInputConfig config;
+  config.mode = MenuInputMode::Encoder;
+  config.navigationClicks = 1;
+  config.defaultSelectClicks = 1;
 
-  screenManager.setScreen("Start Up");
-  display.display();
+  // The library polls these only while a menu is on screen, which is exactly
+  // when the old menu code used to buzz.
+  config.getEncoderPosition = []()
+  {
+    const int delta = (int)encoderGetCount();
+    if (delta != 0)
+      haptic.playEffect(4);
+    return delta;
+  };
+  config.resetEncoderPosition = []()
+  { encoderClearCount(); };
+  config.getEncoderSelectClicks = []()
+  {
+    const int clicks = (int)ClickButtonEnc.clicks;
+    if (clicks != 0)
+      haptic.playEffect(40);
+    return clicks;
+  };
 
-  Serial.println("[INFO] [SETUP] Starting...");
-  Serial.println("[INFO] [SETUP] IOInit...");
-  GpIO::initIO();
-  haptic.init();
+  MenuInput::configure(config);
+}
 
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(1);
-  display.display();
+void setupDisplay()
+{
+  const DisplayConfig config = U8g2DisplayDriver::makeConfig(
+      &displayDriverContext, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-  Serial.println("[INFO] [SETUP] Display...");
+  display.begin(config, &screenManager);
+  display.setTopBarRenderer(TopBar::render);
+  screenManager.init(display);
 
-  screenManager.addScreen(&updateProgress);
-  screenManager.addScreen(&shutdown);
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(2);
-  display.display();
-
-  // #### /Debug
-  screenManager.addScreen(&debug);
-  screenManager.addScreen(&ioTest);
-  screenManager.addScreen(&battery);
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(3);
-  display.display();
-
-  // #### /
-  screenManager.addScreen(&homeScreen);
-  screenManager.addScreen(&switchMenu);
-  switchMenu.setTopBarText("Control");
-  screenManager.addScreen(&settings);
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(4);
-  display.display();
-
-  // #### /Control
-  screenManager.addScreen(&espnowSwitch);
-  espnowSwitch.setTopBarText("ESPNOW");
-  screenManager.addScreen(&carControl);
-  carControl.setTopBarText("Car");
-  // screenManager.addScreen(&carFlash);
-  // carFlash.setTopBarText("Flash");
-  screenManager.addScreen(&remoteRelay);
-  remoteRelay.setTopBarText("Relay");
-  screenManager.addScreen(&encoderTransmiter);
-  encoderTransmiter.setTopBarText("Encoder");
-  screenManager.addScreen(&servosControl);
-  servosControl.setTopBarText("Servos");
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(5);
-  display.display();
-
-  // #### /Settings
-  screenManager.addScreen(&generalSettings);
-  generalSettings.setTopBarText("General");
-  screenManager.addScreen(&wifiSettings);
-  wifiSettings.setTopBarText("Wi-Fi");
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(6);
-  display.display();
-
-  // #### /Settings/WiFi
-  screenManager.addScreen(&wifiInfo);
-
-  ((StartUpScreen *)screenManager.getCurrentScreen())->setStage(7);
-  display.display();
+  // dcr_display's defaults assume a ~240px colour TFT; retune for 128x64 mono.
+  MenuStyle::Metrics metrics;
+  metrics.contentTopY = TopBar::kHeight;
+  metrics.fallbackDisplayHeight = DISPLAY_HEIGHT;
+  metrics.small = {U8G2_TEXT_SMALL, 8, 2};
+  metrics.medium = {U8G2_TEXT_MEDIUM, 12, 3};
+  metrics.large = {U8G2_TEXT_LARGE, 18, 4};
+  MenuStyle::setMetrics(metrics);
 }
 
 void setup()
@@ -228,12 +211,32 @@ void setup()
   pinMode(LATCH_PIN, OUTPUT);
   digitalWrite(LATCH_PIN, HIGH); // Set latch pin to high as soon as possible
 
+  Serial.begin(BAUD_RATE);
+  Serial.setTimeout(10);
+  Console::addStream(&Serial);
+
+  Logger::SetLevel(LogLevel::Debug);
+  Logger::InstallLogHook();
+  FatalHandler::install();
+  taskManager.begin();
+  Files::init();
+
   initConfig();
 
-  display.init();
-  screenManager.init();
+  setupDisplay();
+  screenManager.setScreen(&StartUpScreen2);
+  screenManager.applyPendingScreenChange();
+  StartUp::setStage(1);
+  display.render();
 
-  initScreens();
+  debugI("Starting...");
+  debugI("IOInit...");
+  GpIO::initIO();
+  haptic.init();
+  setupMenuInput();
+
+  StartUp::setStage(2);
+  display.render();
 
   if (preferences.getBool("espnowOn", false))
   {
@@ -247,13 +250,15 @@ void setup()
 
   wireless.setOnReceiveOther(espNowCb);
 
-  Serial.println("[INFO] [SETUP] Done");
-  Serial.println();
+  StartUp::setStage(3);
+  display.render();
 
-  xTaskCreatePinnedToCore(
+  debugI("Done");
+
+  taskManager.createTaskPinnedToCore(
       fpsTaskFunction, /* Task function. */
       "fpsTask",       /* name of task. */
-      1024,           /* Stack size of task */
+      2048,            /* Stack size of task */
       NULL,            /* parameter of the task */
       1,               /* priority of the task */
       &fpsTask,        /* Task handle to keep track of created task */
@@ -264,9 +269,9 @@ void setup()
     ClickButtonEnc.Update();
   } while (ClickButtonEnc.depressed);
 
-  if (((StartUpScreen *)screenManager.getCurrentScreen())->getState() != StartUpState::ApStarted)
+  if (StartUp::getState() != StartUpState::ApStarted)
   {
-    screenManager.setScreen("Home");
+    screenManager.setScreen(&HomeScreen2);
     haptic.playEffect(37);
   }
 
@@ -274,16 +279,14 @@ void setup()
   // currentTable.print();
 }
 
-int64_t lastEncoderValue = 0;
-
 void loop()
 {
   fps++;
 
-  if (!wireless.isSetupDone())
-    wm.process();
-  else
+  if (wireless.isSetupDone())
     SyncManager::getInstance()->loop();
+  else
+    netLink.loop();
 
   if (otaSetup)
     ArduinoOTA.handle();
@@ -296,19 +299,21 @@ void loop()
     batteryUpdate();
   }
 
-  if (autoOffMin != 0 &&
-      millis() - lastInteract > autoOffMin * 60000 && screenManager.getCurrentScreen()->name != "Shutdown" &&
-      screenManager.getCurrentScreen()->name != "Start Up" &&
-      screenManager.getCurrentScreen()->name != "Update Progress")
+  const Screen2 *current = screenManager.getCurrentScreen();
+  const bool autoOffExempt = current == &ShutdownScreen2 ||
+                             current == &StartUpScreen2 ||
+                             current == &UpdateProgressScreen2;
+
+  if (autoOffMin != 0 && !autoOffExempt &&
+      millis() - lastInteract > autoOffMin * 60000)
   {
-    Serial.println("Auto off Timer");
-    screenManager.setScreen("Shutdown");
+    debugI("Auto off timer");
+    screenManager.setScreen(&ShutdownScreen2);
   }
 
   if (ClickButtonEnc.clicks == -3)
-    screenManager.setScreen("Shutdown");
+    screenManager.setScreen(&ShutdownScreen2);
 
-  // display.display();
   if (millis() - lastDraw > 25)
   {
     lastDraw = millis();
@@ -316,7 +321,7 @@ void loop()
     ClickButtonEnc.Update();
 
     frameTime = millis();
-    display.display();
+    display.render();
     lastFrameTime = millis() - frameTime;
   }
 }

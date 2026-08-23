@@ -6,8 +6,10 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 
-#include <WiFiManager.h>
 #include <Preferences.h>
+
+#include <Wireless.h>
+#include <dcr_Logger.h>
 
 #define setBit(x, y, z) (x |= (z << y)) // Set a bit to a value
 #define clearBit(x, y) (x &= ~(1 << y)) // Clear a bit
@@ -15,7 +17,15 @@
 #define checkBit(x, y) ((x >> y) & 1)   // Check a bit and return 1 or 0
 
 extern Preferences preferences;
-extern WiFiManager wm;
+
+/**
+ * The ESP-NOW transport. `Wireless` is a singleton, so this is just a
+ * conveniently named reference to `*Wireless::getInstance()`.
+ */
+extern Wireless &wireless;
+
+/** Required by dcr_netLink: it declares this extern and latches it on first join. */
+extern bool wifiConnectedAtSomePoint;
 
 extern uint64_t lastInteract;
 extern int autoOffMin;
@@ -24,12 +34,6 @@ extern uint32_t fps;
 extern uint32_t lastFps;
 extern uint32_t frameTime;
 extern uint32_t lastFrameTime;
-
-extern uint64_t clearBufferTime;
-extern uint64_t screenManagerDrawTime;
-extern uint64_t drawTopBarTime;
-extern uint64_t sendBufferTime;
-extern uint64_t screenUpdateDrawTime;
 
 #define BAUD_RATE 115200
 

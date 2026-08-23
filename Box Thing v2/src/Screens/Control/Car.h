@@ -1,10 +1,16 @@
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include <Display.h>
+#include <Menu.h>
+#include <ScreenManager.h>
 #include <Wireless.h>
-#include "IO/Menu.h"
+
+#include "config.h"
+#include "IO/GPIO.h"
+#include "IO/Notification.h"
+#include "IO/TopBar.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
 
 static uint8_t led_controller_addrs[8][8] = {
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev 1
@@ -247,10 +253,18 @@ enum class CarSyncMode
   JOIN,
   HOST
 };
-class CarControlScreen : public Screen
+/** Backing store for the Car screen's top bar label; see `setTopBarText`. */
+static char carTopBarName[16] = "Car";
+
+/**
+ * Kept as a class rather than the free-function form the other screens use: it
+ * carries ~150 members and its menu callbacks capture `this`. The Screen2 at the
+ * bottom of this file adapts it to dcr_display's dispatch table.
+ */
+class CarControlScreen
 {
 public:
-  CarControlScreen(String _name);
+  CarControlScreen();
 
   Menu menu = Menu(MenuSize::Medium);
 
@@ -506,9 +520,12 @@ public:
   uint64_t lastSyncUpdate = 0;
   uint64_t lastSyncAutoRefresh = 0;
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
+  void draw();
+  void update();
+  void onEnter();
+
+  /** Retarget the top bar label; the buffer backs `CarControlScreen2.name`. */
+  void setTopBarText(const String &text);
 
   void sendEffects();
   void getEffects();
@@ -547,7 +564,7 @@ public:
   String formatTimeDuration(uint32_t milliseconds);
 };
 
-CarControlScreen::CarControlScreen(String _name) : Screen(_name)
+CarControlScreen::CarControlScreen()
 {
   // general items
   menu.addMenuItem(&backItem);
@@ -941,10 +958,12 @@ void CarControlScreen::draw()
 
   // Draw connection status icon in top bar
 
+  display.setTextSize(U8G2_TEXT_BAR);
+  display.setTextColor(TFT_WHITE);
+  display.setTextDatum(TL_DATUM);
+
   String connTxt = connected ? "Y" : "N";
-  int iconWidth = display.u8g2.getStrWidth(connTxt.c_str());
-  int iconX = display.getCustomIconX(iconWidth);
-  display.u8g2.drawStr(iconX, 9, connTxt.c_str());
+  display.drawString(connTxt, TopBar::nextIconX(display.textWidth(connTxt)), 1);
 
   String modeShortTxt = "";
   if (mode == ApplicationMode::NORMAL)
@@ -958,14 +977,13 @@ void CarControlScreen::draw()
 
   modeShortTxt += "-";
 
-  iconWidth = display.u8g2.getStrWidth(modeShortTxt.c_str());
-  iconX = display.getCustomIconX(iconWidth);
-  display.u8g2.drawStr(iconX, 9, modeShortTxt.c_str());
+  display.drawString(modeShortTxt, TopBar::nextIconX(display.textWidth(modeShortTxt)), 1);
 
   // Set current controller name in top bar
   setTopBarText(led_controller_names[led_controller_addr_index]);
 
   menu.draw();
+  Notification::draw();
 }
 
 void CarControlScreen::update()
@@ -1157,7 +1175,7 @@ void CarControlScreen::onEnter()
                                logMsg += "  Is me: " + String(device.isThisDevice) + "\n";
                              }
                              logMsg += "=============================";
-                             Serial.println(logMsg);
+                             debugI("%s", logMsg.c_str());
                              
                              updateDevicesDisplay(); });
 
@@ -1183,7 +1201,7 @@ void CarControlScreen::onEnter()
                                logMsg += "  Can join: " + String(group.canJoin) + "\n";
                              }
                              logMsg += "============================";
-                             Serial.println(logMsg);
+                             debugI("%s", logMsg.c_str());
                              
                              updateGroupsDisplay(); });
 
@@ -1212,7 +1230,7 @@ void CarControlScreen::onEnter()
                                logMsg += "  Last heartbeat: " + String(member.lastHeartbeat) + "\n";
                              }
                              logMsg += "=================================";
-                             Serial.println(logMsg);
+                             debugI("%s", logMsg.c_str());
                              
                              updateCurrentGroupDisplay();
                              updateGroupMembersDisplay(); });
@@ -1235,14 +1253,14 @@ void CarControlScreen::onEnter()
                              logMsg += "Discovered devices: " + String(syncStatus.discoveredDeviceCount) + "\n";
                              logMsg += "Discovered groups: " + String(syncStatus.discoveredGroupCount) + "\n";
                              logMsg += "============================";
-                             Serial.println(logMsg);
+                             debugI("%s", logMsg.c_str());
                              
                              updateThisDeviceDisplay(); });
 
   wireless.addOnReceiveFor(CMD_SYNC_JOIN_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             display.showNotification("Joined group!", 1500);
+                             Notification::show("Joined group!", 1500);
                              // Refresh all sync data
                              requestSyncStatus();
                              requestSyncGroupInfo(); });
@@ -1250,7 +1268,7 @@ void CarControlScreen::onEnter()
   wireless.addOnReceiveFor(CMD_SYNC_LEAVE_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             display.showNotification("Left group!", 1500);
+                             Notification::show("Left group!", 1500);
                              // Clear current group and refresh status
                              memset(&syncCurrentGroup, 0, sizeof(syncCurrentGroup));
                              requestSyncStatus(); });
@@ -1258,7 +1276,7 @@ void CarControlScreen::onEnter()
   wireless.addOnReceiveFor(CMD_SYNC_CREATE_GROUP, [&](WirelessFrame *fp)
                            {
                              lastConfirmedPing = millis();
-                             display.showNotification("Group created!", 1500);
+                             Notification::show("Group created!", 1500);
                              // Refresh all sync data
                              requestSyncStatus();
                              requestSyncGroupInfo(); });
@@ -1268,7 +1286,7 @@ void CarControlScreen::onEnter()
                            {
                              lastConfirmedPing = millis();
                              uint8_t currentMode = fp->packet.data[0];
-                             display.showNotification("Sync mode set!", 1500);
+                             Notification::show("Sync mode set!", 1500);
                              // Could update UI to reflect new mode if needed
                            });
 
@@ -1409,7 +1427,7 @@ void CarControlScreen::syncRefreshData(bool showNotification)
 
   if (showNotification)
   {
-    display.showNotification("Refreshing...", 1000);
+    Notification::show("Refreshing...", 1000);
   }
 }
 
@@ -1512,11 +1530,11 @@ void CarControlScreen::joinSelectedGroup()
   if (selectedGroupId != 0)
   {
     joinSyncGroup(selectedGroupId);
-    display.showNotification("Joining group...", 1500);
+    Notification::show("Joining group...", 1500);
   }
   else
   {
-    display.showNotification("No group selected", 1500);
+    Notification::show("No group selected", 1500);
   }
 }
 
@@ -1846,3 +1864,20 @@ String CarControlScreen::formatTimeDuration(uint32_t milliseconds)
   else
     return String(milliseconds / 3600000) + "h";
 }
+void CarControlScreen::setTopBarText(const String &text)
+{
+  strlcpy(carTopBarName, text.c_str(), sizeof(carTopBarName));
+}
+
+CarControlScreen carControl;
+
+const Screen2 CarControlScreen2 = {
+    .name = carTopBarName,
+    .draw = []()
+    { carControl.draw(); },
+    .update = []()
+    { carControl.update(); },
+    .onEnter = []()
+    { carControl.onEnter(); },
+    .onExit = nullptr,
+};

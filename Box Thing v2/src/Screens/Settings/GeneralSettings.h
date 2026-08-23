@@ -1,65 +1,46 @@
 #pragma once
 
+#include <Menu.h>
+
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-#include <WiFi.h>
+#include "Screens/Screens.h"
 
-#include "IO/Menu.h"
-
-class GeneralSettingsScreen : public Screen
+namespace
 {
-public:
-  GeneralSettingsScreen(String _name);
+  Menu generalSettingsMenu(MenuSize::Large);
 
-  // unsigned long lastUpdate = 0;
-  // long ramPercentage = 0;
+  MenuItemBack generalSettingsBackItem;
+  MenuItemNumber<int> generalSettingsAutoOffItem("Auto Off", &autoOffMin, 0, 60);
 
-  Menu menu = Menu(MenuSize::Large);
+  [[maybe_unused]] const bool generalSettingsMenuBuilt = []()
+  {
+    generalSettingsMenu.addMenuItem(&generalSettingsBackItem);
+    generalSettingsMenu.addMenuItem(&generalSettingsAutoOffItem);
 
-  MenuItemBack backItem;
+    generalSettingsAutoOffItem.setOnChange([]()
+                                           {
+                                             preferences.putInt("autoOffMin", autoOffMin);
+                                             debugI("Auto off time: %d min", autoOffMin);
+                                             //
+                                           });
+    return true;
+  }();
 
-  // MenuItemNumber<long> ramUsageItem = MenuItemNumber<long>("Ram", &ramPercentage);
+  void generalSettingsDraw()
+  {
+    generalSettingsMenu.draw();
+  }
 
-  MenuItemNumber<int> autoOffItem = MenuItemNumber<int>("Auto Off", &autoOffMin, 0, 60);
+  void generalSettingsUpdate()
+  {
+    generalSettingsMenu.update();
+  }
+}
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-  void onExit() override;
+const Screen2 GeneralSettingsScreen2 = {
+    .name = "General",
+    .draw = generalSettingsDraw,
+    .update = generalSettingsUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-GeneralSettingsScreen::GeneralSettingsScreen(String _name) : Screen(_name)
-{
-  menu.addMenuItem(&backItem);
-  // menu.addMenuItem(&ramUsageItem);
-  menu.addMenuItem(&autoOffItem);
-
-  autoOffItem.setOnChange([this]()
-                          { preferences.putInt("autoOffMin", autoOffMin);
-                          Serial.println("Auto Off Time: " + String(autoOffMin)); });
-}
-
-void GeneralSettingsScreen::draw()
-{
-  menu.draw();
-}
-
-void GeneralSettingsScreen::update()
-{
-  // if (millis() - lastUpdate > 1000)
-  // {
-  //   lastUpdate = millis();
-  //   ramPercentage = (int)(ESP.getFreeHeap() * 100 / ESP.getHeapSize());
-  // }
-
-  menu.update();
-}
-
-void GeneralSettingsScreen::onEnter()
-{
-}
-
-void GeneralSettingsScreen::onExit()
-{
-}

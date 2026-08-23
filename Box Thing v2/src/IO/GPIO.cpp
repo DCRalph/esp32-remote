@@ -1,5 +1,8 @@
 #include "GPIO.h"
 
+#undef LOG_TAG
+#define LOG_TAG "GPIO"
+
 GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
 GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
@@ -51,11 +54,10 @@ GpIO::GpIO(uint8_t _pin, PinMode _mode, bool _activeState)
 void GpIO::init()
 {
 #ifdef DEBUG_GPIO
-  Serial.println("\t[GPIO] " + String(pin) + " as " + PinModeString(mode) + " Initializing...");
+  debugD("%d as %s initializing...", pin, PinModeString(mode).c_str());
 #endif
   pinMode(pin, mode);
 
-  // Serial.println("\t[GPIO] Initialized");
 }
 
 void GpIO::SetMode(PinMode _mode)
@@ -126,7 +128,7 @@ PinMode GpIO::getMode()
 
 void GpIO::initIO()
 {
-  Serial.println("\t[INFO] [IO] Configuring pins...");
+  debugI("Configuring pins...");
 
   led.init();
   latch.init();
@@ -146,21 +148,15 @@ void GpIO::initIO()
   // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
   // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
 
-#ifdef DEBUG_GPIO
-  Serial.println("\t[INFO] [IO] Pins configured.");
-  Serial.println();
-#endif
-
-#ifdef DEBUG_GPIO
-  Serial.println("\t[Encoder] Initializing...");
-#endif
+  debugI("Pins configured");
+  debugI("Encoder initializing...");
 
   // encoder.begin();
 
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
   encoder.clearCount();
 
-    Serial.println("\t[Encoder] Initialized");
+  debugI("Encoder initialized");
 }
 
 int64_t encoderGetCount()

@@ -1,82 +1,76 @@
 #pragma once
 
-#include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-// #include "IO/myespnow.h"
+#include <Display.h>
+#include <ScreenManager.h>
 #include <Wireless.h>
 
-class EspnowSwitchScreen : public Screen
+#include "config.h"
+#include "IO/GPIO.h"
+#include "IO/U8g2DisplayDriver.h"
+#include "Screens/Screens.h"
+
+namespace
 {
-public:
-  EspnowSwitchScreen(String _name);
+  int gEspnowSwitchState = 0;
+  unsigned long gEspnowSwitchLastSend = 0;
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
+  /** Send a car-lock command (type 11) to the paired remote. */
+  void espnowSwitchSendLock(uint8_t value)
+  {
+    TransportPacket p{};
+    p.type = 11;
+    p.len = 1;
+    p.data[0] = value;
 
-  int state = 0;
-  unsigned long lastSend = 0;
+    wireless.send(&p, remote_addr);
+    gEspnowSwitchLastSend = millis();
+  }
+
+  void espnowSwitchDraw()
+  {
+    display.setTextSize(U8G2_TEXT_BAR);
+    display.setTextColor(TFT_WHITE);
+
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "Res: %s",
+             wireless.getLastStatus() == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
+
+    display.setTextDatum(TL_DATUM);
+    display.drawString(buffer, 0, 16);
+
+    display.setTextDatum(TC_DATUM);
+    display.drawString(gEspnowSwitchState == 1   ? "Locking"
+                       : gEspnowSwitchState == 2 ? "Unlocking"
+                                                 : "Idle",
+                       display.width() / 2, 40);
+  }
+
+  void espnowSwitchUpdate()
+  {
+    if (ClickButtonEnc.clicks == 1)
+      screenManager.back();
+
+    if (ClickButtonEnc.clicks == 2)
+    {
+      espnowSwitchSendLock(0); // lock
+      gEspnowSwitchState = 1;
+    }
+
+    if (ClickButtonEnc.clicks == 3)
+    {
+      espnowSwitchSendLock(1); // unlock
+      gEspnowSwitchState = 2;
+    }
+
+    if (gEspnowSwitchState > 0 && millis() - gEspnowSwitchLastSend > 1000)
+      gEspnowSwitchState = 0;
+  }
+}
+
+const Screen2 EspnowSwitchScreen2 = {
+    .name = "ESPNOW",
+    .draw = espnowSwitchDraw,
+    .update = espnowSwitchUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-EspnowSwitchScreen::EspnowSwitchScreen(String _name) : Screen(_name)
-{
-}
-
-void EspnowSwitchScreen::draw()
-{
-
-  char buffer[100];
-
-  display.u8g2.setFont(u8g2_font_koleeko_tf);
-
-  sprintf(buffer, "Res: %s", wireless.getLastStatus() == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
-  display.u8g2.drawStr(0, 24, buffer);
-
-  sprintf(buffer, "%s", state == 1 ? "Locking" : state == 2 ? "Unlocking"
-                                                            : "Idle");
-  display.drawCenteredText(48, buffer);
-}
-
-void EspnowSwitchScreen::update()
-{
-  if (ClickButtonEnc.clicks == 1)
-  {
-    screenManager.back();
-  }
-
-  if (ClickButtonEnc.clicks == 2)
-  {
-    TransportPacket p{};
-    p.type = 11; // car locks
-    p.len = 1;
-    p.data[0] = 0; // lock
-
-    wireless.send(&p, remote_addr);
-
-    state = 1;
-    lastSend = millis();
-  }
-
-  if (ClickButtonEnc.clicks == 3)
-  {
-    TransportPacket p{};
-    p.type = 11; // car locks
-    p.len = 1;
-    p.data[0] = 1; // unlock
-
-    wireless.send(&p, remote_addr);
-
-    state = 2;
-    lastSend = millis();
-  }
-
-  if (state > 0 && millis() - lastSend > 1000)
-  {
-    state = 0;
-  }
-}
-
-void EspnowSwitchScreen::onEnter()
-{
-}

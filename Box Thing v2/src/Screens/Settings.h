@@ -1,49 +1,41 @@
 #pragma once
 
+#include <Menu.h>
+
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include "Screens/Screens.h"
 
-#include "IO/Menu.h"
-
-class SettingsScreen : public Screen
+namespace
 {
-public:
-  SettingsScreen(String _name);
+  Menu settingsMenu(MenuSize::Large);
 
-  Menu menu = Menu(MenuSize::Large);
+  MenuItemBack settingsBackItem;
+  MenuItemNavigate settingsGeneralItem("General", &GeneralSettingsScreen2);
+  MenuItemNavigate settingsWifiItem("WiFi", &WiFiSettingsScreen2);
 
-  MenuItemBack backItem;
+  [[maybe_unused]] const bool settingsMenuBuilt = []()
+  {
+    settingsMenu.addMenuItem(&settingsBackItem);
+    settingsMenu.addMenuItem(&settingsGeneralItem);
+    settingsMenu.addMenuItem(&settingsWifiItem);
+    return true;
+  }();
 
-  MenuItemNavigate generalSettingsItem = MenuItemNavigate("General", "General Settings");
+  void settingsDraw()
+  {
+    settingsMenu.draw();
+  }
 
-  MenuItemNavigate wifiItem = MenuItemNavigate("WiFi", "WiFi Settings");
+  void settingsUpdate()
+  {
+    settingsMenu.update();
+  }
+}
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-  uint8_t active;
+const Screen2 SettingsScreen2 = {
+    .name = "Settings",
+    .draw = settingsDraw,
+    .update = settingsUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-SettingsScreen::SettingsScreen(String _name) : Screen(_name)
-{
-  active = 1;
-
-  menu.addMenuItem(&backItem);
-  menu.addMenuItem(&generalSettingsItem);
-  menu.addMenuItem(&wifiItem);
-}
-
-void SettingsScreen::draw()
-{
-  menu.draw();
-}
-
-void SettingsScreen::update()
-{
-  menu.update();
-}
-
-void SettingsScreen::onEnter()
-{
-}
