@@ -37,7 +37,7 @@ namespace TouchPanelPins
 }
 
 // loop() sleeps out what is left of each frame. Buttons are sampled once per frame,
-// and ClickButton's 20 ms debounce needs two samples inside it.
+// so presses shorter than about 30 ms (20 ms debounce plus a sample) can be missed.
 #define FRAME_INTERVAL_MS 10 // up to 100 fps
 
 // XPT2046 filtering (dcr_display TouchInput::Config), values from the bioreactor controller.
