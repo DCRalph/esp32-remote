@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "IO/LVScreen.h"
-#include "IO/Wireless.h"
 
 class BoxThingEncoderScreen : public LVScreen
 {
@@ -10,8 +9,7 @@ private:
   lv_obj_t *titleLabel;
   lv_obj_t *clicksLabel;
   lv_obj_t *countLabel;
-  uint64_t encCount = 0;
-  int8_t clicks = 0;
+  int64_t encCount = 0;
   int8_t lastClicks = 0;
 
 public:
@@ -36,24 +34,29 @@ public:
     countLabel = lv_label_create(screen);
     lv_obj_set_style_text_font(countLabel, &lv_font_montserrat_32, 0);
     lv_obj_set_style_text_color(countLabel, lv_color_white(), 0);
-    lv_label_set_text_fmt(countLabel, "%d", encCount);
+    lv_label_set_text_fmt(countLabel, "%lld", static_cast<long long>(encCount));
     lv_obj_align(countLabel, LV_ALIGN_BOTTOM_MID, 0, -60);
 
     // Create back button
     createBackButton();
+
+    RemoteProtocol::Encoder::state().onReceive([this](const TransportAddress &, const RemoteProtocol::Encoder::State &s)
+                                               { onRecv(s); });
   }
 
-  void onRecv(fullPacket *fp)
+  // The handler holds `this`: swap in a no-op (DirectChannel has no unregister).
+  ~BoxThingEncoderScreen()
   {
-    memcpy(&encCount, fp->p.data, 8);
-    memcpy(&clicks, fp->p.data + 8, 1);
-    if (clicks != 0)
-    {
-      lastClicks = clicks;
-    }
+    RemoteProtocol::Encoder::state().onReceive([](const TransportAddress &, const RemoteProtocol::Encoder::State &) {});
+  }
 
-    // Update labels
+  void onRecv(const RemoteProtocol::Encoder::State &s)
+  {
+    encCount = s.detents;
+    if (s.clicks != 0)
+      lastClicks = s.clicks;
+
     lv_label_set_text_fmt(clicksLabel, "%d", lastClicks);
-    lv_label_set_text_fmt(countLabel, "%d", encCount);
+    lv_label_set_text_fmt(countLabel, "%lld", static_cast<long long>(encCount));
   }
 };

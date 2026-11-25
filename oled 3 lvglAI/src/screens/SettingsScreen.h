@@ -3,7 +3,6 @@
 #include "config.h"
 #include "IO/LVScreen.h"
 #include "IO/Buttons.h"
-#include "IO/Wireless.h"
 
 static const char *SETTINGS_TAG = "Settings";
 

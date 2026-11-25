@@ -1,17 +1,10 @@
 #pragma once
 
 #include <Menu.h>
-#include <Wireless.h>
+#include <RemoteProtocol.h>
 
 #include "config.h"
 #include "Screens/Screens.h"
-
-struct ServoDataStruct
-{
-  uint8_t manual;
-  uint8_t servoX;
-  uint8_t servoY;
-};
 
 namespace
 {
@@ -54,13 +47,7 @@ namespace
 
     gServoLastSend = millis();
 
-    const ServoDataStruct servoData{
-        static_cast<uint8_t>(gServoManual ? 1 : 0),
-        gServoX,
-        gServoY,
-    };
-
-    wireless.sendTyped(0xB1, servoData, gServoPeerAddr);
+    RemoteProtocol::Servo::command().sendTo(gServoPeerAddr, {static_cast<uint8_t>(gServoManual ? 1 : 0), gServoX, gServoY});
   }
 
   void servoOnEnter()

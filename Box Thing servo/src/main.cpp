@@ -1,6 +1,7 @@
 #include "config.h"
 
-#include "IO/Wireless.h"
+#include <RemoteProtocol.h>
+#include <Wireless.h>
 
 #include "IO/Commands.h"
 
@@ -10,12 +11,9 @@ uint64_t ledBlinkMs = 0;
 
 uint8_t blinks = 0;
 
-void espNowRecvCb(fullPacket *fp)
+void noteCommand()
 {
-  int ret = parseCommand(fp);
-
-  blinks = ret == -1 ? 2 : 4;
-
+  blinks = 4;
   ledBlinkMs = millis();
 }
 
@@ -31,8 +29,9 @@ void setup()
 
   initServos();
 
-  wireless.setup();
-  wireless.setRecvCb(espNowRecvCb);
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
+  registerCommands(noteCommand);
   led.On();
   delay(500);
   led.Off();
@@ -48,6 +47,9 @@ void setup()
 
 void loop()
 {
+  DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
+
   if (blinks > 0)
   {
     if (millis() - ledBlinkMs > 100)

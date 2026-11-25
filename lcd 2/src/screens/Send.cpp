@@ -5,7 +5,6 @@
 #include "Menu.h"
 #include "ScreenManager.h"
 #include "IO/Buttons.h"
-#include "Wireless.h"
 #include "Mesh.h"
 
 namespace SendScreenNamespace
@@ -30,15 +29,7 @@ namespace SendScreenNamespace
     static uint32_t lastTriggerFrom = 0;
 
     static MenuItemAction sendItem{"Send", 2, [&]()
-                                   {
-                                     TransportPacket p;
-                                     p.type = 43;
-                                     p.len = 5;
-
-                                     memcpy(p.data, "Hello", 5);
-
-                                     Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(peer_addr));
-                                   }};
+                                   { RemoteProtocol::Hello::message().sendTo(peer_addr, RemoteProtocol::Hello::Message{"Hello"}); }};
 
     static MenuItemAction sendTriggerItem{"Trigger", 2, [&]()
                                           {

@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "IO/LVScreen.h"
-#include "IO/Wireless.h"
 
 class SendScreen : public LVScreen
 {
@@ -22,11 +21,7 @@ public:
     // Create send button
     createActionButton("Send", []()
                        {
-      data_packet p;
-      p.type = 43;
-      p.len = 5;
-      memcpy(p.data, "Hello", 5);
-      wireless.send(&p, remote_addr); });
+      RemoteProtocol::Hello::message().sendTo(remote_addr, RemoteProtocol::Hello::Message{"Hello"}); });
 
     // Create back button
     createBackButton();

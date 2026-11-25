@@ -3,12 +3,13 @@
 Preferences preferences;
 bool wifiConnectedAtSomePoint = false;
 
-bool globalRelay1 = false;
-bool globalRelay2 = false;
-bool globalRelay3 = false;
-bool globalRelay4 = false;
-bool globalRelay5 = false;
-bool globalRelay6 = false;
+bool carRelays[RemoteProtocol::CarRelays::kRelayCount] = {};
+
+void applyCarRelays(const RemoteProtocol::CarRelays::Relays &relays)
+{
+  for (uint8_t i = 0; i < RemoteProtocol::CarRelays::kRelayCount; i++)
+    carRelays[i] = relays.mask & (1u << i);
+}
 
 void initConfig()
 {

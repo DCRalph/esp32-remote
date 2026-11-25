@@ -1,172 +1,105 @@
 #include "Commands.h"
 
-void lockDoor()
+#include <RemoteProtocol.h>
+
+#include <atomic>
+
+namespace
 {
-  relay7.On();
-  delay(500);
-  relay7.Off();
+  enum DoorRequest : uint8_t
+  {
+    DoorNone,
+    DoorLock,
+    DoorUnlock,
+  };
+
+  // Written by any task (the web server too), consumed only by doorLoop.
+  std::atomic<uint8_t> doorRequest{DoorNone};
+  uint32_t doorPulseStartMs = 0;
+  bool doorPulsing = false;
 }
 
-void unlockDoor()
+void lockDoor() { doorRequest.store(DoorLock); }
+void unlockDoor() { doorRequest.store(DoorUnlock); }
+
+void doorLoop()
 {
-  relay8.On();
-  delay(500);
-  relay8.Off();
+  const uint8_t request = doorRequest.exchange(DoorNone);
+  if (request != DoorNone)
+  {
+    relay7.Off();
+    relay8.Off();
+    (request == DoorLock ? relay7 : relay8).On();
+    doorPulseStartMs = millis();
+    doorPulsing = true;
+  }
+  else if (doorPulsing && millis() - doorPulseStartMs >= 500)
+  {
+    relay7.Off();
+    relay8.Off();
+    doorPulsing = false;
+  }
 }
 
-static int parseForRelay(fullPacket *fp, GpIO *relay, bool *busy, uint8_t get, uint8_t set)
+namespace
 {
-  if (fp->p.type == set)
+  using namespace RemoteProtocol::CarRelays;
+
+  GpIO *const relays[kRelayCount] = {&relay1, &relay2, &relay3, &relay4, &relay5, &relay6};
+  bool *const busy[kRelayCount] = {&relay1Busy, &relay2Busy, &relay3Busy, &relay4Busy, &relay5Busy, &relay6Busy};
+
+  Relays readRelays()
   {
-    if (*busy)
-    {
-      Serial.println("Relay Busy Pin " + String(relay->getPin()));
-      return -1;
-    }
-
-    if (fp->p.data[0] == 0x01)
-    {
-      Serial.println("Relay ON Pin " + String(relay->getPin()));
-      relay->On();
-    }
-    else
-    {
-      Serial.println("Relay OFF Pin " + String(relay->getPin()));
-      relay->Off();
-    }
-
-    fullPacket resp;
-    memcpy(resp.mac, fp->mac, 6);
-    resp.direction = PacketDirection::SEND;
-    resp.p.type = get;
-    resp.p.len = 1;
-    resp.p.data[0] = relay->read();
-
-    wireless.send(&resp);
-    return 1;
+    Relays out{};
+    for (uint8_t i = 0; i < kRelayCount; i++)
+      if (relays[i]->read())
+        out.mask |= 1u << i;
+    return out;
   }
-  else if (fp->p.type == get)
-  {
-    Serial.println("Relay GET Pin " + String(relay->getPin()));
-    fullPacket resp;
-    memcpy(resp.mac, fp->mac, 6);
-    resp.direction = PacketDirection::SEND;
-    resp.p.type = get;
-    resp.p.len = 1;
-    resp.p.data[0] = relay->read();
-
-    wireless.send(&resp);
-    return 2;
-  }
-  return -1;
 }
 
-int parseCommand(fullPacket *fp)
+void registerCommands(void (*onCommand)())
 {
+  lock().onReceive([onCommand](const TransportAddress &, const Lock &msg)
+                   {
+                     Serial.println(msg.unlock ? "Unlocking Doors" : "Locking Doors");
+                     if (msg.unlock)
+                       unlockDoor();
+                     else
+                       lockDoor();
+                     onCommand(); });
 
-  // ################### DOOR LOCK ###################
-  if (fp->p.type == CMD_DOOR_LOCK)
-  {
-    if (fp->p.data[0] == 0x01)
-    {
-      Serial.println("Unlocking Doors");
-      unlockDoor();
-      return 1;
-    }
-    else
-    {
-      Serial.println("Locking Doors");
-      lockDoor();
-      return 2;
-    }
-  }
+  // A busy relay (flashing) keeps its state; the reply always carries the real one.
+  set().onRequest([onCommand](const TransportAddress &, const RelaySet &req, Relays &resp)
+                  {
+                    if (req.index < kRelayCount && !*busy[req.index])
+                    {
+                      Serial.printf("Relay %u %s\n", req.index + 1, req.on ? "ON" : "OFF");
+                      if (req.on)
+                        relays[req.index]->On();
+                      else
+                        relays[req.index]->Off();
+                    }
+                    resp = readRelays();
+                    onCommand();
+                    return true; });
 
-  // ################### RELAYS ###################
-  else if (fp->p.type >= CMD_RELAY_1_SET && fp->p.type <= CMD_RELAY_6_GET)
-  {
-    int ret = -1;
-    ret = parseForRelay(fp, &relay1, &relay1Busy, CMD_RELAY_1_GET, CMD_RELAY_1_SET);
-    if (ret != -1)
-      return ret;
-    parseForRelay(fp, &relay2, &relay2Busy, CMD_RELAY_2_GET, CMD_RELAY_2_SET);
-    if (ret != -1)
-      return ret;
-    parseForRelay(fp, &relay3, &relay3Busy, CMD_RELAY_3_GET, CMD_RELAY_3_SET);
-    if (ret != -1)
-      return ret;
-    parseForRelay(fp, &relay4, &relay4Busy, CMD_RELAY_4_GET, CMD_RELAY_4_SET);
-    if (ret != -1)
-      return ret;
-    parseForRelay(fp, &relay5, &relay5Busy, CMD_RELAY_5_GET, CMD_RELAY_5_SET);
-    if (ret != -1)
-      return ret;
-    parseForRelay(fp, &relay6, &relay6Busy, CMD_RELAY_6_GET, CMD_RELAY_6_SET);
-    if (ret != -1)
-      return ret;
-  }
+  get().onRequest([onCommand](const TransportAddress &, const RelaysGet &, Relays &resp)
+                  {
+                    resp = readRelays();
+                    onCommand();
+                    return true; });
 
-  // ################### GET ALL RELAYS ###################
-  else if (fp->p.type == CMD_RELAY_ALL)
-  {
-    Serial.println("Get All Relays");
-
-    fullPacket resp;
-    memcpy(resp.mac, fp->mac, 6);
-    resp.direction = PacketDirection::SEND;
-    resp.p.type = CMD_RELAY_ALL;
-    resp.p.len = 6;
-    resp.p.data[0] = relay1.read();
-    resp.p.data[1] = relay2.read();
-    resp.p.data[2] = relay3.read();
-    resp.p.data[3] = relay4.read();
-    resp.p.data[4] = relay5.read();
-    resp.p.data[5] = relay6.read();
-
-    wireless.send(&resp);
-    return 3;
-  }
-
-  // ############ RELAY 1 FLASH ############
-  else if (fp->p.type == CMD_RELAY_1_FLASH)
-  {
-    if (relay1Busy)
-    {
-      Serial.println("Relay 1 Busy");
-      return -1;
-    }
-
-    relay1Busy = true;
-
-    Serial.println("Relay 1 Flash");
-
-    int count = fp->p.data[0];
-    int speed = fp->p.data[1] * 10;
-
-    relay1FlashCount = count;
-    relay1FlashDelay = speed;
-
-    return 4;
-  }
-
-  // ################### UNKNOW COMMAND ###################
-  else
-  {
-    Serial.println("######### Unknown Command #########");
-
-    Serial.print("Type: ");
-    Serial.print(fp->p.type);
-
-    Serial.print(" - Len: ");
-    Serial.println(fp->p.len);
-
-    Serial.println("Data: ");
-    for (int i = 0; i < fp->p.len; i++)
-    {
-      Serial.print(fp->p.data[i], HEX);
-      Serial.print(" ");
-    }
-    Serial.println();
-    Serial.println("######################");
-  }
-  return -1;
+  flash().onReceive([onCommand](const TransportAddress &, const Flash &msg)
+                    {
+                      if (relay1Busy)
+                      {
+                        Serial.println("Relay 1 Busy");
+                        return;
+                      }
+                      Serial.println("Relay 1 Flash");
+                      relay1Busy = true;
+                      relay1FlashCount = msg.count;
+                      relay1FlashDelay = msg.intervalMs;
+                      onCommand(); });
 }

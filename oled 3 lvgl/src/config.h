@@ -8,7 +8,6 @@
 
 #include <Preferences.h>
 
-#include <esp_now.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include "esp_log.h"
@@ -22,12 +21,10 @@ extern uint32_t lastFps;
 extern uint32_t frameTime;
 extern uint32_t lastFrameTime;
 
-#define ESP_NOW_CHANNEL 1
 
 #define BAUD_RATE 115200
 
 #define DEBUG true
-#define DEBUG_ESP_NOW false
 
 #define BTN_UP_PIN 13
 #define BTN_DOWN_PIN 12

@@ -1,20 +1,11 @@
 #include "Commands.h"
 
+#include <RemoteProtocol.h>
+
+bool rxStale = false;
+
 static TaskHandle_t testProdcudureTaskHandle;
 static TaskHandle_t fireTaskHandle;
-
-static void sendAck(uint8_t type, uint8_t *data, uint8_t len, uint8_t dest[6])
-{
-  fullPacket fp;
-  fp.direction = PacketDirection::SEND;
-  fp.p.type = type;
-  fp.p.len = len;
-  memcpy(fp.p.data, data, len);
-
-  memcpy(fp.mac, dest, 6);
-
-  wireless.send(&fp);
-}
 
 static void testProdcudureTask(void *pvParameters)
 {
@@ -54,58 +45,24 @@ void runTestProcedure()
 
 static void fireTask(void *pvParameters)
 {
-  bool relay1Fire = ((bool *)pvParameters)[0];
-  bool relay2Fire = ((bool *)pvParameters)[1];
-  bool relay3Fire = ((bool *)pvParameters)[2];
-  bool relay4Fire = ((bool *)pvParameters)[3];
-  bool relay5Fire = ((bool *)pvParameters)[4];
-  bool relay6Fire = ((bool *)pvParameters)[5];
-  bool relay7Fire = ((bool *)pvParameters)[6];
-  bool relay8Fire = ((bool *)pvParameters)[7];
+  const uint8_t relayMask = static_cast<uint8_t>(reinterpret_cast<uintptr_t>(pvParameters));
 
-  if (relay1Fire)
-    relay1.On();
-  if (relay2Fire)
-    relay2.On();
-  if (relay3Fire)
-    relay3.On();
-  if (relay4Fire)
-    relay4.On();
-  if (relay5Fire)
-    relay5.On();
-  if (relay6Fire)
-    relay6.On();
-  if (relay7Fire)
-    relay7.On();
-  if (relay8Fire)
-    relay8.On();
+  for (int i = 0; i < 8; i++)
+    if (relayMask & (1u << i))
+      relayMap[i]->On();
 
   vTaskDelay(pdMS_TO_TICKS(100));
 
-  if (relay1Fire)
-    relay1.Off();
-  if (relay2Fire)
-    relay2.Off();
-  if (relay3Fire)
-    relay3.Off();
-  if (relay4Fire)
-    relay4.Off();
-  if (relay5Fire)
-    relay5.Off();
-  if (relay6Fire)
-    relay6.Off();
-  if (relay7Fire)
-    relay7.Off();
-  if (relay8Fire)
-    relay8.Off();
+  for (int i = 0; i < 8; i++)
+    if (relayMask & (1u << i))
+      relayMap[i]->Off();
 
   fireTaskHandle = NULL;
   vTaskDelete(NULL);
 }
 
-void fireRelays(bool *relayToFire)
+void fireRelays(uint8_t relayMask)
 {
-
   if (armed.get() == ArmedState::DISARMED || armed.get() == ArmedState::LOCKED)
   {
     Serial.println("Not Armed");
@@ -113,89 +70,47 @@ void fireRelays(bool *relayToFire)
   }
 
   if (fireTaskHandle == NULL)
-    xTaskCreate(fireTask, "Fire Task", 4096, relayToFire, 1, &fireTaskHandle);
+    xTaskCreate(fireTask, "Fire Task", 4096, reinterpret_cast<void *>(static_cast<uintptr_t>(relayMask)), 1, &fireTaskHandle);
 }
 
-static void fireCmd(fullPacket *fp)
+void registerCommands()
 {
-  if (armed.get() != ArmedState::ARMED)
-  {
-    Serial.println("Not Armed");
-    return;
-  }
+  using namespace RemoteProtocol::FireBox;
 
-  if (fp->p.len != 8)
-  {
-    Serial.println("Invalid FIRE command");
-    return;
-  }
+  // Frames that waited out a stall are dropped, pings included, so the link times
+  // out instead of an old arm and fire replaying.
+  ping().onRequest([](const TransportAddress &, const Ping &, Pong &)
+                   {
+                     if (rxStale)
+                       return false;
+                     remoteConnected = true;
+                     lastRemotePing = millis();
+                     return true; });
 
-  bool relay1 = fp->p.data[0] == 0x01;
-  bool relay2 = fp->p.data[1] == 0x01;
-  bool relay3 = fp->p.data[2] == 0x01;
-  bool relay4 = fp->p.data[3] == 0x01;
-  bool relay5 = fp->p.data[4] == 0x01;
-  bool relay6 = fp->p.data[5] == 0x01;
-  bool relay7 = fp->p.data[6] == 0x01;
-  bool relay8 = fp->p.data[7] == 0x01;
+  test().onReceive([](const TransportAddress &, const Test &)
+                   {
+                     if (!rxStale)
+                       runTestProcedure(); });
 
-  bool relayToFire[8] = {relay1, relay2, relay3, relay4, relay5, relay6, relay7, relay8};
+  arm().onReceive([](const TransportAddress &, const Arm &msg)
+                  {
+                    if (rxStale)
+                      return;
+                    armed.setRemote(msg.armed != 0);
+                    armed.update(); });
 
-  fireRelays(relayToFire);
-}
-
-int parseCommand(fullPacket *fp)
-{
-
-  if (fp->p.type == CMD_PING)
-  {
-    remoteConnected = true;
-    lastRemotePing = millis();
-    sendAck(CMD_PING, NULL, 0, fp->mac);
-  }
-
-  else if (fp->p.type == CMD_TEST)
-  {
-    runTestProcedure();
-  }
-
-  // ################### ARM ###################
-  else if (fp->p.type == CMD_ARM)
-  {
-    armed.setRemote(true);
-  }
-
-  // ################### DISARM ###################
-  else if (fp->p.type == CMD_DISARM)
-  {
-    armed.setRemote(false);
-  }
-
-  // ################### FIRE ###################
-  else if (fp->p.type == CMD_FIRE)
-  {
-    fireCmd(fp);
-  }
-
-  // ################### UNKNOW COMMAND ###################
-  else
-  {
-    Serial.println("######### Unknown Command #########");
-
-    Serial.print("Type: ");
-    Serial.print(fp->p.type);
-
-    Serial.print(" - Len: ");
-    Serial.println(fp->p.len);
-
-    Serial.println("Data: ");
-    for (int i = 0; i < fp->p.len; i++)
-    {
-      Serial.print(fp->p.data[i], HEX);
-      Serial.print(" ");
-    }
-    Serial.println();
-    Serial.println("######################");
-  }
-  return -1;
+  // Frames arrive in batches: refresh the state so a disarm just before this frame
+  // wins, and require the raw pin too, since the 50 ms debounce lags a switch-off.
+  // The remote must be armed as well, not only the switch (READY).
+  fire().onReceive([](const TransportAddress &, const Fire &msg)
+                   {
+                     if (rxStale)
+                       return;
+                     armed.setSW(armedSW.read());
+                     armed.update();
+                     const bool switchClosed = digitalRead(ARMED_PIN) == LOW;
+                     if (armed.get() == ArmedState::ARMED && switchClosed)
+                       fireRelays(msg.relayMask);
+                     else
+                       Serial.println("Not Armed"); });
 }

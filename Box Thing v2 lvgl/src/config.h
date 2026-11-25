@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 // #include "secrets.h"
-#include <esp_now.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
 
@@ -34,8 +33,6 @@ extern uint64_t screenUpdateDrawTime;
 #define HOSTNAME "esp32-box-thing"
 #define AP_SSID "ESP32-Box-Thing"
 
-#define ESP_NOW_CHANNEL 1
-#define DEBUG_ESP_NOW
 // Display
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
@@ -59,14 +56,6 @@ extern uint64_t screenUpdateDrawTime;
 #define MCP_STATE_1_PIN 47
 #define MCP_STATE_2_PIN 48
 
-// COMMANDS
-#define CMD_PING 0xd1
-#define CMD_TEST 0xd2
-
-#define CMD_ARM 0xf0
-#define CMD_DISARM 0xf1
-
-#define CMD_FIRE 0xf2
 
 static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};
 

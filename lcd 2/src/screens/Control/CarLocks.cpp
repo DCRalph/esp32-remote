@@ -3,7 +3,6 @@
 #include "config.h"
 #include "Display.h"
 #include "IO/Buttons.h"
-#include "Wireless.h"
 #include "ScreenManager.h"
 
 namespace CarLocksScreenNamespace
@@ -31,24 +30,10 @@ namespace CarLocksScreenNamespace
   void update()
   {
     if (ClickButtonUP.clicks == 1)
-    {
-      TransportPacket p;
-      p.type = 0x10;
-      p.len = 1;
-      p.data[0] = 0;
-
-      Wireless::getInstance()->send(&p, car_addr);
-    }
+      RemoteProtocol::CarRelays::lock().sendTo(car_addr, {0});
 
     if (ClickButtonDOWN.clicks == -1)
-    {
-      TransportPacket p;
-      p.type = 0x10;
-      p.len = 1;
-      p.data[0] = 1;
-
-      Wireless::getInstance()->send(&p, car_addr);
-    }
+      RemoteProtocol::CarRelays::lock().sendTo(car_addr, {1});
 
     if (ClickButtonDOWN.clicks == 1)
       screenManager.back();

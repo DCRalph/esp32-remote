@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "IO/LVScreen.h"
-#include "IO/Wireless.h"
 
 class CarFlashScreen : public LVScreen
 {
@@ -23,15 +22,7 @@ public:
 
     // Create flash button
     createActionButton("Flash R 1", [this]()
-                       {
-                         //  data_packet p;
-                         //  p.type = CMD_RELAY_1_FLASH;
-                         //  p.len = 2;
-                         //  p.data[0] = count;
-                         //  p.data[1] = uint8_t(delay / 10);
-                         //  wireless.send(&p, car_addr);
-                         //
-                       });
+                       { RemoteProtocol::CarRelays::flash().sendTo(remote_addr, {count, delay}); });
 
     // Create count spinbox
     createSpinbox("Count", &count, 1, 100, 1);

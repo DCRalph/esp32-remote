@@ -5,12 +5,12 @@
 
 #include "IO/LCD.h"
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
-
-
 
 extern void runTestProcedure();
-extern void fireRelays(bool *relayToFire);
+// Bit n fires relay n + 1 for 100 ms; refused while DISARMED or LOCKED.
+extern void fireRelays(uint8_t relayMask);
 
-
-extern int parseCommand(fullPacket *fp);
+// Answers the Box Thing v2 fire box screen. Call once DirectComms is attached.
+extern void registerCommands();
+// Set before each receive drain: true after a loop stall (over 500 ms), so queued frames are stale.
+extern bool rxStale;

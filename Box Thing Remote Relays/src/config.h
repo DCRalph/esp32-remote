@@ -3,18 +3,8 @@
 #include <Arduino.h>
 
 #include <WiFi.h>
-#include <esp_wifi.h>
-#include <esp_now.h>
 
 #include "armed.h"
-
-// WiFi
-
-#define ESP_NOW_CHANNEL 1
-#define DEBUG_ESP_NOW
-#define ESPNOW_NO_DISABLE_WIFI
-
-//
 
 extern bool remoteConnected;
 extern uint64_t lastRemotePing;
@@ -52,12 +42,3 @@ extern uint64_t lastRemotePing;
 
 // Leds
 #define NUM_LEDS 2
-
-// COMMANDS
-#define CMD_PING 0xd1
-#define CMD_TEST 0xd2
-
-#define CMD_ARM 0xf0
-#define CMD_DISARM 0xf1
-
-#define CMD_FIRE 0xf2

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Display.h>
+#include <RemoteProtocol.h>
 #include <ScreenManager.h>
-#include <Wireless.h>
 
 #include "config.h"
 #include "IO/GPIO.h"
@@ -38,18 +38,7 @@ namespace
 
     gEncoderTxLastSend = millis();
 
-    const int64_t encCount = encoderDetents();
-
-    WirelessFrame fp{};
-    memcpy(fp.mac, wireless.broadcastAddress().data(), 6);
-    fp.direction = PacketDirection::SEND;
-    fp.packet.type = 0xa3;
-    fp.packet.len = 9;
-
-    memcpy(fp.packet.data, &encCount, 8);
-    fp.packet.data[8] = gEncoderTxNextClicks;
-
-    wireless.send(&fp);
+    RemoteProtocol::Encoder::state().sendTo(wireless.broadcastAddress(), {encoderDetents(), gEncoderTxNextClicks});
     gEncoderTxNextClicks = 0;
   }
 

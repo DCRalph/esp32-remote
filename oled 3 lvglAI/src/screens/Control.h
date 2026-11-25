@@ -2,7 +2,6 @@
 
 #include "config.h"
 #include "IO/LVScreen.h"
-#include "IO/Wireless.h"
 #include "IO/GPIO.h"
 
 class ControlScreen : public LVScreen
@@ -75,12 +74,7 @@ private:
 
     auto cb = new std::function<void()>([count, delay]()
                                         {
-      data_packet p;
-      p.type = 0x30;
-      p.len = 2;
-      p.data[0] = count;
-      p.data[1] = delay / 10;
-      wireless.send(&p, remote_addr); });
+      RemoteProtocol::CarRelays::flash().sendTo(remote_addr, {count, delay}); });
     callbacks.push_back(cb);
 
     lv_obj_add_event_cb(btn, [](lv_event_t *e)

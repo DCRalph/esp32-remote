@@ -5,15 +5,9 @@
 #include "IO/GPIO.h"
 
 #include <WiFi.h>
-#include <esp_wifi.h>
-#include <esp_now.h>
 
-// WiFi
-
-#define ESP_NOW_CHANNEL 1
+// Soft AP channel; ESP-NOW peers use channel 1 too.
 #define CHANNEL 1
-#define DEBUG_ESP_NOW
-#define ESPNOW_NO_DISABLE_WIFI
 
 // RELAY BUSY
 
@@ -26,7 +20,7 @@ extern bool relay6Busy;
 
 // flash relay 1 settings
 extern uint8_t relay1FlashCount;
-extern uint8_t relay1FlashDelay;
+extern uint16_t relay1FlashDelay; // ms per half cycle
 
 
 
@@ -42,29 +36,3 @@ extern uint8_t relay1FlashDelay;
 #define RELAY_6_PIN 12
 #define RELAY_7_PIN 13
 #define RELAY_8_PIN 14
-
-// COMMANDS
-#define CMD_DOOR_LOCK 0x10
-
-#define CMD_RELAY_ALL 0x20
-
-#define CMD_RELAY_1_SET 0x21
-#define CMD_RELAY_1_GET 0x22
-
-#define CMD_RELAY_2_SET 0x23
-#define CMD_RELAY_2_GET 0x24
-
-#define CMD_RELAY_3_SET 0x25
-#define CMD_RELAY_3_GET 0x26
-
-#define CMD_RELAY_4_SET 0x27
-#define CMD_RELAY_4_GET 0x28
-
-#define CMD_RELAY_5_SET 0x29
-#define CMD_RELAY_5_GET 0x2a
-
-#define CMD_RELAY_6_SET 0x2b
-#define CMD_RELAY_6_GET 0x2c
-
-#define CMD_RELAY_1_FLASH 0x30
-#define CMD_RELAY_1_FLASH_STOP 0x31

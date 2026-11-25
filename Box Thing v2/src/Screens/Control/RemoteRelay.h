@@ -1,16 +1,10 @@
 #pragma once
 
 #include <Menu.h>
-#include <Wireless.h>
+#include <RemoteProtocol.h>
 
 #include "config.h"
 #include "Screens/Screens.h"
-
-namespace RemoteRelay
-{
-  /** Called from the ESP-NOW receive hook when the relay board answers a ping. */
-  void notePingReply();
-}
 
 namespace
 {
@@ -20,21 +14,12 @@ namespace
   bool gRelayLastConnected = false;
   bool gRelayArmed = false;
 
-  /** Send a zero-payload command to the relay board. */
-  void relaySendCommand(uint8_t type)
-  {
-    wireless.sendTyped(type, remote_addr);
-  }
-
   void relayFire(int relay)
   {
     if (!gRelayConnected || !gRelayArmed)
       return;
 
-    bool relays[8] = {false, false, false, false, false, false, false, false};
-    relays[relay] = true;
-
-    wireless.sendTyped(CMD_FIRE, relays, remote_addr);
+    RemoteProtocol::FireBox::fire().sendTo(remote_addr, {static_cast<uint8_t>(1u << relay)});
   }
 
   Menu relayMenu;
@@ -43,7 +28,7 @@ namespace
   MenuItemToggle relayConnectionItem("Conn", &gRelayConnected, false);
   MenuItemToggle relayArmItem("Armed", &gRelayArmed);
   MenuItemAction relayTestItem("Test", 1, []()
-                               { relaySendCommand(CMD_TEST); });
+                               { RemoteProtocol::FireBox::test().sendTo(remote_addr, {}); });
 
   MenuItemAction relayFire1Item("Fire 1", 1, []()
                                 { relayFire(0); });
@@ -80,7 +65,7 @@ namespace
     relayMenu.addMenuItem(&relayFire8Item);
 
     relayArmItem.setOnChange([]()
-                             { relaySendCommand(gRelayArmed ? CMD_ARM : CMD_DISARM); });
+                             { RemoteProtocol::FireBox::arm().sendTo(remote_addr, {gRelayArmed}); });
     return true;
   }();
 
@@ -107,14 +92,13 @@ namespace
     if (millis() - gRelayLastPing > 200)
     {
       gRelayLastPing = millis();
-      relaySendCommand(CMD_PING);
+      RemoteProtocol::FireBox::ping().request(remote_addr, {}, 200, [](bool ok, const RemoteProtocol::FireBox::Pong &)
+                                              {
+                                                if (ok)
+                                                  gRelayLastConfirmedPing = millis();
+                                              });
     }
   }
-}
-
-void RemoteRelay::notePingReply()
-{
-  gRelayLastConfirmedPing = millis();
 }
 
 const Screen2 RemoteRelayScreen2 = {

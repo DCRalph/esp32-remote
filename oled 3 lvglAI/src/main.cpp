@@ -7,6 +7,7 @@
 #include "IO/Battery.h" // Battery monitoring definitions
 #include "IO/ScreenManager.h"
 #include "IO/ScreenFactory.h"
+#include <Wireless.h>
 
 // Display buffer - using smaller buffer size for AMOLED
 static lv_disp_draw_buf_t draw_buf;
@@ -389,6 +390,9 @@ void setup()
 
   Serial.println("Hardware initialized");
 
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
+
   // Initialize display
   rm67162_init();
   lcd_setRotation(LV_ROT);
@@ -483,6 +487,9 @@ void setup()
 
 void loop()
 {
+  DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
+
   // Update the physical buttons' state.
   buttons.update();
 

@@ -1,0 +1,8 @@
+{
+  "name": "remote_protocol",
+  "version": "1.0.0",
+  "description": "Direct ESP-NOW messages shared by the esp32-remote devices, on wireless_mesh DirectComms",
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "headers": "RemoteProtocol.h"
+}

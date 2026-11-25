@@ -10,14 +10,41 @@ uint32_t lastFps = 0;
 uint32_t frameTime = 0;
 uint32_t lastFrameTime = 0;
 
-bool globalRelay1 = false;
-bool globalRelay2 = false;
-bool globalRelay3 = false;
-bool globalRelay4 = false;
-bool globalRelay5 = false;
-bool globalRelay6 = false;
-bool globalRelay7 = false;
-bool globalRelay8 = false;
+bool carRelays[RemoteProtocol::CarRelays::kRelayCount] = {};
+
+void applyCarRelays(const RemoteProtocol::CarRelays::Relays &relays)
+{
+  for (uint8_t i = 0; i < RemoteProtocol::CarRelays::kRelayCount; i++)
+    carRelays[i] = relays.mask & (1u << i);
+}
+
+static void onCarRelays(bool ok, const RemoteProtocol::CarRelays::Relays &relays)
+{
+  if (ok)
+    applyCarRelays(relays);
+}
+
+void requestCarRelay(uint8_t index, bool on)
+{
+  RemoteProtocol::CarRelays::set().request(remote_addr, {index, on}, 300, onCarRelays);
+}
+
+void fetchCarRelays()
+{
+  RemoteProtocol::CarRelays::get().request(remote_addr, {}, 300, onCarRelays);
+}
+
+void refreshCarRelaySwitches(lv_obj_t *const *switches)
+{
+  fetchCarRelays();
+  for (uint8_t i = 0; i < RemoteProtocol::CarRelays::kRelayCount; i++)
+  {
+    if (carRelays[i])
+      lv_obj_add_state(switches[i], LV_STATE_CHECKED);
+    else
+      lv_obj_clear_state(switches[i], LV_STATE_CHECKED);
+  }
+}
 
 void initConfig()
 {

@@ -1,7 +1,9 @@
 
 #include "secrets.h"
 #include "config.h"
-#include "IO/Wireless.h"
+#include <RemoteProtocol.h>
+#include <Wireless.h>
+
 #include "IO/Commands.h"
 #include "IO/LCD.h"
 #include "IO/Battery.h"
@@ -13,11 +15,6 @@ bool lastArmedSW = false;
 uint64_t lastLedShow = 0;
 
 unsigned long batteryLoopMs = 0;
-
-void espNowRecvCb(fullPacket *fp)
-{
-  int ret = parseCommand(fp);
-}
 
 void armedStateCB(ArmedState state)
 {
@@ -48,6 +45,7 @@ void armedStateCB(ArmedState state)
 void setup()
 {
   Serial.begin(115200);
+  Serial.setTimeout(10); // readString() otherwise blocks the loop, and the link, for 1 s
 
   WiFi.mode(WIFI_AP_STA);
 
@@ -56,8 +54,9 @@ void setup()
 
   armed.setOnStateChange(armedStateCB);
 
-  wireless.setup();
-  wireless.setRecvCb(espNowRecvCb);
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
+  registerCommands();
 
   pwrLed.SetColor(255, 0, 0);
 
@@ -69,6 +68,23 @@ uint64_t lastLoopPerSecondMs = 0;
 
 void loop()
 {
+  // Before draining frames: a ping queued during a stalled loop must not hide a lost link.
+  if (millis() - lastRemotePing > 1000)
+  {
+    lastRemotePing = millis();
+    remoteConnected = false;
+    armed.setRemote(false);
+  }
+  armed.update();
+
+  // Frames are at most one drain interval old. Any stall that trips the 1 s link
+  // timeout also trips this; an LCD redraw (about 200 ms of 50 kHz I2C) does not.
+  static uint32_t lastDrainMs = millis();
+  rxStale = millis() - lastDrainMs > 500;
+  lastDrainMs = millis();
+  DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
+
   loopsPerSecond++;
 
   if (millis() - lastLoopPerSecondMs > 1000)
@@ -118,12 +134,6 @@ void loop()
     armed.setSW(armedSW.read());
   }
 
-  if (millis() - lastRemotePing > 1000)
-  {
-    lastRemotePing = millis();
-    remoteConnected = false;
-    armed.setRemote(false);
-  }
 
   armed.update();
 
@@ -183,8 +193,7 @@ void loop()
 
     else if (input == "fire")
     {
-      bool relayToFire[8] = {true, true, true, true, true, true, true, true};
-      fireRelays(relayToFire);
+      fireRelays(0xFF);
     }
 
     else
