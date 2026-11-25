@@ -65,8 +65,9 @@ void Device::begin()
   pinMode(POWER_BUTTON_PIN, INPUT_PULLDOWN);
 
   readDeviceInfo();
-  // Same choices as bioreactor-controller's setDeviceSettings().
-  deviceInfo.rotation = deviceInfo.deviceType == kDeviceTypeBioreactor8 ? 3 : 1;
+  // Same choices as bioreactor-controller's setDeviceSettings(), then turned if asked.
+  const uint8_t bioreactorRotation = deviceInfo.deviceType == kDeviceTypeBioreactor8 ? 3 : 1;
+  deviceInfo.rotation = ROTATE_180 ? (bioreactorRotation + 2) % 4 : bioreactorRotation;
   deviceInfo.backlightActiveHigh = deviceInfo.hardwareVersion != 2 && deviceInfo.hardwareVersion != 3;
 
   pinMode(DISPLAY_BACKLIGHT_PIN, OUTPUT);

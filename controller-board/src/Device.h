@@ -12,7 +12,7 @@ namespace Device
     int hardwareVersion = 0; // picks the backlight polarity
     int deviceType = 0;      // bioreactor DeviceType; the 8-way unit mounts the panel flipped
     char serial[9] = "";
-    uint8_t rotation = 1;    // TFT_eSPI rotation for this unit
+    uint8_t rotation = 1;    // TFT_eSPI rotation for this unit, after ROTATE_180
     bool backlightActiveHigh = true;
   };
 
