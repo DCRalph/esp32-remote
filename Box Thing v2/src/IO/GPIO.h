@@ -60,6 +60,9 @@ public:
   static void initIO();
 };
 
-extern int64_t encoderGetCount();
-extern void encoderSetCount(int64_t _count);
-extern void encoderClearCount();
+/** Detents turned since the previous call, signed. Counts are never cleared, so none are lost. */
+int32_t encoderTakeDetents();
+/** Detent position since the last reset. */
+int64_t encoderDetents();
+/** Zero the position and drop any turns not yet taken. */
+void encoderReset();

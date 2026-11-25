@@ -54,6 +54,8 @@ extern int autoOffMin;
 #define ENCODER_PIN_BUTTON 1
 #define ENCODER_PIN_A 17
 #define ENCODER_PIN_B 18
+// Full-quad counts per detent: 4 for 20-pulse/20-detent encoders, 2 for half-step ones.
+#define ENCODER_COUNTS_PER_DETENT 4
 
 #define BATTERY_SENSE_PIN 3
 #define BATTERY_SENSE_R1 10000 // 10k

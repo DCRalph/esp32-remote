@@ -14,7 +14,12 @@ GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
 
 ESP32Encoder encoder;
-static uint64_t lastEncoderValue = 0;
+
+namespace
+{
+  int64_t detentPosition = 0; // hysteresis-tracked position, in detents
+  int64_t takenDetents = 0;   // position already handed out by encoderTakeDetents()
+}
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -142,30 +147,38 @@ void GpIO::initIO()
   debugI("Encoder initializing...");
 
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
-  encoder.clearCount();
+  // Longest PCNT glitch filter (1023 APB cycles, ~12.8 us); the default 250 passes contact bounce.
+  encoder.setFilter(1023);
+  encoderReset();
 
   debugI("Encoder initialized");
 }
 
-int64_t encoderGetCount()
+// A detent counts only once the shaft is ENCODER_COUNTS_PER_DETENT - 1 counts
+// past the last one, so bounce or a knob resting near a boundary cannot flicker.
+int64_t encoderDetents()
 {
-  uint64_t value = encoder.getCount() / 4;
+  constexpr int64_t cpd = ENCODER_COUNTS_PER_DETENT;
+  const int64_t count = encoder.getCount();
+  while (count >= detentPosition * cpd + (cpd - 1))
+    detentPosition++;
+  while (count <= detentPosition * cpd - (cpd - 1))
+    detentPosition--;
+  return detentPosition;
+}
 
-  if (value != lastEncoderValue)
-  {
-    lastEncoderValue = value;
+int32_t encoderTakeDetents()
+{
+  const int64_t position = encoderDetents();
+  const int32_t delta = static_cast<int32_t>(position - takenDetents);
+  takenDetents = position;
+  if (delta != 0)
     lastInteract = millis();
-  }
-
-  return value;
+  return delta;
 }
 
-void encoderSetCount(int64_t _count)
-{
-  encoder.setCount(_count * 4);
-}
-
-void encoderClearCount()
+void encoderReset()
 {
   encoder.clearCount();
+  detentPosition = takenDetents = 0;
 }
