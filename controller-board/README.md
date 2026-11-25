@@ -48,6 +48,9 @@ match, so touch lines up without recalibrating.
   calibration file is used, else generic XPT2046 values. The calibrator also
   works out whether the controller's raw axes are swapped or reversed for this
   panel, and a saved calibration only applies at the rotation it was taken in.
+- **Backlight**: a brightness slider, 5-100 %. The backlight pin is driven by
+  20 kHz PWM with the hardware version's polarity. The level is not saved, so
+  it is back to 100 % after a restart.
 - **Device**: what the unit reported at boot, frame rate and memory.
 - **Power off**.
 

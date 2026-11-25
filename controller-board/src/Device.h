@@ -21,6 +21,9 @@ namespace Device
   const Info &info();
 
   void setBacklight(bool on);
+  /** Backlight level while on, 5-100 %, by PWM; applies now if the backlight is on. Not saved. */
+  void setBrightness(uint8_t percent);
+  uint8_t brightness();
 
   /**
    * The bioreactor's saved TFT_eSPI touch calibration (5 values), from LittleFS:

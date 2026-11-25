@@ -33,6 +33,13 @@ namespace
   constexpr char kTouchCalFile[] = "/TouchCalData";
 
   Device::Info deviceInfo;
+
+  // 20 kHz is above hearing and flicker; 8 bits is plenty of steps for a slider.
+  constexpr uint8_t kBacklightChannel = 0;
+  constexpr uint32_t kBacklightHz = 20000;
+  constexpr uint8_t kBacklightBits = 8;
+  bool backlightOn = false;
+  uint8_t backlightPercent = 100;
   uint32_t powerPressedSinceMs = 0;
   bool powerArmed = false; // the press that switched the board on must be released first
 
@@ -74,7 +81,8 @@ void Device::begin()
   deviceInfo.rotation = ROTATE_180 ? (bioreactorRotation + 2) % 4 : bioreactorRotation;
   deviceInfo.backlightActiveHigh = deviceInfo.hardwareVersion != 2 && deviceInfo.hardwareVersion != 3;
 
-  pinMode(DISPLAY_BACKLIGHT_PIN, OUTPUT);
+  ledcSetup(kBacklightChannel, kBacklightHz, kBacklightBits);
+  ledcAttachPin(DISPLAY_BACKLIGHT_PIN, kBacklightChannel);
   setBacklight(false);
 
   debugI("Device %s: hw v%d, type %d, rotation %u, backlight active %s",
@@ -89,7 +97,22 @@ const Device::Info &Device::info()
 
 void Device::setBacklight(bool on)
 {
-  digitalWrite(DISPLAY_BACKLIGHT_PIN, on == deviceInfo.backlightActiveHigh ? HIGH : LOW);
+  backlightOn = on;
+  // 255 reads as fully on: the core turns the maximum duty into 100 %.
+  const uint32_t duty = on ? 255u * backlightPercent / 100 : 0;
+  ledcWrite(kBacklightChannel, deviceInfo.backlightActiveHigh ? duty : 255 - duty);
+}
+
+void Device::setBrightness(uint8_t percent)
+{
+  backlightPercent = constrain(percent, 5, 100);
+  if (backlightOn)
+    setBacklight(true);
+}
+
+uint8_t Device::brightness()
+{
+  return backlightPercent;
 }
 
 bool Device::loadTouchCalibration(uint16_t (&calData)[5])
