@@ -38,7 +38,7 @@ namespace
 
     gEncoderTxLastSend = millis();
 
-    const uint64_t encCount = encoderGetCount();
+    const int64_t encCount = encoderDetents();
 
     WirelessFrame fp{};
     memcpy(fp.mac, wireless.broadcastAddress().data(), 6);
@@ -55,7 +55,7 @@ namespace
 
   void encoderTxOnEnter()
   {
-    encoderClearCount();
+    encoderReset();
   }
 }
 

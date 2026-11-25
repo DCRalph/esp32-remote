@@ -142,11 +142,10 @@ namespace
     if (gWiFiScanState != WiFiScanState::Results)
       return;
 
-    const int64_t delta = encoderGetCount();
+    const int32_t delta = encoderTakeDetents();
     if (delta != 0)
     {
-      encoderClearCount();
-      gWiFiScanActive = constrain(gWiFiScanActive + (delta > 0 ? 1 : -1), 0, gWiFiScanCount - 1);
+      gWiFiScanActive = constrain(gWiFiScanActive + delta, 0, gWiFiScanCount - 1);
 
       if (gWiFiScanActive < gWiFiScanTop)
         gWiFiScanTop = gWiFiScanActive;

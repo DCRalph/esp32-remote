@@ -23,7 +23,7 @@ namespace
 
     char buffer[64];
 
-    snprintf(buffer, sizeof(buffer), "Enc: %d:%d", (int)encoder.getCount(), (int)encoderGetCount());
+    snprintf(buffer, sizeof(buffer), "Enc: %d:%d", (int)encoder.getCount(), (int)encoderDetents());
     display.drawString(buffer, 0, 12);
 
     snprintf(buffer, sizeof(buffer), "Btn: %d : %d", ClickButtonEnc.depressed, gIoTestLastClicks);
@@ -36,7 +36,7 @@ namespace
       screenManager.back();
 
     if (ClickButtonEnc.clicks == 3)
-      encoder.clearCount();
+      encoderReset();
   }
 }
 

@@ -99,14 +99,11 @@ namespace
 
   void wifiPasswordUpdate()
   {
-    const int64_t delta = encoderGetCount();
+    const int32_t delta = encoderTakeDetents();
     if (delta != 0)
     {
-      encoderClearCount();
-      gWiFiPasswordCharIndex += (delta > 0 ? 1 : -1);
-      if (gWiFiPasswordCharIndex < 0)
-        gWiFiPasswordCharIndex += kWiFiPasswordCharsetLen;
-      gWiFiPasswordCharIndex %= kWiFiPasswordCharsetLen;
+      gWiFiPasswordCharIndex = ((gWiFiPasswordCharIndex + delta) % kWiFiPasswordCharsetLen + kWiFiPasswordCharsetLen) %
+                               kWiFiPasswordCharsetLen;
       haptic.playEffect(4);
     }
 
@@ -147,7 +144,7 @@ namespace
   {
     gWiFiPassword = "";
     gWiFiPasswordCharIndex = 0;
-    encoderClearCount();
+    encoderTakeDetents(); // drop turns made before this screen
   }
 }
 

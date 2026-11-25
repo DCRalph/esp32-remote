@@ -136,25 +136,26 @@ void setupESPNOW()
 
 // Sources are polled only when a menu, popup or widget asks for input, so the
 // haptics fire exactly when the library consumes a turn or a click.
-EncoderInput encoderInput({
-    .readDelta = []() -> int32_t
-    {
-      const int32_t delta = (int32_t)encoderGetCount();
-      if (delta != 0)
-      {
-        encoderClearCount();
-        haptic.playEffect(4);
-      }
-      return delta;
-    },
-    .readClicks = []()
-    {
-      const int clicks = (int)ClickButtonEnc.clicks;
-      if (clicks != 0)
-        haptic.playEffect(40);
-      return clicks;
-    },
-});
+EncoderInput encoderInput([]
+                          {
+  EncoderInput::Config c;
+  c.readDelta = []() -> int32_t
+  {
+    const int32_t delta = encoderTakeDetents();
+    if (delta != 0)
+      haptic.playEffect(4);
+    return delta;
+  };
+  c.readClicks = []()
+  {
+    const int clicks = (int)ClickButtonEnc.clicks;
+    if (clicks != 0)
+      haptic.playEffect(40);
+    return clicks;
+  };
+  // One detent is one step; the library's acceleration turned quick clicks into 2-4 rows.
+  c.accelerate = false;
+  return c; }());
 
 void setupDisplay()
 {
