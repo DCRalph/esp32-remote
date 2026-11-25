@@ -48,6 +48,38 @@ Touch filtering matches the bioreactor: a press starts above raw pressure 600,
 holds above 20, and survives 5 empty polls; touch is also sampled mid-frame so
 short taps register. Serial logs frame timing once a second.
 
+## USB control
+
+The USB serial port takes the bioreactor's agent commands, so the UI can be
+driven and checked from a computer. A line runs on CR or LF; each command ends
+with a `> ` prompt.
+
+| Command | Answer |
+| --- | --- |
+| `tap <x> <y>` | `TAP x,y`; a press and release over the next two frames |
+| `press <x> <y>` / `release` | `PRESS x,y` / `RELEASE`; a held touch, for long presses and drags |
+| `shot` | the screen as `SHOT-BEGIN w= h= fmt=rle565 bytes= crc=`, base64 lines, `SHOT-END` |
+| `screen <home\|ui\|touch\|device>` | `Switched to <name>` |
+| `version` | `Version: controller-board <build time>` |
+
+Coordinates are screen pixels (320 x 240, origin top left), so a point read off a
+shot is the point to tap. Injected touches go through the same filtering and
+gestures as a finger. `shot` sends runs of `[count][low][high]` RGB565 and a
+CRC-32, written straight to the USB FIFO with logging muted.
+
+`tools/agent.py` (from bioreactor-controller's `scripts/agent.py`) holds the port
+so it is opened once (reopening resets the board), logs the stream, and answers
+short calls:
+
+```
+python tools/agent.py serve --port /dev/cu.usbmodem101   # leave running
+python tools/agent.py shot shot.png
+python tools/agent.py tap 160 120
+python tools/agent.py screen touch
+```
+
+It needs `pyserial`.
+
 ## Build
 
 ```

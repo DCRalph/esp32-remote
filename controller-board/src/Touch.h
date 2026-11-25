@@ -23,5 +23,11 @@ namespace Touch
   /** One unfiltered read, for the touch test screen. */
   Reading read();
 
+  // Synthetic touch for serial control, read by `input` in place of the panel, so
+  // it goes through the same filtering and gestures as a finger.
+  void injectTap(int16_t x, int16_t y);
+  void injectPress(int16_t x, int16_t y); // held until injectRelease()
+  void injectRelease();
+
   extern TouchInput input;
 }

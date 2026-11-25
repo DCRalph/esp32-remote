@@ -8,6 +8,19 @@ namespace
   TFT_eSPI *panel = nullptr;
   bool savedCalibration = false;
 
+  enum class Synthetic : uint8_t
+  {
+    None,
+    Tap,
+    Held,
+  };
+  Synthetic synthetic = Synthetic::None;
+  int16_t syntheticX = 0, syntheticY = 0;
+  uint8_t tapPollsLeft = 0;
+  // Polls a tap stays down: about two frames (input polls at render and mid-frame).
+  constexpr uint8_t kTapPolls = 4;
+  constexpr uint16_t kSyntheticPressure = 2000;
+
   // Placeholder until Calibrate runs: TFT_eSPI's x0, x1, y0, y1, orientation flags.
   uint16_t calData[5] = {300, 3600, 300, 3600, 1};
 
@@ -15,6 +28,15 @@ namespace
   // TouchInput, which applies the start/hold thresholds.
   bool readSample(TouchSample &s)
   {
+    if (synthetic == Synthetic::Tap && tapPollsLeft > 0 && --tapPollsLeft == 0)
+      synthetic = Synthetic::None;
+    if (synthetic != Synthetic::None)
+    {
+      s.x = syntheticX;
+      s.y = syntheticY;
+      s.z = kSyntheticPressure;
+      return true;
+    }
     if (panel == nullptr)
       return false;
     const uint16_t z = panel->getTouchRawZ();
@@ -88,4 +110,24 @@ Touch::Reading Touch::read()
     panel->convertRawXY(&r.x, &r.y);
   }
   return r;
+}
+
+void Touch::injectTap(int16_t x, int16_t y)
+{
+  syntheticX = x;
+  syntheticY = y;
+  tapPollsLeft = kTapPolls + 1; // the first poll consumes one before reporting
+  synthetic = Synthetic::Tap;
+}
+
+void Touch::injectPress(int16_t x, int16_t y)
+{
+  syntheticX = x;
+  syntheticY = y;
+  synthetic = Synthetic::Held;
+}
+
+void Touch::injectRelease()
+{
+  synthetic = Synthetic::None;
 }

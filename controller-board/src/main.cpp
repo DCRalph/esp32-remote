@@ -1,6 +1,5 @@
 #include <Arduino.h>
 
-#include <TFTDisplayDriver.h>
 #include <dcr_display.h>
 
 #include <dcr_Console.h>
@@ -9,7 +8,9 @@
 #include <dcr_TaskManager.h>
 #include <dcr_TimeProfiler.h>
 
+#include "ControllerPanel.h"
 #include "Device.h"
+#include "SerialControl.h"
 #include "Touch.h"
 #include "config.h"
 #include "screens/Screens.h"
@@ -23,16 +24,16 @@ namespace
   uint32_t lastStatsMs = 0;
 
   // Built on first use: the rotation comes from NVS, read in Device::begin().
-  TFTDisplayDriver &panel()
+  ControllerPanel &panel()
   {
-    static TFTDisplayDriver driver(LCD_WIDTH, LCD_HEIGHT, Device::info().rotation);
+    static ControllerPanel driver(LCD_WIDTH, LCD_HEIGHT, Device::info().rotation);
     return driver;
   }
 
   void runCalibration()
   {
     calibrationRequested = false;
-    Touch::calibrate(panel().tft());
+    Touch::calibrate(panel().panelDevice());
     // Calibration drew straight to the panel: push the whole next frame.
     panel().resync();
     display.invalidate();
@@ -72,9 +73,10 @@ void setup()
   timeProfiler.begin(2048, 1, 0);
 
   display.begin(panel());
-  Touch::begin(panel().tft());
+  Touch::begin(panel().panelDevice());
   Inputs::addSource(Touch::input);
   screenManager.setScreen(&HomeScreen);
+  SerialControl::begin(panel());
 
   // Light the backlight only once a real frame is on the panel.
   display.render();
@@ -87,6 +89,7 @@ void loop()
   const uint32_t frameStartMs = millis();
 
   Device::loop();
+  SerialControl::loop();
   display.render();
   // Catches a tap that starts and ends while the frame is drawing.
   Touch::input.sample();
