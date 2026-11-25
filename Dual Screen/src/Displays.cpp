@@ -77,6 +77,8 @@ void Displays::begin()
 void Displays::render()
 {
   display.render();
+  // Catches a tap that starts and ends while the LCD frame is drawing.
+  Touch::input.sample();
   touchDisplay.render();
 }
 

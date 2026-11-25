@@ -36,4 +36,13 @@ namespace TouchPanelPins
   constexpr int8_t kTouchCS = 1;
 }
 
+// XPT2046 filtering (dcr_display TouchInput::Config), values from the bioreactor controller.
+namespace TouchFilter
+{
+  constexpr uint8_t kReleasePolls = 5;     // empty frames before a press counts as lifted
+  constexpr uint16_t kStartPressure = 600; // raw z to begin a press
+  constexpr uint16_t kHoldPressure = 300;  // raw z to keep one; XPT2046_Touchscreen reports 0 below 300
+  constexpr uint8_t kAgreePx = 0;          // two-sample check; 0 as the library caches reads for 3 ms
+}
+
 void initConfig();
