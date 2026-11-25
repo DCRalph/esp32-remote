@@ -16,9 +16,10 @@ namespace
   {
     display.setTextRole(TextRole::Small);
     display.setTextDatum(Datum::TopLeft);
-    display.setTextColor(Color::DarkGrey);
+    const Theme &t = display.theme();
+    display.setTextColor(t.mutedText);
     display.drawString(label, 12, y);
-    display.setTextColor(Color::White);
+    display.setTextColor(t.text);
     display.drawString(value, 130, y);
   }
 

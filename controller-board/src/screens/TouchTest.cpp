@@ -31,7 +31,7 @@ namespace
   Rect canvas;
   bool built = false;
 
-  void text(const String &s, int16_t x, int16_t y, uint8_t datum = Datum::TopLeft, uint16_t color = Color::White)
+  void text(const String &s, int16_t x, int16_t y, uint8_t datum, uint16_t color)
   {
     display.setTextRole(TextRole::Small);
     display.setTextColor(color);
@@ -56,30 +56,31 @@ namespace
 
   void draw()
   {
+    const Theme &t = display.theme();
     const Point *prev = nullptr;
     for (const Point &p : points)
     {
       if (!p.start && prev)
-        display.drawLine(prev->x, prev->y, p.x, p.y, Color::Cyan);
+        display.drawLine(prev->x, prev->y, p.x, p.y, t.accent);
       else
-        display.drawPixel(p.x, p.y, Color::Cyan);
+        display.drawPixel(p.x, p.y, t.accent);
       prev = &p;
     }
     if (lastX >= 0)
     {
-      display.drawLine(lastX - 10, lastY, lastX + 10, lastY, Color::Red);
-      display.drawLine(lastX, lastY - 10, lastX, lastY + 10, Color::Red);
+      display.drawLine(lastX - 10, lastY, lastX + 10, lastY, t.danger);
+      display.drawLine(lastX, lastY - 10, lastX, lastY + 10, t.danger);
     }
 
     // Live controller values, unfiltered, next to the filtered pointer.
     const Touch::Reading r = Touch::read();
     text("raw " + String(r.rawX) + "," + String(r.rawY) + "  z " + String(r.z), 4, kTop + 2,
-         Datum::TopLeft, r.touched ? Color::Green : Color::DarkGrey);
+         Datum::TopLeft, r.touched ? t.success : t.mutedText);
     text(lastX >= 0 ? "px " + String(lastX) + "," + String(lastY) : String("px -"), LCD_WIDTH - 4, kTop + 2,
-         Datum::TopRight);
+         Datum::TopRight, t.text);
     const int16_t barW = static_cast<int16_t>(std::min<uint32_t>(r.z, 2000) * (LCD_WIDTH - 8) / 2000);
-    display.fillRect(4, kTop + 16, barW, 3, r.z > TouchFilter::kStartPressure ? Color::Green : Color::DarkGrey);
-    text(String(points.size()) + " pts", LCD_WIDTH / 2, LCD_HEIGHT - 18, Datum::MiddleCenter, Color::DarkGrey);
+    display.fillRect(4, kTop + 16, barW, 3, r.z > TouchFilter::kStartPressure ? t.success : t.track);
+    text(String(points.size()) + " pts", LCD_WIDTH / 2, LCD_HEIGHT - 18, Datum::MiddleCenter, t.mutedText);
 
     group.draw();
   }
