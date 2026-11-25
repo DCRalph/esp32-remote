@@ -1,21 +1,17 @@
+// LilyGO T-Display AMOLED (RM67162). TFT_eSPI holds the frame in a sprite; the
+// panel itself is driven by driver/rm67162 over QSPI.
 #pragma once
 
-#include "config.h"
-#include "driver/rm67162.h"
-#include <TFT_eSPI.h>
+#include <TFTDisplayDriver.h>
 
-#include "Display.h"
-
-struct AmoledDisplayDriverContext
+class AmoledDisplayDriver : public TFTDisplayDriver
 {
-  TFT_eSPI tft;
-  TFT_eSprite sprite;
+public:
+  using TFTDisplayDriver::TFTDisplayDriver;
 
-  AmoledDisplayDriverContext() : tft(), sprite(&tft) {}
+protected:
+  void initPanel() override;
+  void pushFrame() override;
+  // TFT_eSPI is not wired to this panel, so there is no direct-draw fallback.
+  bool allowDirectFallback() const override { return false; }
 };
-
-namespace AmoledDisplayDriver
-{
-  DisplayDriverOps makeOps();
-  DisplayConfig makeConfig(AmoledDisplayDriverContext *context, uint16_t width, uint16_t height, uint8_t rotation, uint8_t colorDepth = 16);
-}

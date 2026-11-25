@@ -9,22 +9,32 @@
 #include "Wireless.h"
 #include <Mesh.h>
 
-#include <Display.h>
-#include <ScreenManager.h>
+#include <dcr_Console.h>
+#include <dcr_FatalHandler.h>
+#include <dcr_Logger.h>
+#include <dcr_TaskManager.h>
+#include <dcr_TimeProfiler.h>
+#include <dcr_display.h>
+
 #include "IO/AmoledDisplayDriver.h"
-#include "MenuInput.h"
 
 #include "screens/Home.h"
 
 #include "IO/GPIO.h"
 
 WiFiClient espClient;
-AmoledDisplayDriverContext displayDriverContext;
+AmoledDisplayDriver displayDriver(LCD_WIDTH, LCD_HEIGHT, TFT_ROT);
 
-int getBatteryPercentage()
-{
-  return battery.getPercentageI();
-}
+// Up/down move, a double click on either selects, the trigger selects too.
+ButtonInput buttonInput([]
+                        {
+  ButtonInput::Config c;
+  c.up = []() { return (int)ClickButtonUP.clicks; };
+  c.down = []() { return (int)ClickButtonDOWN.clicks; };
+  c.select = []() { return (int)ClickButtonTRIGGER.clicks; };
+  c.defaultSelectClicks = 2;
+  c.multiClickSelects = true;
+  return c; }());
 
 unsigned long long prevMillis1;
 int interval1 = 500;
@@ -35,18 +45,6 @@ long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
 unsigned long long lastDraw = 0;
-
-TaskHandle_t fpsTask;
-
-void fpsTaskFunction(void *pvParameters)
-{
-  for (;;)
-  {
-    lastFps = fps;
-    fps = 0;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
 
 void onWirelessRecv(const TransportAddress &, const TransportPacket &pkt)
 {
@@ -81,6 +79,12 @@ void setup()
   configureDeepSleep();
 
   Serial.begin(115200);
+  Console::addStream(&Serial);
+  Logger::SetLevel(LogLevel::Debug);
+  Logger::InstallLogHook();
+  FatalHandler::install();
+  taskManager.begin();
+  timeProfiler.begin(2048, 1, 0);
 
   GpIO::initIO();
   led.On();
@@ -91,21 +95,10 @@ void setup()
   battery.init();
   battery.update();
 
-  DisplayConfig displayConfig = AmoledDisplayDriver::makeConfig(&displayDriverContext, LCD_WIDTH, LCD_HEIGHT, TFT_ROT, 16);
-  display.begin(displayConfig, &screenManager);
-  screenManager.init(display);
-
-  MenuInputConfig menuInputConfig;
-  menuInputConfig.mode = MenuInputMode::Buttons2;
-  menuInputConfig.navigationClicks = 1;
-  menuInputConfig.defaultSelectClicks = 2;
-  menuInputConfig.getUpClicks = []()
-  { return (int)ClickButtonUP.clicks; };
-  menuInputConfig.getDownClicks = []()
-  { return (int)ClickButtonDOWN.clicks; };
-  menuInputConfig.getSelectClicks = []()
-  { return (int)ClickButtonTRIGGER.clicks; };
-  MenuInput::configure(menuInputConfig);
+  display.begin(displayDriver);
+  display.setBatteryProvider([]()
+                             { return (int)battery.getPercentageI(); });
+  Inputs::addSource(buttonInput);
 
   screenManager.setScreen(&HomeScreen);
 
@@ -134,15 +127,6 @@ void setup()
   led.Off();
   btnLed.Off();
   buttons.update();
-
-  xTaskCreatePinnedToCore(
-      fpsTaskFunction, /* Task function. */
-      "fpsTask",       /* name of task. */
-      10000,           /* Stack size of task */
-      NULL,            /* parameter of the task */
-      1,               /* priority of the task */
-      &fpsTask,        /* Task handle to keep track of created task */
-      0);              /* pin task to core 0 */
 }
 
 bool sleepLoop()
@@ -209,15 +193,13 @@ bool sleepLoop()
 
 void loop()
 {
-  fps++;
-
   SyncManager::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {
     prevMillis1 = millis();
     battery.update();
-    ESP_LOGI("Loop", "Battery: %fV", battery.getVoltage());
+    debugD("Battery: %fV", battery.getVoltage());
   }
 
   if (!sleepLoop() && millis() - lastDraw > (1000 / 30))
@@ -226,8 +208,9 @@ void loop()
 
     buttons.update();
 
-    frameTime = millis();
+    timeProfiler.increment(PROFILE_FRAME);
+    timeProfiler.start(PROFILE_FRAME);
     display.render();
-    lastFrameTime = millis() - frameTime;
+    timeProfiler.stop(PROFILE_FRAME);
   }
 }
