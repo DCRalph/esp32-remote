@@ -13,14 +13,8 @@ GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 
 ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
 
-// RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
 ESP32Encoder encoder;
 static uint64_t lastEncoderValue = 0;
-
-// void IRAM_ATTR encoderISR()
-// {
-//   encoder.readAB();
-// }
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -138,20 +132,14 @@ void GpIO::initIO()
   MCPState1.init();
   MCPState2.init();
 
-  // led.On();
   latch.On();
 
   ClickButtonEnc.debounceTime = 20;
   ClickButtonEnc.multiclickTime = 200;
   ClickButtonEnc.longClickTime = 500;
 
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-  // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
-
   debugI("Pins configured");
   debugI("Encoder initializing...");
-
-  // encoder.begin();
 
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
   encoder.clearCount();

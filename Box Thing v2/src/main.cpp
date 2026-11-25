@@ -18,6 +18,7 @@
 #include <dcr_Logger.h>
 #include <dcr_NetLink.h>
 #include <dcr_TaskManager.h>
+#include <dcr_TimeProfiler.h>
 
 #include "config.h"
 #include "Setup/InitOTA.h"
@@ -25,7 +26,6 @@
 #include "IO/Battery.h"
 #include "IO/GPIO.h"
 #include "IO/Haptic.h"
-#include "IO/PartitionTable.h"
 #include "IO/TopBar.h"
 #include "IO/U8g2DisplayDriver.h"
 
@@ -69,19 +69,7 @@ int getBatteryPercentage()
 
 unsigned long batteryLoopMs = 0;
 
-TaskHandle_t fpsTask;
 uint64_t lastDraw = 0;
-
-void fpsTaskFunction(void *pvParameters)
-{
-  for (;;)
-  {
-    lastFps = fps;
-    fps = 0;
-    taskManager.noteHeartbeat();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
 
 void espNowCb(WirelessFrame *frame)
 {
@@ -219,6 +207,7 @@ void setup()
   Logger::InstallLogHook();
   FatalHandler::install();
   taskManager.begin();
+  timeProfiler.begin(2048, 1, 0);
   Files::init();
 
   initConfig();
@@ -255,15 +244,6 @@ void setup()
 
   debugI("Done");
 
-  taskManager.createTaskPinnedToCore(
-      fpsTaskFunction, /* Task function. */
-      "fpsTask",       /* name of task. */
-      2048,            /* Stack size of task */
-      NULL,            /* parameter of the task */
-      1,               /* priority of the task */
-      &fpsTask,        /* Task handle to keep track of created task */
-      0);
-
   do
   {
     ClickButtonEnc.Update();
@@ -274,15 +254,10 @@ void setup()
     screenManager.setScreen(&HomeScreen2);
     haptic.playEffect(37);
   }
-
-  PartitionTable currentTable = PartitionTable::createFromFlash();
-  // currentTable.print();
 }
 
 void loop()
 {
-  fps++;
-
   if (wireless.isSetupDone())
     SyncManager::getInstance()->loop();
   else
@@ -320,8 +295,9 @@ void loop()
 
     ClickButtonEnc.Update();
 
-    frameTime = millis();
+    timeProfiler.increment(PROFILE_FRAME);
+    timeProfiler.start(PROFILE_FRAME);
     display.render();
-    lastFrameTime = millis() - frameTime;
+    timeProfiler.stop(PROFILE_FRAME);
   }
 }

@@ -2,6 +2,7 @@
 
 #include <Menu.h>
 #include <dcr_TaskManager.h>
+#include <dcr_TimeProfiler.h>
 
 #include "config.h"
 #include "IO/GPIO.h"
@@ -59,8 +60,8 @@ namespace
   String gDebugFreeMem = "0";
   String gDebugUsedMem = "0";
 
-  // dcr_taskManager replaces the old per-phase render timers, which dcr_display's
-  // render() does not expose.
+  uint32_t gDebugFps = 0;
+  uint32_t gDebugFrameUs = 0;
   int gDebugCpu0 = 0;
   int gDebugCpu1 = 0;
   int gDebugTaskCount = 0;
@@ -74,8 +75,8 @@ namespace
   MenuItemNumber<long> debugBootCountItem("Boot", &gDebugBootCount);
   MenuItemToggle debugOtaItem("OTA", &gDebugOtaState);
 
-  MenuItemNumber<uint32_t> debugFpsItem("FPS", &lastFps);
-  MenuItemNumber<uint32_t> debugFrameTimeItem("F Time", &lastFrameTime);
+  MenuItemNumber<uint32_t> debugFpsItem("FPS", &gDebugFps);
+  MenuItemNumber<uint32_t> debugFrameTimeItem("F us", &gDebugFrameUs);
 
   MenuItemNumber<int> debugCpu0Item("CPU0 %", &gDebugCpu0);
   MenuItemNumber<int> debugCpu1Item("CPU1 %", &gDebugCpu1);
@@ -134,6 +135,8 @@ namespace
     gDebugFreeMem = formatBytes(freeMem, true);
     gDebugUsedMem = formatBytes(totalMem - freeMem, true);
 
+    gDebugFps = timeProfiler.getCallsPerSecond(PROFILE_FRAME);
+    gDebugFrameUs = timeProfiler.getTimeUs(PROFILE_FRAME);
     gDebugCpu0 = (int)taskManager.getCpuUsagePercent(0);
     gDebugCpu1 = (int)taskManager.getCpuUsagePercent(1);
     gDebugTaskCount = (int)taskManager.snapshotTasks().size();

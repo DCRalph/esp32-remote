@@ -1,7 +1,6 @@
 #pragma once
 #include "config.h"
 
-#include <RotaryEncoder.h>
 #include <ESP32Encoder.h>
 #include <ClickButton.h>
 #include <FunctionalInterrupt.h>
@@ -16,12 +15,9 @@ extern GpIO MCPPowerGood;
 extern GpIO MCPState1;
 extern GpIO MCPState2;
 
-// extern RotaryEncoder encoder;
 extern ESP32Encoder encoder;
 
 extern ClickButton ClickButtonEnc;
-
-// void IRAM_ATTR encoderISR();
 
 enum PinMode
 {

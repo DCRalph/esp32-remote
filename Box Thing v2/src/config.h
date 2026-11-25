@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-// #include "secrets.h"
 #include <esp_now.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -30,10 +29,8 @@ extern bool wifiConnectedAtSomePoint;
 extern uint64_t lastInteract;
 extern int autoOffMin;
 
-extern uint32_t fps;
-extern uint32_t lastFps;
-extern uint32_t frameTime;
-extern uint32_t lastFrameTime;
+// dcr_timeProfiler key for display.render(): calls per second and duration.
+#define PROFILE_FRAME "frame"
 
 #define BAUD_RATE 115200
 
