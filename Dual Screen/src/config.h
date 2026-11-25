@@ -36,8 +36,4 @@ namespace TouchPanelPins
   constexpr int8_t kTouchCS = 1;
 }
 
-// dcr_timeProfiler keys for each display's render(): calls per second and duration.
-#define PROFILE_LCD "lcd"
-#define PROFILE_TOUCH "touch"
-
 void initConfig();

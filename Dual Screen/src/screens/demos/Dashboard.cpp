@@ -4,7 +4,6 @@
 
 #include <WiFi.h>
 #include <dcr_NetLink.h>
-#include <dcr_TimeProfiler.h>
 
 #include "config.h"
 #include "Displays.h"
@@ -91,8 +90,8 @@ namespace
     tile(1, 0, "Battery", String(battery.getVoltage(), 2) + " V", battery.getPercentageI());
     tile(0, 1, "Heap free", String(heap / 1024) + " KB", heapTotal ? heap * 100 / heapTotal : 0);
     tile(1, 1, "PSRAM free", String(psram / 1024) + " KB", psramTotal ? psram * 100 / psramTotal : 0);
-    tile(0, 2, "LCD", String(timeProfiler.getCallsPerSecond(PROFILE_LCD)) + "/s " +
-                          String(timeProfiler.getTimeMs(PROFILE_LCD), 1) + "ms");
+    const FrameStats &lcd = display.stats(), &touch = touchDisplay.stats();
+    tile(0, 2, "Frames LCD / touch", String(lcd.fps) + " / " + touch.fps + " fps", lcd.loadPercent);
     tile(1, 2, "Wi-Fi", netLink.isConnected() ? String(WiFi.RSSI()) + " dBm" : String("offline"),
          netLink.isConnected() ? constrain(2 * (WiFi.RSSI() + 100), 0, 100) : 0);
   }
