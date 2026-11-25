@@ -1,0 +1,3 @@
+[submodule "libs/dcr_display"]
+	path = libs/dcr_display
+	url = https://github.com/DCRalph/dcr_display.git

@@ -1,25 +1,45 @@
 #include "InitOTA.h"
 
+#include <Display.h>
+#include <ScreenManager.h>
+
+#include "Screens/Screens.h"
+#include "Screens/UpdateProgress.h"
+
+#undef LOG_TAG
+#define LOG_TAG "OTA"
+
 bool otaSetup = false;
 bool otaInProgress = false;
 
 static int lastPercent = 0;
 
+/**
+ * Switch to the progress screen and paint it now. `setScreen` only queues the
+ * change, and OTA callbacks never return to the main loop, so the change has to
+ * be applied by hand before rendering.
+ */
+static void showProgressScreen()
+{
+  screenManager.setScreen(&UpdateProgressScreen2);
+  screenManager.applyPendingScreenChange();
+  display.render();
+}
+
 void InitOta()
 {
-  Serial.println("\t[INFO] [OTA] Initializing...");
+  debugI("Initializing...");
 
   ArduinoOTA.setHostname(HOSTNAME);
   ArduinoOTA.onStart([]()
                      {
                        otaInProgress = true;
 
-                       String type = (ArduinoOTA.getCommand() == U_FLASH) ? "Sketch" : "Filesystem";
-                       Serial.println("\n\n\nStart updating " + type);
+                       const char *type = (ArduinoOTA.getCommand() == U_FLASH) ? "Sketch" : "Filesystem";
+                       debugI("Start updating %s", type);
 
-                       screenManager.setScreen("Update Progress");
-                       ((UpdateProgressScreen *)screenManager.getCurrentScreen())->setProgress(0);
-                       display.display();
+                       UpdateProgress::setProgress(0);
+                       showProgressScreen();
                        //
                      });
 
@@ -27,11 +47,10 @@ void InitOta()
                    {
                      otaInProgress = false;
 
-                     Serial.println("End. Rebooting!");
+                     debugI("End. Rebooting!");
 
-                     screenManager.setScreen("Update Progress");
-                     ((UpdateProgressScreen *)screenManager.getCurrentScreen())->setMessage("Rebooting...");
-                     display.display();
+                     UpdateProgress::setMessage("Rebooting...");
+                     showProgressScreen();
 
                      ESP.restart();
                      //
@@ -45,10 +64,10 @@ void InitOta()
                             return;
                           lastPercent = percent;
 
-                          Serial.println("Progress: " + String(percent) + "%");
+                          debugD("Progress: %u%%", percent);
 
-                          ((UpdateProgressScreen *)screenManager.getCurrentScreen())->setProgress(percent);
-                          display.display();
+                          UpdateProgress::setProgress(percent);
+                          display.render();
                           //
                         });
 
@@ -56,20 +75,30 @@ void InitOta()
                      {
                        otaInProgress = false;
 
-                       if (error == OTA_AUTH_ERROR) // 0
-                         Serial.println("Auth Failed");
-                       else if (error == OTA_BEGIN_ERROR) // 1
-                         Serial.println("Begin Failed");
-                       else if (error == OTA_CONNECT_ERROR) // 2
-                         Serial.println("Connect Failed");
-                       else if (error == OTA_RECEIVE_ERROR) // 3
-                         Serial.println("Receive Failed");
-                       else if (error == OTA_END_ERROR) // 4
-                         Serial.println("End Failed");
+                       switch (error)
+                       {
+                       case OTA_AUTH_ERROR:
+                         debugE("Auth Failed");
+                         break;
+                       case OTA_BEGIN_ERROR:
+                         debugE("Begin Failed");
+                         break;
+                       case OTA_CONNECT_ERROR:
+                         debugE("Connect Failed");
+                         break;
+                       case OTA_RECEIVE_ERROR:
+                         debugE("Receive Failed");
+                         break;
+                       case OTA_END_ERROR:
+                         debugE("End Failed");
+                         break;
+                       default:
+                         debugE("Unknown error %d", error);
+                         break;
+                       }
 
-                       screenManager.setScreen("Update Progress");
-                       ((UpdateProgressScreen *)screenManager.getCurrentScreen())->setMessage("Error: " + String(error));
-                       display.display();
+                       UpdateProgress::setMessage("Error: " + String(error));
+                       showProgressScreen();
 
                        delay(1000);
                        //
@@ -78,5 +107,5 @@ void InitOta()
   ArduinoOTA.begin();
   otaSetup = true;
 
-  Serial.println("\t[INFO] [OTA] Initialized");
+  debugI("Initialized");
 }

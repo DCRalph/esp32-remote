@@ -1,8 +1,9 @@
 #pragma once
 
+#include <Wireless.h>
+
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#include "secrets.h"
 
 #include "driver/rtc_io.h"
 #include "esp_sleep.h"
@@ -18,10 +19,11 @@
 extern Preferences preferences;
 extern esp_sleep_wakeup_cause_t wakeup_reason;
 
-extern uint32_t fps;
-extern uint32_t lastFps;
-extern uint32_t frameTime;
-extern uint32_t lastFrameTime;
+// The ESP-NOW transport singleton, under the name the screens use.
+extern Wireless &wireless;
+
+// dcr_timeProfiler key for display.render(): calls per second and duration.
+#define PROFILE_FRAME "frame"
 
 #define ESP_NOW_CHANNEL 1
 

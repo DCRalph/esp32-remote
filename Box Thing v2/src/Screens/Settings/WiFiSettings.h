@@ -1,149 +1,94 @@
 #pragma once
 
+#include <Menu.h>
+#include <dcr_NetLink.h>
+
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
+#include "Screens/Screens.h"
 
-#include "IO/Menu.h"
-
-class WiFiSettingsScreen : public Screen
+namespace
 {
-public:
-  WiFiSettingsScreen(String _name);
+  bool gWifiSettingsWifiActive = false;
+  bool gWifiSettingsEspnowActive = false;
 
-  Menu menu = Menu();
+  Menu wifiSettingsMenu;
 
-  MenuItemBack backItem;
+  MenuItemBack wifiSettingsBackItem;
+  MenuItemNavigate wifiSettingsInfoItem("WiFi Info", &WiFiInfoScreen2);
+  MenuItemNavigate wifiSettingsScanItem("Add Network", &WiFiScanScreen2);
+  MenuItemToggle wifiSettingsWifiItem("WiFi", &gWifiSettingsWifiActive);
+  MenuItemToggle wifiSettingsEspnowItem("ESPNOW", &gWifiSettingsEspnowActive);
+  MenuItemAction wifiSettingsForgetItem("Reset WiFi", 1, []()
+                                        { netLink.resetConfig(); });
 
-  MenuItemNavigate wifiInfoItem = MenuItemNavigate("WiFi Info", "WiFi Info");
+  [[maybe_unused]] const bool wifiSettingsMenuBuilt = []()
+  {
+    wifiSettingsMenu.addMenuItem(&wifiSettingsBackItem);
+    wifiSettingsMenu.addMenuItem(&wifiSettingsInfoItem);
+    wifiSettingsMenu.addMenuItem(&wifiSettingsScanItem);
+    wifiSettingsMenu.addMenuItem(&wifiSettingsWifiItem);
+    wifiSettingsMenu.addMenuItem(&wifiSettingsEspnowItem);
+    wifiSettingsMenu.addMenuItem(&wifiSettingsForgetItem);
 
-  bool wifiActive = false;
-  bool configPortalActive = false;
-  bool espnowActive = false;
+    // WiFi and ESP-NOW both own the radio, so enabling one tears down the other.
+    wifiSettingsWifiItem.setOnChange([]()
+                                     {
+                                       if (WiFi.status() == WL_CONNECTED)
+                                       {
+                                         netLink.off();
+                                         return;
+                                       }
 
-  MenuItemToggle wifiItem = MenuItemToggle("WiFi", &wifiActive);
+                                       if (wireless.isSetupDone())
+                                       {
+                                         teardownMeshTransport();
+                                         preferences.putBool("espnowOn", false);
+                                       }
 
-  MenuItemToggle toggleESPNOWItem = MenuItemToggle("ESPNOW", &espnowActive);
+                                       netLink.on();
+                                       netLink.connect();
+                                       //
+                                     });
 
-  MenuItemToggle configPortalItem = MenuItemToggle("Config", &configPortalActive);
+    wifiSettingsEspnowItem.setOnChange([]()
+                                       {
+                                         if (wireless.isSetupDone())
+                                         {
+                                           teardownMeshTransport();
+                                           preferences.putBool("espnowOn", false);
+                                           return;
+                                         }
 
-  MenuItemAction wifiForgetItem = MenuItemAction("Reset WiFi", 1, [&]()
-                                                 {
-                                                   wm.resetSettings();
-                                                   //  updateButtons();
-                                                   //
-                                                 });
+                                         netLink.prepareForExternalTransport();
+                                         beginMeshTransport();
+                                         preferences.putBool("espnowOn", true);
+                                         //
+                                       });
+    return true;
+  }();
 
-  void draw() override;
-  void update() override;
-  void onEnter() override;
-  void updateButtons();
+  void wifiSettingsSyncToggles()
+  {
+    wifiSettingsWifiItem.set(WiFi.status() == WL_CONNECTED);
+    wifiSettingsEspnowItem.set(wireless.isSetupDone());
+  }
 
-  uint8_t active;
+  void wifiSettingsDraw()
+  {
+    wifiSettingsMenu.draw();
+  }
+
+  void wifiSettingsUpdate()
+  {
+    wifiSettingsMenu.update();
+    wifiSettingsSyncToggles();
+  }
+}
+
+const Screen2 WiFiSettingsScreen2 = {
+    .name = "Wi-Fi",
+    .draw = wifiSettingsDraw,
+    .update = wifiSettingsUpdate,
+    .onEnter = wifiSettingsSyncToggles,
+    .onExit = nullptr,
 };
-
-WiFiSettingsScreen::WiFiSettingsScreen(String _name) : Screen(_name)
-{
-  active = 1;
-
-  menu.addMenuItem(&backItem);
-  menu.addMenuItem(&wifiInfoItem);
-  menu.addMenuItem(&wifiItem);
-  menu.addMenuItem(&toggleESPNOWItem);
-  menu.addMenuItem(&configPortalItem);
-  menu.addMenuItem(&wifiForgetItem);
-
-  wifiItem.setOnChange([&]()
-                       {
-                         if (WiFi.status() == WL_CONNECTED)
-                           wm.disconnect();
-                         else
-                         {
-                           if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // if config portal is on
-                           {
-                             wm.stopConfigPortal();
-                             wm.stopWebPortal();
-                           }
-
-                           if (wireless.isSetupDone()) // espnow is on
-                           {
-                             teardownMeshTransport();
-                             preferences.putBool("espnowOn", false);
-                           }
-
-                           wm.autoConnect(AP_SSID);
-                         }
-
-                         //  updateButtons();
-                         //
-                       });
-
-  toggleESPNOWItem.setOnChange([&]()
-                               {
-                                 if (wireless.isSetupDone()) // espnow is on
-                                 {
-                                   teardownMeshTransport();
-                                   preferences.putBool("espnowOn", false);
-                                 }
-                                 else
-                                 {
-                                   if (wm.getConfigPortalActive() || wm.getWebPortalActive()) // if config portal is on
-                                   {
-                                     wm.stopConfigPortal();
-                                     wm.stopWebPortal();
-                                   }
-
-                                   wm.disconnect();
-                                   beginMeshTransport();
-                                   preferences.putBool("espnowOn", true);
-                                 }
-
-                                 //  updateButtons();
-                                 //
-                               });
-
-  configPortalItem.setOnChange([&]()
-                               {
-                                 if (wm.getConfigPortalActive() || wm.getWebPortalActive())
-                                 {
-                                   wm.stopConfigPortal();
-                                   wm.stopWebPortal();
-                                 }
-                                 else
-                                 {
-                                   if (wireless.isSetupDone()) // espnow is on
-                                   {
-                                     teardownMeshTransport();
-                                   }
-                                   wm.disconnect();
-                                   wm.startConfigPortal(AP_SSID);
-                                 }
-                                 //  updateButtons();
-                                 //
-                               });
-
-  // updateButtons();
-}
-
-void WiFiSettingsScreen::draw()
-{
-  menu.draw();
-}
-
-void WiFiSettingsScreen::update()
-{
-  menu.update();
-  updateButtons();
-}
-
-void WiFiSettingsScreen::onEnter()
-{
-  // updateButtons();
-}
-
-void WiFiSettingsScreen::updateButtons()
-{
-  wifiItem.set(WiFi.status() == WL_CONNECTED);
-  toggleESPNOWItem.set(wireless.isSetupDone());
-  configPortalItem.set(wm.getConfigPortalActive() || wm.getWebPortalActive());
-}

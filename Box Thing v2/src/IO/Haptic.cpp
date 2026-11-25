@@ -1,12 +1,13 @@
-
-
 #include "Haptic.h"
+
+#undef LOG_TAG
+#define LOG_TAG "HAPTIC"
 
 void Haptic::init()
 {
   if (!drv.begin())
   {
-    Serial.println("Could not find DRV2605");
+    debugE("Could not find DRV2605");
     while (1)
       delay(10);
   }

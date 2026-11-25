@@ -1,6 +1,7 @@
 #include "Home.h"
 
 #include "config.h"
+#include <dcr_TimeProfiler.h>
 #include "Display.h"
 #include "Menu.h"
 #include "Popup.h"
@@ -42,8 +43,10 @@ namespace HomeScreenNamespace
     static MenuItemNavigate testLoadingItem{"Test Loading", &TestLoadingScreen};
     static MenuItemNavigate engineItem{"Engine", &EngineScreen};
 
-    static MenuItemNumber<uint32_t> fpsItem{"FPS", &lastFps};
-    static MenuItemNumber<uint32_t> frameTimeItem{"Frame Time", &lastFrameTime};
+    static uint32_t fps = 0;
+    static uint32_t frameUs = 0;
+    static MenuItemNumber<uint32_t> fpsItem{"FPS", &fps};
+    static MenuItemNumber<uint32_t> frameTimeItem{"Frame us", &frameUs};
 
     static unsigned long long prevMillis1 = 0;
 
@@ -80,6 +83,8 @@ namespace HomeScreenNamespace
 
   void update()
   {
+    fps = timeProfiler.getCallsPerSecond(PROFILE_FRAME);
+    frameUs = timeProfiler.getTimeUs(PROFILE_FRAME);
     menu.update();
   }
 

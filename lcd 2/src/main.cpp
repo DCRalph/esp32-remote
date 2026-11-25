@@ -16,21 +16,28 @@
 #include "Wireless.h"
 #include "Mesh.h"
 
-#include "Display.h"
-#include "MenuInput.h"
-#include "TFTDisplayDriver.h"
-#include "ScreenManager.h"
+#include <TFTDisplayDriver.h>
+#include <dcr_display.h>
 
 #include "screens/Home.h"
 #include "companion/CompanionHttp.h"
 #include "companion/CompanionRadio.h"
 
-TFTDisplayDriverContext displayDriverContext;
+#if __has_include("secrets.h")
+#include "secrets.h"
+#endif
 
-int getBatteryPercentage()
-{
-  return battery.getPercentageI();
-}
+TFTDisplayDriver displayDriver(LCD_WIDTH, LCD_HEIGHT, TFT_ROT);
+
+// Two buttons: one click moves, a double click selects.
+ButtonInput buttonInput([]
+                        {
+  ButtonInput::Config c;
+  c.up = []() { return (int)ClickButtonUP.clicks; };
+  c.down = []() { return (int)ClickButtonDOWN.clicks; };
+  c.defaultSelectClicks = 2;
+  c.multiClickSelects = true;
+  return c; }());
 
 unsigned long long prevMillis1;
 int interval1 = 200;
@@ -71,24 +78,10 @@ void setup()
 
   battery.init();
 
-  const DisplayConfig displayConfig = TFTDisplayDriver::makeConfig(
-      &displayDriverContext,
-      LCD_WIDTH,
-      LCD_HEIGHT,
-      TFT_ROT,
-      16);
-  display.begin(displayConfig, &screenManager);
-  screenManager.init(display);
-
-  MenuInputConfig menuInputConfig;
-  menuInputConfig.mode = MenuInputMode::Buttons2;
-  menuInputConfig.navigationClicks = 1;    // 1 click = up/down
-  menuInputConfig.defaultSelectClicks = 2; // 2 clicks = default action (e.g. select / run default route)
-  menuInputConfig.getUpClicks = []()
-  { return (int)ClickButtonUP.clicks; };
-  menuInputConfig.getDownClicks = []()
-  { return (int)ClickButtonDOWN.clicks; };
-  MenuInput::configure(menuInputConfig);
+  display.begin(displayDriver);
+  display.setBatteryProvider([]()
+                             { return (int)battery.getPercentageI(); });
+  Inputs::addSource(buttonInput);
 
   screenManager.setScreen(&HomeScreen);
 
@@ -125,7 +118,9 @@ void setup()
   };
   netLink.setCallbacks(netCallbacks);
 
-  netLink.setFactoryCredentials("Kaitiaki", "Solv-it32");
+#ifdef FACTORY_WIFI_SSID
+  netLink.setFactoryCredentials(FACTORY_WIFI_SSID, FACTORY_WIFI_PASSWORD);
+#endif
 
   netLink.init();
   HTTP::init();

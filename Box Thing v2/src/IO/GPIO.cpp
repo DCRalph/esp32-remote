@@ -1,5 +1,8 @@
 #include "GPIO.h"
 
+#undef LOG_TAG
+#define LOG_TAG "GPIO"
+
 GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
 GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
@@ -10,14 +13,8 @@ GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 
 ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
 
-// RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
 ESP32Encoder encoder;
 static uint64_t lastEncoderValue = 0;
-
-// void IRAM_ATTR encoderISR()
-// {
-//   encoder.readAB();
-// }
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -51,11 +48,10 @@ GpIO::GpIO(uint8_t _pin, PinMode _mode, bool _activeState)
 void GpIO::init()
 {
 #ifdef DEBUG_GPIO
-  Serial.println("\t[GPIO] " + String(pin) + " as " + PinModeString(mode) + " Initializing...");
+  debugD("%d as %s initializing...", pin, PinModeString(mode).c_str());
 #endif
   pinMode(pin, mode);
 
-  // Serial.println("\t[GPIO] Initialized");
 }
 
 void GpIO::SetMode(PinMode _mode)
@@ -126,7 +122,7 @@ PinMode GpIO::getMode()
 
 void GpIO::initIO()
 {
-  Serial.println("\t[INFO] [IO] Configuring pins...");
+  debugI("Configuring pins...");
 
   led.init();
   latch.init();
@@ -136,31 +132,19 @@ void GpIO::initIO()
   MCPState1.init();
   MCPState2.init();
 
-  // led.On();
   latch.On();
 
   ClickButtonEnc.debounceTime = 20;
   ClickButtonEnc.multiclickTime = 200;
   ClickButtonEnc.longClickTime = 500;
 
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-  // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
-
-#ifdef DEBUG_GPIO
-  Serial.println("\t[INFO] [IO] Pins configured.");
-  Serial.println();
-#endif
-
-#ifdef DEBUG_GPIO
-  Serial.println("\t[Encoder] Initializing...");
-#endif
-
-  // encoder.begin();
+  debugI("Pins configured");
+  debugI("Encoder initializing...");
 
   encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
   encoder.clearCount();
 
-    Serial.println("\t[Encoder] Initialized");
+  debugI("Encoder initialized");
 }
 
 int64_t encoderGetCount()

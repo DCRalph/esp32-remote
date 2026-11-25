@@ -1,49 +1,45 @@
 #pragma once
 
+#include <Menu.h>
+
 #include "config.h"
-#include "IO/Display.h"
-#include "IO/GPIO.h"
-#include "IO/Menu.h"
+#include "Screens/Screens.h"
 
-class SwitchMenuScreen : public Screen
+namespace
 {
-public:
-  SwitchMenuScreen(String _name);
+  Menu switchMenu(MenuSize::Large);
 
-  Menu menu = Menu(MenuSize::Large);
+  MenuItemBack switchMenuBackItem;
+  MenuItemNavigate switchMenuCarItem("Car", &CarControlScreen2);
+  MenuItemNavigate switchMenuRelayItem("Relay", &RemoteRelayScreen2);
+  MenuItemNavigate switchMenuEncoderItem("Encoder", &EncoderTransmiterScreen2);
+  MenuItemNavigate switchMenuServosItem("Servos", &ServoControlScreen2);
 
-  MenuItemBack backItem;
+  [[maybe_unused]] const bool switchMenuBuilt = []()
+  {
+    switchMenu.addMenuItem(&switchMenuBackItem);
+    switchMenu.addMenuItem(&switchMenuCarItem);
+    switchMenu.addMenuItem(&switchMenuRelayItem);
+    switchMenu.addMenuItem(&switchMenuEncoderItem);
+    switchMenu.addMenuItem(&switchMenuServosItem);
+    return true;
+  }();
 
-  // MenuItemNavigate espnowSwitchItem = MenuItemNavigate("ESP SW", "Espnow Switch");
+  void switchMenuDraw()
+  {
+    switchMenu.draw();
+  }
 
-  MenuItemNavigate carItem = MenuItemNavigate("Car", "Car Control");
+  void switchMenuUpdate()
+  {
+    switchMenu.update();
+  }
+}
 
-  MenuItemNavigate remoteRelayItem = MenuItemNavigate("Relay", "Remote Relay");
-
-  MenuItemNavigate encoderTransmiterItem = MenuItemNavigate("Encoder", "Encoder Transmiter");
-
-  MenuItemNavigate servosControlItem = MenuItemNavigate("Servos", "Servos Control");
-
-  void draw() override;
-  void update() override;
+const Screen2 SwitchMenuScreen2 = {
+    .name = "Control",
+    .draw = switchMenuDraw,
+    .update = switchMenuUpdate,
+    .onEnter = nullptr,
+    .onExit = nullptr,
 };
-
-SwitchMenuScreen::SwitchMenuScreen(String _name) : Screen(_name)
-{
-  menu.addMenuItem(&backItem);
-  // menu.addMenuItem(&espnowSwitchItem);
-  menu.addMenuItem(&carItem);
-  menu.addMenuItem(&remoteRelayItem);
-  menu.addMenuItem(&encoderTransmiterItem);
-  menu.addMenuItem(&servosControlItem);
-}
-
-void SwitchMenuScreen::draw()
-{
-  menu.draw();
-}
-
-void SwitchMenuScreen::update()
-{
-  menu.update();
-}
