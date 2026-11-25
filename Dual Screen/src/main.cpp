@@ -74,6 +74,7 @@ void setup()
 
 void loop()
 {
+  const uint32_t frameStartMs = millis();
   buttons.update();
   netLink.loop();
 
@@ -86,6 +87,9 @@ void loop()
   Displays::render();
   Displays::logStats();
 
-  static TickType_t lastWake = xTaskGetTickCount();
-  xTaskDelayUntil(&lastWake, pdMS_TO_TICKS(FRAME_INTERVAL_MS));
+  // Sleep out the rest of the frame. Not xTaskDelayUntil: after a slow frame it
+  // runs catch-up frames back to back, which shows as a burst.
+  const uint32_t spentMs = millis() - frameStartMs;
+  if (spentMs < FRAME_INTERVAL_MS)
+    vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS - spentMs));
 }

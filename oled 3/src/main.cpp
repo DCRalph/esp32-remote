@@ -44,7 +44,6 @@ unsigned long long sleepCountdownMillis = 0;
 long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
-unsigned long long lastDraw = 0;
 
 void onWirelessRecv(const TransportAddress &, const TransportPacket &pkt)
 {
@@ -193,6 +192,7 @@ bool sleepLoop()
 
 void loop()
 {
+  const uint32_t frameStartMs = millis();
   SyncManager::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
@@ -202,15 +202,17 @@ void loop()
     debugD("Battery: %fV", battery.getVoltage());
   }
 
-  if (!sleepLoop() && millis() - lastDraw > (1000 / 30))
+  buttons.update();
+  if (!sleepLoop())
   {
-    lastDraw = millis();
-
-    buttons.update();
-
     timeProfiler.increment(PROFILE_FRAME);
     timeProfiler.start(PROFILE_FRAME);
     display.render();
     timeProfiler.stop(PROFILE_FRAME);
   }
+
+  // Sleep out the rest of the frame rather than spinning (no catch-up bursts).
+  const uint32_t spentMs = millis() - frameStartMs;
+  if (spentMs < FRAME_INTERVAL_MS)
+    vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS - spentMs));
 }

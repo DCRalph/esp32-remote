@@ -16,6 +16,10 @@ extern bool wifiConnectedAtSomePoint;
 
 #define BAUD_RATE 115200
 
+// loop() sleeps out what is left of each frame. Buttons are sampled once per frame,
+// and ClickButton's 20 ms debounce needs two samples inside it.
+#define FRAME_INTERVAL_MS 10 // up to 100 fps
+
 #define DEBUG true
 #define DEBUG_ESP_NOW false
 
