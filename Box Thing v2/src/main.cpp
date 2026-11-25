@@ -161,6 +161,12 @@ void setupDisplay()
   display.begin(displayDriver);
   display.setTopBarRenderer(TopBar::render);
   Inputs::addSource(encoderInput);
+
+  // Three Large rows under the top bar (52 px / 3 = 17), not the library's two.
+  // helvB12 is 16 px from ascent to descent, so it still fits a row.
+  MenuStyle::Metrics metrics = MenuStyle::metrics();
+  metrics.large.lineHeight = (DISPLAY_HEIGHT - metrics.contentTopY) / 3;
+  MenuStyle::setMetrics(metrics);
 }
 
 void setup()
