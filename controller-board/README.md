@@ -29,8 +29,10 @@ The heater coprocessor, pumps, RFID and battery chips are not driven at all.
 | Power button | 15 | active high; hold 2 s to switch off |
 
 Pins and the TFT_eSPI setup are build flags in `platformio.ini`, copied from
-bioreactor-controller's `lib/TFT_eSPI/User_Setup.h` and `src/config.h`. Rotation
-is 1, or 3 on the 8-way unit, as the bioreactor chooses from its device type.
+bioreactor-controller's `lib/TFT_eSPI/User_Setup.h` and `src/config.h`. The screen
+is turned 180 degrees from the bioreactor (`ROTATE_180` in `src/config.h`): rotation
+3, or 1 on the 8-way unit. The bioreactor's saved touch calibration is flipped to
+match, so touch lines up without recalibrating.
 
 ## Screens
 

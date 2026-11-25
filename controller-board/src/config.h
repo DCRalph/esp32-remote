@@ -11,6 +11,9 @@ constexpr uint8_t LATCH_PWR_PIN = 5;          // high holds the power supply on
 constexpr uint8_t POWER_BUTTON_PIN = 15;      // active high, pulled down
 constexpr uint8_t DISPLAY_BACKLIGHT_PIN = 38; // active level depends on hardware version
 
+// The panel turned 180 degrees from the bioreactor's orientation.
+constexpr bool ROTATE_180 = true;
+
 // Hold the power button this long to switch off.
 constexpr uint32_t POWER_OFF_HOLD_MS = 2000;
 

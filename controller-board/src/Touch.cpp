@@ -49,6 +49,10 @@ void Touch::begin(TFT_eSPI &tft)
 {
   panel = &tft;
   savedCalibration = Device::loadTouchCalibration(calData);
+  // The saved calibration maps raw readings at the bioreactor's rotation; turned
+  // 180 degrees, both screen axes run the other way (TFT_eSPI invert x and y flags).
+  if (savedCalibration && ROTATE_180)
+    calData[4] ^= 0x06;
   tft.setTouch(calData);
 }
 
