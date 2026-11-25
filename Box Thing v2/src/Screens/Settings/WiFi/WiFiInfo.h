@@ -8,7 +8,7 @@
 #include "config.h"
 #include "IO/GPIO.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 namespace
@@ -19,18 +19,18 @@ namespace
     const int centreX = display.width() / 2;
 
     display.setTextSize(U8G2_TEXT_TITLE);
-    display.setTextDatum(TC_DATUM);
+    display.setTextDatum(Datum::TopCenter);
     display.drawString(line1, centreX, 14);
     display.drawString(line2, centreX, 32);
 
     display.setTextSize(U8G2_TEXT_MONO12);
-    display.setTextDatum(TL_DATUM);
+    display.setTextDatum(Datum::TopLeft);
     display.drawString(footer, 0, 55);
   }
 
   void wifiInfoDraw()
   {
-    display.setTextColor(TFT_WHITE);
+    display.setTextColor(Color::White);
 
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "ch: %d status: %d", ESP_NOW_CHANNEL,
@@ -39,7 +39,7 @@ namespace
     if (WiFi.status() == WL_CONNECTED)
     {
       display.setTextSize(U8G2_TEXT_MONO12);
-      display.setTextDatum(TL_DATUM);
+      display.setTextDatum(Datum::TopLeft);
 
       display.drawString("SSID: " + WiFi.SSID(), 0, TopBar::kHeight);
       display.drawString("IP: " + WiFi.localIP().toString(), 0, TopBar::kHeight + 10);

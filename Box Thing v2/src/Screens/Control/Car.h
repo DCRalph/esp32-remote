@@ -9,7 +9,7 @@
 #include "IO/GPIO.h"
 #include "IO/Notification.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 static uint8_t led_controller_addrs[8][8] = {
@@ -959,8 +959,8 @@ void CarControlScreen::draw()
   // Draw connection status icon in top bar
 
   display.setTextSize(U8G2_TEXT_BAR);
-  display.setTextColor(TFT_WHITE);
-  display.setTextDatum(TL_DATUM);
+  display.setTextColor(Color::White);
+  display.setTextDatum(Datum::TopLeft);
 
   String connTxt = connected ? "Y" : "N";
   display.drawString(connTxt, TopBar::nextIconX(display.textWidth(connTxt)), 1);

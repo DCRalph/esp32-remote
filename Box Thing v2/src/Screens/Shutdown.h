@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "IO/GPIO.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 namespace
@@ -25,8 +25,8 @@ namespace
   void shutdownDraw()
   {
     display.noTopBar();
-    display.setTextColor(TFT_WHITE);
-    display.setTextDatum(TC_DATUM);
+    display.setTextColor(Color::White);
+    display.setTextDatum(Datum::TopCenter);
 
     const int centreX = display.width() / 2;
 
@@ -41,8 +41,8 @@ namespace
       uint8_t progress = map(millis() - gShutdownStartTime, 0, kShutdownCountdownMs, 100, 0);
       progress = constrain(progress, 0, 100);
 
-      display.drawRect(0, 48, 127, 16, TFT_WHITE);
-      display.fillRect(2, 50, map(progress, 0, 100, 0, 123), 12, TFT_WHITE);
+      display.drawRect(0, 48, 127, 16, Color::White);
+      display.fillRect(2, 50, map(progress, 0, 100, 0, 123), 12, Color::White);
       return;
     }
 

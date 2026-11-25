@@ -4,9 +4,7 @@
 
 #include "config.h"
 #include "IO/Battery.h"
-#include "IO/U8g2DisplayDriver.h"
-
-extern U8g2DisplayDriverContext displayDriverContext;
+#include "IO/BoxThingDisplay.h"
 
 namespace
 {
@@ -37,19 +35,19 @@ namespace
 
 void TopBar::render(Display &display, const Screen2 *screen)
 {
-  auto &u8g2 = displayDriverContext.u8g2;
+  U8G2 &u8g2 = displayDriver.panel();
   const int maxX = display.width();
 
   char battery[16];
   snprintf(battery, sizeof(battery), "%d%%", batteryGetPercentageSmooth());
 
   display.setTextSize(U8G2_TEXT_BAR);
-  display.setTextColor(TFT_WHITE);
+  display.setTextColor(Color::White);
 
-  display.setTextDatum(TL_DATUM);
+  display.setTextDatum(Datum::TopLeft);
   display.drawString(screen->name, 0, 0);
 
-  display.setTextDatum(TR_DATUM);
+  display.setTextDatum(Datum::TopRight);
   display.drawString(battery, maxX, 0);
 
   const int batteryWidth = display.textWidth(battery);
@@ -61,7 +59,7 @@ void TopBar::render(Display &display, const Screen2 *screen)
   u8g2.setDrawColor(1);
   u8g2.drawGlyph(iconX, 0, linkGlyph());
 
-  display.drawLine(0, kHeight - 2, maxX, kHeight - 2, TFT_WHITE);
+  display.drawLine(0, kHeight - 2, maxX, kHeight - 2, Color::White);
 
   gNextIconX = iconX;
 }

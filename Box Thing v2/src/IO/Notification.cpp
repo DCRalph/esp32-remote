@@ -2,7 +2,7 @@
 
 #include <Display.h>
 
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 
 namespace
 {
@@ -55,12 +55,12 @@ void Notification::draw()
   const int boxX = (display.width() - boxWidth) / 2;
   const int boxY = (display.height() - boxHeight) / 2;
 
-  display.fillRect(boxX, boxY, boxWidth, boxHeight, TFT_WHITE);
-  display.drawRect(boxX - 1, boxY - 1, boxWidth + 2, boxHeight + 2, TFT_WHITE);
+  display.fillRect(boxX, boxY, boxWidth, boxHeight, Color::White);
+  display.drawRect(boxX - 1, boxY - 1, boxWidth + 2, boxHeight + 2, Color::White);
 
-  display.setTextColor(TFT_BLACK, TFT_WHITE);
-  display.setTextDatum(TL_DATUM);
+  display.setTextColor(Color::Black, Color::White);
+  display.setTextDatum(Datum::TopLeft);
   display.drawString(gMessage, boxX + 4, boxY + 3);
 
-  display.setTextColor(TFT_WHITE);
+  display.setTextColor(Color::White);
 }

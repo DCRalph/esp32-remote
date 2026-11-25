@@ -8,7 +8,7 @@
 #include "IO/GPIO.h"
 #include "IO/Haptic.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 #include "Screens/Settings/WiFi/WiFiProvision.h"
 
@@ -30,10 +30,10 @@ namespace
 
   void wifiPasswordDraw()
   {
-    display.setTextColor(TFT_WHITE);
+    display.setTextColor(Color::White);
 
     display.setTextSize(U8G2_TEXT_SMALL);
-    display.setTextDatum(TL_DATUM);
+    display.setTextDatum(Datum::TopLeft);
     display.drawString(WiFiProvision::pendingSsid, 0, TopBar::kHeight);
 
     display.setTextSize(U8G2_TEXT_MONO12);
@@ -48,7 +48,7 @@ namespace
     const int cellWidth = 10;
 
     display.setTextSize(U8G2_TEXT_MONO12);
-    display.setTextDatum(TC_DATUM);
+    display.setTextDatum(Datum::TopCenter);
 
     for (int offset = -kWiFiPasswordRibbonSpan; offset <= kWiFiPasswordRibbonSpan; offset++)
     {
@@ -61,20 +61,20 @@ namespace
 
       if (offset == 0)
       {
-        display.fillRect(x - cellWidth / 2, ribbonY - 2, cellWidth, 14, TFT_WHITE);
-        display.setTextColor(TFT_BLACK, TFT_WHITE);
+        display.fillRect(x - cellWidth / 2, ribbonY - 2, cellWidth, 14, Color::White);
+        display.setTextColor(Color::Black, Color::White);
       }
       else
       {
-        display.setTextColor(TFT_WHITE, TFT_BLACK);
+        display.setTextColor(Color::White, Color::Black);
       }
 
       display.drawString(c, x, ribbonY);
     }
 
-    display.setTextColor(TFT_WHITE);
+    display.setTextColor(Color::White);
     display.setTextSize(U8G2_TEXT_SMALL);
-    display.setTextDatum(TC_DATUM);
+    display.setTextDatum(Datum::TopCenter);
     display.drawString("1 add  2 del  3 save", centreX, 56);
   }
 

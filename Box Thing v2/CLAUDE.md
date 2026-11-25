@@ -22,8 +22,9 @@ instead of hand-rolling the same thing here:
 - Timing and rates: `timeProfiler.start/stop/increment`, not ad hoc counters.
 - Screens: `Screen2` descriptors, declared in `src/Screens/Screens.h`.
 
-`dcr_display` is pinned to a commit on its `mono-panel-support` branch. Move it to the
-default branch once that work merges upstream.
+- Input: register an `EncoderInput` with `Inputs::addSource`; menus, popups and widgets
+  read events, never the encoder directly.
+- Fonts: `display.setTextSize(U8G2_TEXT_*)` picks a face from `IO/BoxThingDisplay`.
 
 ## Comments
 

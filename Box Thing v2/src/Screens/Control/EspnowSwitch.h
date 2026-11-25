@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "IO/GPIO.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 namespace
@@ -29,16 +29,16 @@ namespace
   void espnowSwitchDraw()
   {
     display.setTextSize(U8G2_TEXT_BAR);
-    display.setTextColor(TFT_WHITE);
+    display.setTextColor(Color::White);
 
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "Res: %s",
              wireless.getLastStatus() == ESP_NOW_SEND_SUCCESS ? "OK" : "Fail");
 
-    display.setTextDatum(TL_DATUM);
+    display.setTextDatum(Datum::TopLeft);
     display.drawString(buffer, 0, 16);
 
-    display.setTextDatum(TC_DATUM);
+    display.setTextDatum(Datum::TopCenter);
     display.drawString(gEspnowSwitchState == 1   ? "Locking"
                        : gEspnowSwitchState == 2 ? "Unlocking"
                                                  : "Idle",

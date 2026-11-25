@@ -2,7 +2,7 @@
 
 #include <Display.h>
 
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 
 namespace
 {
@@ -20,8 +20,8 @@ namespace
   void draw()
   {
     display.noTopBar();
-    display.setTextColor(TFT_WHITE);
-    display.setTextDatum(TC_DATUM);
+    display.setTextColor(Color::White);
+    display.setTextDatum(Datum::TopCenter);
 
     const int centreX = display.width() / 2;
 
@@ -39,8 +39,8 @@ namespace
       display.setTextSize(U8G2_TEXT_BAR);
       display.drawString(String(gProgress) + "%", centreX, 36);
 
-      display.drawRect(0, 48, 127, 16, TFT_WHITE);
-      display.fillRect(2, 50, map(gProgress, 0, 100, 0, 123), 12, TFT_WHITE);
+      display.drawRect(0, 48, 127, 16, Color::White);
+      display.fillRect(2, 50, map(gProgress, 0, 100, 0, 123), 12, Color::White);
       break;
 
     case State::ShowingMessage:

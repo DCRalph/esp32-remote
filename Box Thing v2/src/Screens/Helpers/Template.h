@@ -11,7 +11,7 @@
 #include "config.h"
 #include "IO/GPIO.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 namespace
@@ -19,8 +19,8 @@ namespace
   void templateDraw()
   {
     display.setTextSize(U8G2_TEXT_MONO12);
-    display.setTextColor(TFT_WHITE);
-    display.setTextDatum(TL_DATUM);
+    display.setTextColor(Color::White);
+    display.setTextDatum(Datum::TopLeft);
     display.drawString("Template", 0, TopBar::kHeight);
   }
 

@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "IO/GPIO.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 
 namespace
@@ -17,8 +17,8 @@ namespace
   void encoderTxDraw()
   {
     display.setTextSize(U8G2_TEXT_MONO10);
-    display.setTextColor(TFT_WHITE);
-    display.setTextDatum(TL_DATUM);
+    display.setTextColor(Color::White);
+    display.setTextDatum(Datum::TopLeft);
 
     display.drawString("Encoder Transmiter", 0, 22);
     display.drawString("Press encoder 2 times", 0, 42);

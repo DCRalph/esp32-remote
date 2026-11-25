@@ -4,12 +4,9 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-#include <Display.h>
-#include <Menu.h>
-#include <MenuInput.h>
 #include <Mesh.h>
-#include <ScreenManager.h>
 #include <Wireless.h>
+#include <dcr_display.h>
 
 #include <dcr_Console.h>
 #include <dcr_FatalHandler.h>
@@ -27,7 +24,7 @@
 #include "IO/GPIO.h"
 #include "IO/Haptic.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 
 #include "Screens/Screens.h"
 
@@ -58,14 +55,6 @@
 
 #undef LOG_TAG
 #define LOG_TAG "MAIN"
-
-U8g2DisplayDriverContext displayDriverContext;
-
-/** dcr_display asks the application for this to draw the battery percentage. */
-int getBatteryPercentage()
-{
-  return batteryGetPercentageSmooth();
-}
 
 unsigned long batteryLoopMs = 0;
 
@@ -145,53 +134,33 @@ void setupESPNOW()
   StartUp::setState(StartUpState::EspNowStarted);
 }
 
-/** Configure the encoder as dcr_display's menu input, with haptics on the way. */
-void setupMenuInput()
-{
-  MenuInputConfig config;
-  config.mode = MenuInputMode::Encoder;
-  config.navigationClicks = 1;
-  config.defaultSelectClicks = 1;
-
-  // The library polls these only while a menu is on screen, which is exactly
-  // when the old menu code used to buzz.
-  config.getEncoderPosition = []()
-  {
-    const int delta = (int)encoderGetCount();
-    if (delta != 0)
-      haptic.playEffect(4);
-    return delta;
-  };
-  config.resetEncoderPosition = []()
-  { encoderClearCount(); };
-  config.getEncoderSelectClicks = []()
-  {
-    const int clicks = (int)ClickButtonEnc.clicks;
-    if (clicks != 0)
-      haptic.playEffect(40);
-    return clicks;
-  };
-
-  MenuInput::configure(config);
-}
+// Sources are polled only when a menu, popup or widget asks for input, so the
+// haptics fire exactly when the library consumes a turn or a click.
+EncoderInput encoderInput({
+    .readDelta = []() -> int32_t
+    {
+      const int32_t delta = (int32_t)encoderGetCount();
+      if (delta != 0)
+      {
+        encoderClearCount();
+        haptic.playEffect(4);
+      }
+      return delta;
+    },
+    .readClicks = []()
+    {
+      const int clicks = (int)ClickButtonEnc.clicks;
+      if (clicks != 0)
+        haptic.playEffect(40);
+      return clicks;
+    },
+});
 
 void setupDisplay()
 {
-  const DisplayConfig config = U8g2DisplayDriver::makeConfig(
-      &displayDriverContext, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-
-  display.begin(config, &screenManager);
+  display.begin(displayDriver);
   display.setTopBarRenderer(TopBar::render);
-  screenManager.init(display);
-
-  // dcr_display's defaults assume a ~240px colour TFT; retune for 128x64 mono.
-  MenuStyle::Metrics metrics;
-  metrics.contentTopY = TopBar::kHeight;
-  metrics.fallbackDisplayHeight = DISPLAY_HEIGHT;
-  metrics.small = {U8G2_TEXT_SMALL, 8, 2};
-  metrics.medium = {U8G2_TEXT_MEDIUM, 12, 3};
-  metrics.large = {U8G2_TEXT_LARGE, 18, 4};
-  MenuStyle::setMetrics(metrics);
+  Inputs::addSource(encoderInput);
 }
 
 void setup()
@@ -222,7 +191,6 @@ void setup()
   debugI("IOInit...");
   GpIO::initIO();
   haptic.init();
-  setupMenuInput();
 
   StartUp::setStage(2);
   display.render();

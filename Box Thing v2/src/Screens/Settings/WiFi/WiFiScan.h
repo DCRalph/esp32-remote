@@ -8,7 +8,7 @@
 #include "IO/GPIO.h"
 #include "IO/Haptic.h"
 #include "IO/TopBar.h"
-#include "IO/U8g2DisplayDriver.h"
+#include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 #include "Screens/Settings/WiFi/WiFiProvision.h"
 
@@ -69,13 +69,13 @@ namespace
 
   void wifiScanDraw()
   {
-    display.setTextColor(TFT_WHITE);
-    display.setTextDatum(TL_DATUM);
+    display.setTextColor(Color::White);
+    display.setTextDatum(Datum::TopLeft);
 
     if (gWiFiScanState == WiFiScanState::Scanning)
     {
       display.setTextSize(U8G2_TEXT_TITLE);
-      display.setTextDatum(TC_DATUM);
+      display.setTextDatum(Datum::TopCenter);
       display.drawString("Scanning...", display.width() / 2, 24);
       return;
     }
@@ -83,7 +83,7 @@ namespace
     if (gWiFiScanState == WiFiScanState::Failed)
     {
       display.setTextSize(U8G2_TEXT_TITLE);
-      display.setTextDatum(TC_DATUM);
+      display.setTextDatum(Datum::TopCenter);
       display.drawString("No networks", display.width() / 2, 16);
       display.setTextSize(U8G2_TEXT_MONO10);
       display.drawString("Click to rescan", display.width() / 2, 44);
@@ -103,22 +103,22 @@ namespace
 
       if (active)
       {
-        display.fillRoundRect(0, y, display.width() - 4, kWiFiScanRowHeight, 2, TFT_WHITE);
-        display.setTextColor(TFT_BLACK, TFT_WHITE);
+        display.fillRoundRect(0, y, display.width() - 4, kWiFiScanRowHeight, 2, Color::White);
+        display.setTextColor(Color::Black, Color::White);
       }
       else
       {
-        display.setTextColor(TFT_WHITE, TFT_BLACK);
+        display.setTextColor(Color::White, Color::Black);
       }
 
       String ssid = WiFi.SSID(index);
       if (ssid.isEmpty())
         ssid = "<hidden>";
 
-      display.setTextDatum(TL_DATUM);
+      display.setTextDatum(Datum::TopLeft);
       display.drawString(ssid, 2, y + 2);
 
-      display.setTextDatum(TR_DATUM);
+      display.setTextDatum(Datum::TopRight);
       display.drawString(String(WiFi.RSSI(index)), display.width() - 6, y + 2);
     }
   }
