@@ -6,6 +6,7 @@
 #include <dcr_NetLink.h>
 
 #include "Wireless.h"
+#include <RemoteProtocol.h>
 
 static bool s_meshSuspended = false;
 
@@ -34,6 +35,7 @@ void CompanionRadio::resumeMeshAfterCompanion() {
 #endif
 
   Wireless::getInstance()->begin();
+  RemoteProtocol::attachDirect();
 
   s_meshSuspended = false;
 }

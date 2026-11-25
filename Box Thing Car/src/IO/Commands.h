@@ -4,9 +4,9 @@
 #include "config.h"
 
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
 
 extern void lockDoor();
 extern void unlockDoor();
 
-extern int parseCommand(fullPacket *fp);
+// Answers the CarRelays channels from lcd 2 and oled 3; onCommand runs after each one.
+extern void registerCommands(void (*onCommand)());

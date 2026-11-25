@@ -1,6 +1,6 @@
 #include "config.h"
 #include "secrets.h"
-#include "IO/Wireless.h"
+#include <Wireless.h>
 #include "IO/GpIO.h"
 #include "IO/Battery.h"
 
@@ -34,9 +34,8 @@ CRGB leds[NUM_LEDS];
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-void espNowRecvCb(fullPacket *fp)
+void espNowRecvCb()
 {
-
   blinks = 4;
   ledBlinkMs = millis();
 }
@@ -69,7 +68,8 @@ void setup()
   client.setCallback(callback);
 
   // wireless.setup();
-  wireless.setOnReceiveOther(espNowRecvCb);
+  Wireless::getInstance()->setOnReceiveOther([](WirelessFrame *)
+                                             { espNowRecvCb(); });
   led.On();
   delay(500);
   led.Off();

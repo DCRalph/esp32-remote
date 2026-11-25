@@ -6,14 +6,13 @@ Preferences preferences;
 esp_sleep_wakeup_cause_t wakeup_reason;
 
 
-bool globalRelay1 = false;
-bool globalRelay2 = false;
-bool globalRelay3 = false;
-bool globalRelay4 = false;
-bool globalRelay5 = false;
-bool globalRelay6 = false;
-bool globalRelay7 = false;
-bool globalRelay8 = false;
+bool carRelays[RemoteProtocol::CarRelays::kRelayCount] = {};
+
+void applyCarRelays(const RemoteProtocol::CarRelays::Relays &relays)
+{
+  for (uint8_t i = 0; i < RemoteProtocol::CarRelays::kRelayCount; i++)
+    carRelays[i] = relays.mask & (1u << i);
+}
 
 void initConfig()
 {

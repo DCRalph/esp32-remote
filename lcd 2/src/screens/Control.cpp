@@ -3,7 +3,6 @@
 #include "config.h"
 #include "Display.h"
 #include "Menu.h"
-#include "Wireless.h"
 #include "ScreenManager.h"
 #include "Control/Car.h"
 
@@ -16,32 +15,11 @@ namespace ControlScreenNamespace
     static MenuItemBack backItem;
     static MenuItemNavigate carItem{"Car Control", &CarScreen};
     static MenuItemAction flashItemPreset1{"Flash 5 30", 2, [&]()
-                                           {
-                                             TransportPacket p;
-                                             p.type = 0x30;
-                                             p.len = 2;
-                                             p.data[0] = 5;
-                                             p.data[1] = 30 / 10;
-                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
-                                           }};
+                                           { RemoteProtocol::CarRelays::flash().sendTo(car_addr, {5, 30}); }};
     static MenuItemAction flashItemPreset2{"Flash 2 40", 2, [&]()
-                                           {
-                                             TransportPacket p;
-                                             p.type = 0x30;
-                                             p.len = 2;
-                                             p.data[0] = 2;
-                                             p.data[1] = 40 / 10;
-                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
-                                           }};
+                                           { RemoteProtocol::CarRelays::flash().sendTo(car_addr, {2, 40}); }};
     static MenuItemAction flashItemPreset3{"Flash 8 50", 2, [&]()
-                                           {
-                                             TransportPacket p;
-                                             p.type = 0x30;
-                                             p.len = 2;
-                                             p.data[0] = 8;
-                                             p.data[1] = 50 / 10;
-                                             Wireless::getInstance()->sendPacket(p, TransportAddress::fromMac(car_addr));
-                                           }};
+                                           { RemoteProtocol::CarRelays::flash().sendTo(car_addr, {8, 50}); }};
 
     static bool initialized = false;
 

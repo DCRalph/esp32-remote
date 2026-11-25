@@ -45,33 +45,6 @@ long sleepCountdownTime = 1500;
 long sleepDisplayTime = 500;
 
 
-void onWirelessRecv(const TransportAddress &, const TransportPacket &pkt)
-{
-  if (pkt.type == CMD_RELAY_1_GET)
-    globalRelay1 = pkt.data[0];
-  else if (pkt.type == CMD_RELAY_2_GET)
-    globalRelay2 = pkt.data[0];
-  else if (pkt.type == CMD_RELAY_3_GET)
-    globalRelay3 = pkt.data[0];
-  else if (pkt.type == CMD_RELAY_4_GET)
-    globalRelay4 = pkt.data[0];
-  else if (pkt.type == CMD_RELAY_5_GET)
-    globalRelay5 = pkt.data[0];
-  else if (pkt.type == CMD_RELAY_6_GET)
-    globalRelay6 = pkt.data[0];
-
-  else if (pkt.type == CMD_RELAY_ALL)
-  {
-    globalRelay1 = pkt.data[0];
-    globalRelay2 = pkt.data[1];
-    globalRelay3 = pkt.data[2];
-    globalRelay4 = pkt.data[3];
-    globalRelay5 = pkt.data[4];
-    globalRelay6 = pkt.data[5];
-  }
-
-}
-
 void setup()
 {
   initConfig();
@@ -120,6 +93,7 @@ void setup()
       });
 
   syncMgr->begin();
+  RemoteProtocol::attachDirect();
 
   prevMillis1 = millis();
 
@@ -194,6 +168,7 @@ void loop()
 {
   const uint32_t frameStartMs = millis();
   SyncManager::getInstance()->loop();
+  DirectComms::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {

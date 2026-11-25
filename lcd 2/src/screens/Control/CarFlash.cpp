@@ -3,7 +3,6 @@
 #include "config.h"
 #include "Display.h"
 #include "Menu.h"
-#include "Wireless.h"
 #include "ScreenManager.h"
 
 namespace CarFlashScreenNamespace
@@ -18,15 +17,7 @@ namespace CarFlashScreenNamespace
     static uint8_t delay = 50;
 
     static MenuItemAction relay1FlashItem{"Flash R 1", 2, [&]()
-                                          {
-                                            TransportPacket p;
-                                            p.type = CMD_RELAY_1_FLASH;
-                                            p.len = 2;
-                                            p.data[0] = count;
-                                            p.data[1] = uint8_t(delay / 10);
-
-                                            Wireless::getInstance()->send(&p, car_addr);
-                                          }};
+                                          { RemoteProtocol::CarRelays::flash().sendTo(car_addr, {count, delay}); }};
 
     static MenuItemNumber<uint8_t> relay1FlashCountItem{"Count", &count, 1, 100};
     static MenuItemNumber<uint8_t> relay1FlashDelayItem{"Delay", &delay, 20, 250, 10};

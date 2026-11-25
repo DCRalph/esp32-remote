@@ -4,26 +4,14 @@
 #include "Display.h"
 #include "ScreenManager.h"
 #include "IO/Buttons.h"
-#include "Wireless.h"
 
 namespace BoxThingEncoderScreenNamespace
 {
 
   namespace
   {
-    static uint64_t encCount = 0;
-    static int8_t clicks = 0;
+    static int64_t encCount = 0;
     static int8_t lastClicks = 0;
-  }
-
-  void onRecvPacket(const TransportPacket &pkt)
-  {
-    memcpy(&encCount, pkt.data, 8);
-    memcpy(&clicks, pkt.data + 8, 1);
-    if (clicks != 0)
-    {
-      lastClicks = clicks;
-    }
   }
 
   void draw()
@@ -38,7 +26,7 @@ namespace BoxThingEncoderScreenNamespace
     sprintf(buf, "%d", lastClicks);
     display.drawString(buf, LCD_WIDTH / 2, 100);
 
-    sprintf(buf, "%d", encCount);
+    sprintf(buf, "%lld", static_cast<long long>(encCount));
     display.drawString(buf, LCD_WIDTH / 2, 140);
   }
 
@@ -50,18 +38,15 @@ namespace BoxThingEncoderScreenNamespace
     }
   }
 
+  // DirectChannel has no unregister; the handler only stores values the screen shows.
   void onEnter()
   {
-    wireless.addOnReceiveFor(0xa3, [](WirelessFrame *frame)
-                               {
-                                 if (frame)
-                                   BoxThingEncoderScreenNamespace::onRecvPacket(frame->packet);
-                               });
-  }
-
-  void onExit()
-  {
-    wireless.removeOnReceiveFor(0xa3);
+    RemoteProtocol::Encoder::state().onReceive([](const TransportAddress &, const RemoteProtocol::Encoder::State &s)
+                                               {
+                                                 encCount = s.detents;
+                                                 if (s.clicks != 0)
+                                                   lastClicks = s.clicks;
+                                               });
   }
 
 } // namespace BoxThingEncoderScreenNamespace
@@ -71,7 +56,7 @@ const Screen2 BoxThingEncoderScreen = {
     .draw = BoxThingEncoderScreenNamespace::draw,
     .update = BoxThingEncoderScreenNamespace::update,
     .onEnter = BoxThingEncoderScreenNamespace::onEnter,
-    .onExit = BoxThingEncoderScreenNamespace::onExit,
+    .onExit = nullptr,
     .topBarColor = TFT_BLUE,
     .topBarTextColor = TFT_BLACK,
 };

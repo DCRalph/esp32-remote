@@ -7,7 +7,8 @@
 #include "config.h"
 
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
+#include <RemoteProtocol.h>
+#include <Wireless.h>
 #include "IO/Battery.h"
 
 #include <lvgl.h>
@@ -118,13 +119,10 @@ void setupWiFi() {
   }
 }
 
-void espNowCb(fullPacket *fp) {
-  if (fp->p.type == CMD_PING) {
-    // Dummy callback
-  }
+void setupESPNOW() {
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
 }
-
-void setupESPNOW() { wireless.setup(); }
 
 // -----------------------------------------------------------------
 // Extra: Create a dummy menu system for non-touch navigation using
@@ -330,7 +328,6 @@ void setup() {
   } else {
     setupWiFi();
   }
-  wireless.setRecvCb(espNowCb);
 
   Serial.println("[INFO] [SETUP] Done");
   Serial.println();
@@ -345,6 +342,8 @@ unsigned long batteryLoopMs = 0;
 char buffer[100];
 
 void loop() {
+  Wireless::getInstance()->loop();
+  DirectComms::getInstance()->loop();
 
   ClickButtonEnc.Update();
   // LVGL tick update
@@ -392,7 +391,7 @@ void loop() {
   }
 
   // Process WiFi Manager if needed
-  if (!wireless.isSetupDone()) {
+  if (!Wireless::getInstance()->isSetupDone()) {
     wm.process();
   }
 

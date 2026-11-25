@@ -4,7 +4,8 @@
 #include "config.h"
 #include "IO/Server.h"
 
-#include "IO/Wireless.h"
+#include <RemoteProtocol.h>
+#include <Wireless.h>
 
 #include "IO/Commands.h"
 
@@ -13,12 +14,9 @@ uint64_t relay1FlashMs = 0;
 
 uint8_t blinks = 0;
 
-void espNowRecvCb(fullPacket *fp)
+void noteCommand()
 {
-  int ret = parseCommand(fp);
-
-  blinks = ret == -1 ? 2 : 4;
-
+  blinks = 4;
   ledBlinkMs = millis();
 }
 
@@ -33,8 +31,9 @@ void setup()
   WiFi.softAP(WIFI_SSID, WIFI_PASS, CHANNEL, 0);
   WiFi.softAPConfig(IPAddress(10, 104, 19, 1), IPAddress(10, 104, 19, 1), IPAddress(255, 255, 255, 0));
 
-  wireless.setup();
-  wireless.setRecvCb(espNowRecvCb);
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
+  registerCommands(noteCommand);
 
   setupRoutes();
   setupServer();
@@ -46,6 +45,8 @@ void setup()
 
 void loop()
 {
+  Wireless::getInstance()->loop();
+  DirectComms::getInstance()->loop();
 
   if (relay1FlashCount > 0)
   {

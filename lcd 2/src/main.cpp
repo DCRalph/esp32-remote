@@ -14,6 +14,7 @@
 #include "IO/Battery.h"
 #include "IO/Buttons.h"
 #include "Wireless.h"
+#include <RemoteProtocol.h>
 #include "Mesh.h"
 
 #include <TFTDisplayDriver.h>
@@ -105,6 +106,7 @@ void setup()
       });
 
   syncMgr->begin();
+  RemoteProtocol::attachDirect();
 
   NetLinkCallbacks netCallbacks;
   netCallbacks.isBleActive = []()
@@ -192,7 +194,10 @@ void loop()
   if (CompanionHttp::isActive())
     CompanionHttp::loop();
   if (!CompanionRadio::isMeshSuspended())
+  {
     SyncManager::getInstance()->loop();
+    DirectComms::getInstance()->loop();
+  }
 
   if (millis() - prevMillis1 > interval1)
   {

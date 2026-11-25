@@ -1,5 +1,6 @@
 #include "config.h"
-#include "IO/Wireless.h"
+#include <RemoteProtocol.h>
+#include <Wireless.h>
 
 #include <Wire.h>
 #include <U8g2lib.h>
@@ -63,9 +64,8 @@ static void anim_x_cb(void *var, int32_t value)
 uint64_t ledBlinkMs = 0;
 uint8_t blinks = 0;
 
-void espNowRecvCb(fullPacket *fp)
+void espNowRecvCb()
 {
-
   blinks = 4;
   ledBlinkMs = millis();
 }
@@ -82,8 +82,14 @@ void setup()
 
   GpIO::initIO();
 
-  wireless.setup();
-  wireless.setOnReceiveOther(espNowRecvCb);
+  Wireless::getInstance()->setup();
+  RemoteProtocol::attachDirect();
+  RemoteProtocol::Hello::message().onReceive([](const TransportAddress &, const RemoteProtocol::Hello::Message &msg)
+                                             {
+                                               Serial.printf("[INFO] [ESPNOW] %.8s\n", msg.text);
+                                               espNowRecvCb(); });
+  Wireless::getInstance()->setOnReceiveOther([](WirelessFrame *)
+                                             { espNowRecvCb(); });
 
   led.On();
   delay(500);
@@ -138,6 +144,9 @@ uint64_t lastTime = 0;
 
 void loop()
 {
+  Wireless::getInstance()->loop();
+  DirectComms::getInstance()->loop();
+
   // if (blinks > 0)
   // {
   //   if (millis() - ledBlinkMs > 100)

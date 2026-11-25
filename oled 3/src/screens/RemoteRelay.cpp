@@ -4,21 +4,25 @@
 #include "Display.h"
 #include "Menu.h"
 #include "ScreenManager.h"
-#include "Wireless.h"
 #include "IO/GPIO.h"
 #include "IO/Buttons.h"
 
 namespace
 {
+  using namespace RemoteProtocol::CarRelays;
 
-  void relayChangeCb(uint8_t cmd, bool *global)
+  constexpr uint32_t kReplyTimeoutMs = 300;
+
+  void onRelays(bool ok, const Relays &relays)
   {
-    TransportPacket pkt{};
-    pkt.type = cmd;
-    pkt.len = 1;
-    pkt.data[0] = static_cast<uint8_t>(!*global);
+    if (ok)
+      applyCarRelays(relays);
+  }
 
-    wireless.send(&pkt, remote_addr);
+  // The toggles are read-only: a press asks the car, and its reply sets the state.
+  void requestRelay(uint8_t index)
+  {
+    set().request(remote_addr, {index, !carRelays[index]}, kReplyTimeoutMs, onRelays);
   }
 
 } // namespace
@@ -30,14 +34,16 @@ namespace RemoteRelayScreenNamespace
   {
     static Menu menu;
     static MenuItemBack backItem;
-    static MenuItemToggle relay1Item{"R 1", &globalRelay1, false};
-    static MenuItemToggle relay2Item{"R 2", &globalRelay2, false};
-    static MenuItemToggle relay3Item{"R 3", &globalRelay3, false};
-    static MenuItemToggle relay4Item{"R 4", &globalRelay4, false};
-    static MenuItemToggle relay5Item{"R 5", &globalRelay5, false};
-    static MenuItemToggle relay6Item{"R 6", &globalRelay6, false};
-    static MenuItemToggle relay7Item{"R 7", &globalRelay7, false};
-    static MenuItemToggle relay8Item{"R 8", &globalRelay8, false};
+    static MenuItemToggle relayItems[kRelayCount] = {
+        {"R 1", &carRelays[0], false},
+        {"R 2", &carRelays[1], false},
+        {"R 3", &carRelays[2], false},
+        {"R 4", &carRelays[3], false},
+        {"R 5", &carRelays[4], false},
+        {"R 6", &carRelays[5], false},
+    };
+    static MenuItemToggle &relay1Item = relayItems[0];
+    static MenuItemToggle &relay2Item = relayItems[1];
 
     static uint64_t lastFetch = 0;
 
@@ -51,42 +57,14 @@ namespace RemoteRelayScreenNamespace
 
       menu.addMenuItem(&backItem);
 
-      menu.addMenuItem(&relay1Item);
+      for (uint8_t i = 0; i < kRelayCount; i++)
+      {
+        menu.addMenuItem(&relayItems[i]);
+        relayItems[i].setOnChange([i]()
+                                  { requestRelay(i); });
+      }
       relay1Item.setTextColor(TFT_RED);
-
-      menu.addMenuItem(&relay2Item);
       relay2Item.setTextColor(TFT_BLUE);
-
-      menu.addMenuItem(&relay3Item);
-      menu.addMenuItem(&relay4Item);
-      menu.addMenuItem(&relay5Item);
-      menu.addMenuItem(&relay6Item);
-      menu.addMenuItem(&relay7Item);
-      menu.addMenuItem(&relay8Item);
-
-      relay1Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_1_SET, &globalRelay1); });
-
-      relay2Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_2_SET, &globalRelay2); });
-
-      relay3Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_3_SET, &globalRelay3); });
-
-      relay4Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_4_SET, &globalRelay4); });
-
-      relay5Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_5_SET, &globalRelay5); });
-
-      relay6Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_6_SET, &globalRelay6); });
-
-      relay7Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_7_SET, &globalRelay7); });
-
-      relay8Item.setOnChange([]()
-                             { relayChangeCb(CMD_RELAY_8_SET, &globalRelay8); });
     }
   }
 
@@ -104,12 +82,7 @@ namespace RemoteRelayScreenNamespace
     if (millis() - lastFetch > 1000)
     {
       lastFetch = millis();
-
-      TransportPacket pkt{};
-      pkt.type = CMD_RELAY_ALL;
-      pkt.len = 0;
-
-      wireless.send(&pkt, remote_addr);
+      get().request(remote_addr, {}, kReplyTimeoutMs, onRelays);
     }
 
     if (menu.items[menu.getActive()] == &relay1Item)
@@ -135,11 +108,7 @@ namespace RemoteRelayScreenNamespace
   void onEnter()
   {
     ensureInitialized();
-    TransportPacket pkt{};
-    pkt.type = CMD_RELAY_ALL;
-    pkt.len = 0;
-
-    wireless.send(&pkt, remote_addr);
+    get().request(remote_addr, {}, kReplyTimeoutMs, onRelays);
   }
 
   void onExit()

@@ -5,7 +5,6 @@
 #include "Menu.h"
 #include "ScreenManager.h"
 #include "IO/Buttons.h"
-#include "Wireless.h"
 
 namespace SendScreenNamespace
 {
@@ -18,13 +17,7 @@ namespace SendScreenNamespace
     static u8_t peer_addr[6] = {0x80, 0x65, 0x99, 0x4b, 0x3a, 0xd1};
 
     static MenuItemAction sendItem{"Send", 2, [&]()
-                                   {
-                                     TransportPacket pkt{};
-                                     pkt.type = 43;
-                                     pkt.len = 5;
-                                     memcpy(pkt.data, "Hello", 5);
-                                     wireless.send(&pkt, peer_addr);
-                                   }};
+                                   { RemoteProtocol::Hello::message().sendTo(peer_addr, RemoteProtocol::Hello::Message{"Hello"}); }};
 
     static bool initialized = false;
 

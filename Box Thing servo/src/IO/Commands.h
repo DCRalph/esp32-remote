@@ -4,6 +4,6 @@
 #include "config.h"
 
 #include "IO/GPIO.h"
-#include "IO/Wireless.h"
 
-extern int parseCommand(fullPacket *fp);
+// Answers the Servo channel from Box Thing v2; onCommand runs after each message.
+extern void registerCommands(void (*onCommand)());

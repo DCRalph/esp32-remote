@@ -5,6 +5,7 @@
 #include <WiFiUdp.h>
 
 #include <Mesh.h>
+#include <RemoteProtocol.h>
 #include <Wireless.h>
 #include <dcr_display.h>
 
@@ -59,12 +60,6 @@
 unsigned long batteryLoopMs = 0;
 
 
-void espNowCb(WirelessFrame *frame)
-{
-  if (frame->packet.type == CMD_PING)
-    RemoteRelay::notePingReply();
-}
-
 void beginMeshTransport()
 {
   auto *sync = SyncManager::getInstance();
@@ -86,10 +81,12 @@ void beginMeshTransport()
         preferences.putUChar("meshSyncMode", m);
       });
   sync->begin();
+  RemoteProtocol::attachDirect();
 }
 
 void teardownMeshTransport()
 {
+  DirectComms::getInstance()->end();
   wireless.unSetup();
   SyncManager::getInstance()->setTransport(nullptr);
 }
@@ -211,8 +208,6 @@ void setup()
     InitOta();
   }
 
-  wireless.setOnReceiveOther(espNowCb);
-
   StartUp::setStage(3);
   display.render();
 
@@ -235,7 +230,10 @@ void loop()
   const uint32_t frameStartMs = millis();
 
   if (wireless.isSetupDone())
+  {
     SyncManager::getInstance()->loop();
+    DirectComms::getInstance()->loop();
+  }
   else
     netLink.loop();
 
