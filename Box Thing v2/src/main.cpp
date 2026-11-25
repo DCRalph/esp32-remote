@@ -30,29 +30,10 @@
 #include "Screens/Screens.h"
 
 #include "Screens/StartUp.h"
-#include "Screens/UpdateProgress.h"
 
 #include "Screens/Shutdown.h"
 
-#include "Screens/Debug/Battery.h"
-#include "Screens/Debug/IOTest.h"
-#include "Screens/Debug/Debug.h"
-
-#include "Screens/Control/Car.h"
-#include "Screens/Control/EncoderTransmiter.h"
-#include "Screens/Control/EspnowSwitch.h"
-#include "Screens/Control/RemoteRelay.h"
-#include "Screens/Control/ServosControl.h"
-
-#include "Screens/Settings/GeneralSettings.h"
-#include "Screens/Settings/WiFi/WiFiInfo.h"
-#include "Screens/Settings/WiFi/WiFiPassword.h"
-#include "Screens/Settings/WiFi/WiFiScan.h"
-#include "Screens/Settings/WiFiSettings.h"
-
 #include "Screens/Home.h"
-#include "Screens/SwitchMenu.h"
-#include "Screens/Settings.h"
 
 #undef LOG_TAG
 #define LOG_TAG "MAIN"
