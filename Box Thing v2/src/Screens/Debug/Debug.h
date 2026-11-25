@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Menu.h>
+#include <UiTest.h>
 #include <dcr_TaskManager.h>
 #include <dcr_TimeProfiler.h>
 
@@ -71,6 +72,7 @@ namespace
   MenuItemBack debugBackItem;
   MenuItemNavigate debugIoTestItem("IO Test", &IOTestScreen2);
   MenuItemNavigate debugBatteryItem("Battery", &BatteryScreen2);
+  MenuItemNavigate debugUiTestItem("UI test", &UiTest::RootScreen);
   MenuItemToggle debugLedItem("LED", &gDebugLedState);
   MenuItemNumber<long> debugBootCountItem("Boot", &gDebugBootCount);
   MenuItemToggle debugOtaItem("OTA", &gDebugOtaState);
@@ -91,6 +93,7 @@ namespace
     debugMenu.addMenuItem(&debugBackItem);
     debugMenu.addMenuItem(&debugIoTestItem);
     debugMenu.addMenuItem(&debugBatteryItem);
+    debugMenu.addMenuItem(&debugUiTestItem);
     debugMenu.addMenuItem(&debugLedItem);
     debugMenu.addMenuItem(&debugBootCountItem);
     debugMenu.addMenuItem(&debugOtaItem);
