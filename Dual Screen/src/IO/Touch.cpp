@@ -14,10 +14,30 @@ namespace
   constexpr int16_t kRawMax = 3800;
   Touch::Calibration cal{kRawMin, kRawMax, kRawMin, kRawMax};
 
+  // Unclamped, so readings off the panel reach TouchInput's bounds check as noise.
+  bool readSample(TouchSample &s)
+  {
+    if (!ready)
+      return false;
+    const TS_Point p = ts.getPoint();
+    if (p.z == 0)
+      return false;
+    s.x = map(p.x, cal.xMin, cal.xMax, 0, TOUCH_WIDTH - 1);
+    s.y = map(p.y, cal.yMin, cal.yMax, 0, TOUCH_HEIGHT - 1);
+    s.z = p.z;
+    return true;
+  }
+
   TouchInput::Config inputConfig()
   {
     TouchInput::Config c;
-    c.read = Touch::read;
+    c.readSample = readSample;
+    c.releasePolls = TouchFilter::kReleasePolls;
+    c.startPressure = TouchFilter::kStartPressure;
+    c.holdPressure = TouchFilter::kHoldPressure;
+    c.agreePx = TouchFilter::kAgreePx;
+    c.width = TOUCH_WIDTH;
+    c.height = TOUCH_HEIGHT;
     return c;
   }
 }
