@@ -5,9 +5,10 @@ BoxThingDisplay displayDriver;
 // The base binds a reference to `oled` before it is constructed; it is first used in begin().
 BoxThingDisplay::BoxThingDisplay() : U8g2DisplayDriver(oled)
 {
+  // Library chrome (menus, popups); app screens pick faces with setTextSize(U8G2_TEXT_*).
   fonts.small = u8g2_font_6x10_tf;
-  fonts.body = u8g2_font_doomalpha04_tr;
-  fonts.title = u8g2_font_profont22_tf;
+  fonts.body = u8g2_font_helvR08_tf;
+  fonts.title = u8g2_font_helvB12_tf;
   fonts.xlarge = u8g2_font_logisoso24_tr;
 }
 
