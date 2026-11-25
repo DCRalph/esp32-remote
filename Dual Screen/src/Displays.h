@@ -12,6 +12,8 @@ namespace Displays
 {
   /** Brings up both panels, their inputs and their home screens. */
   void begin();
-  /** One frame on each display, timed under PROFILE_LCD and PROFILE_TOUCH. */
+  /** One frame on each display. */
   void render();
+  /** One line per second to the serial console: frames and timing for both displays, plus memory. */
+  void logStats();
 }

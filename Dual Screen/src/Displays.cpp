@@ -2,7 +2,10 @@
 
 #include <ILI9341DisplayDriver.h>
 #include <TFTDisplayDriver.h>
-#include <dcr_TimeProfiler.h>
+
+#undef LOG_TAG
+#define LOG_TAG "PERF"
+#include <dcr_Logger.h>
 
 #include "config.h"
 #include "IO/Battery.h"
@@ -42,6 +45,17 @@ namespace
   {
     return battery.getPercentageI();
   }
+
+  String describe(const FrameStats &s)
+  {
+    char buf[112];
+    snprintf(buf, sizeof(buf), "%2ufps %3u/s draw %.1fms push %.1fms max %.1fms upd %.2fms load %u%%", s.fps,
+             s.renders, s.avgDrawUs / 1000.0f, s.avgPushUs / 1000.0f, s.maxFrameUs / 1000.0f,
+             s.avgUpdateUs / 1000.0f, s.loadPercent);
+    return buf;
+  }
+
+  uint32_t lastLogMs = 0;
 }
 
 void Displays::begin()
@@ -62,13 +76,15 @@ void Displays::begin()
 
 void Displays::render()
 {
-  timeProfiler.increment(PROFILE_LCD);
-  timeProfiler.start(PROFILE_LCD);
   display.render();
-  timeProfiler.stop(PROFILE_LCD);
-
-  timeProfiler.increment(PROFILE_TOUCH);
-  timeProfiler.start(PROFILE_TOUCH);
   touchDisplay.render();
-  timeProfiler.stop(PROFILE_TOUCH);
+}
+
+void Displays::logStats()
+{
+  if (millis() - lastLogMs < 1000)
+    return;
+  lastLogMs = millis();
+  debugI("LCD %s | Touch %s | heap %uK psram %uK", describe(display.stats()).c_str(),
+         describe(touchDisplay.stats()).c_str(), ESP.getFreeHeap() / 1024, ESP.getFreePsram() / 1024);
 }

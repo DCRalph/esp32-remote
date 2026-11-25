@@ -6,7 +6,6 @@
 #include <dcr_Logger.h>
 #include <dcr_NetLink.h>
 #include <dcr_TaskManager.h>
-#include <dcr_TimeProfiler.h>
 
 #include "config.h"
 #include "Displays.h"
@@ -58,7 +57,6 @@ void setup()
   Logger::InstallLogHook();
   FatalHandler::install();
   taskManager.begin();
-  timeProfiler.begin(2048, 1, 0);
 
   initConfig();
 
@@ -86,4 +84,5 @@ void loop()
   }
 
   Displays::render();
+  Displays::logStats();
 }
