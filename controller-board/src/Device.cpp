@@ -44,10 +44,14 @@ namespace
       debugW("No bioreactor NVS data; using defaults");
       return;
     }
+    // getBytes() refuses a buffer smaller than the stored blob (100 bytes today), so
+    // read it whole and take the leading fields.
     StoredDeviceInfoPrefix stored{};
+    uint8_t raw[256];
     const size_t len = prefs.getBytesLength("deviceInfo");
-    if (len >= sizeof(stored) && prefs.getBytes("deviceInfo", &stored, sizeof(stored)) == sizeof(stored))
+    if (len >= sizeof(stored) && len <= sizeof(raw) && prefs.getBytes("deviceInfo", raw, len) == len)
     {
+      memcpy(&stored, raw, sizeof(stored));
       deviceInfo.found = true;
       deviceInfo.hardwareVersion = stored.hardwareVersion;
       deviceInfo.deviceType = stored.deviceType;

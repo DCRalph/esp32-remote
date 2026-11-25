@@ -73,6 +73,7 @@ void setup()
   timeProfiler.begin(2048, 1, 0);
 
   display.begin(panel());
+  display.setTheme(Theme::bactosure());
   Touch::begin(panel().panelDevice());
   Inputs::addSource(Touch::input);
   screenManager.setScreen(&HomeScreen);
