@@ -45,6 +45,7 @@ void armedStateCB(ArmedState state)
 void setup()
 {
   Serial.begin(115200);
+  Serial.setTimeout(10); // readString() otherwise blocks the loop, and the link, for 1 s
 
   WiFi.mode(WIFI_AP_STA);
 
@@ -76,6 +77,10 @@ void loop()
   }
   armed.update();
 
+  // A frame is at most one drain interval old; past 300 ms treat the queue as stale.
+  static uint32_t lastDrainMs = millis();
+  rxStale = millis() - lastDrainMs > 300;
+  lastDrainMs = millis();
   DirectComms::getInstance()->loop();
   Wireless::getInstance()->loop();
 

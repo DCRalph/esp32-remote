@@ -9,6 +9,7 @@ class RemoteRelayScreen : public LVScreen
 private:
   lv_obj_t *list;
   lv_timer_t *updateTimer;
+  lv_obj_t *switches[RemoteProtocol::CarRelays::kRelayCount] = {};
   uint64_t lastFetch = 0;
 
 public:
@@ -31,11 +32,12 @@ public:
     // Create back button
     createBackButton();
 
-    // Create update timer
+    // Only while shown: LVGL timers keep running for cached screens.
     updateTimer = lv_timer_create([](lv_timer_t *timer)
                                   {
-      auto screen = static_cast<RemoteRelayScreen*>(timer->user_data);
-      screen->fetchRelayStates(); }, 1000, this);
+      auto self = static_cast<RemoteRelayScreen*>(timer->user_data);
+      if (lv_scr_act() == self->screen)
+        refreshCarRelaySwitches(self->switches); }, 500, this);
   }
 
   ~RemoteRelayScreen()
@@ -45,11 +47,6 @@ public:
       lv_timer_del(updateTimer);
       updateTimer = nullptr;
     }
-  }
-
-  void onEnter() override
-  {
-    fetchRelayStates();
   }
 
   void onExit() override
@@ -69,6 +66,7 @@ private:
     lv_obj_set_style_text_color(label, color, 0);
 
     lv_obj_t *sw = lv_switch_create(cont);
+    switches[index] = sw;
     lv_obj_align(sw, LV_ALIGN_RIGHT_MID, -10, 0);
     if (carRelays[index])
       lv_obj_add_state(sw, LV_STATE_CHECKED);
@@ -85,8 +83,4 @@ private:
     }
   }
 
-  void fetchRelayStates()
-  {
-    fetchCarRelays();
-  }
 };

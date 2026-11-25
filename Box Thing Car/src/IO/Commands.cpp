@@ -2,24 +2,38 @@
 
 #include <RemoteProtocol.h>
 
-static uint32_t doorPulseStartMs = 0;
-static bool doorPulsing = false;
+#include <atomic>
 
-static void startDoorPulse(GpIO &relay)
+namespace
 {
-  relay7.Off();
-  relay8.Off();
-  relay.On();
-  doorPulseStartMs = millis();
-  doorPulsing = true;
+  enum DoorRequest : uint8_t
+  {
+    DoorNone,
+    DoorLock,
+    DoorUnlock,
+  };
+
+  // Written by any task (the web server too), consumed only by doorLoop.
+  std::atomic<uint8_t> doorRequest{DoorNone};
+  uint32_t doorPulseStartMs = 0;
+  bool doorPulsing = false;
 }
 
-void lockDoor() { startDoorPulse(relay7); }
-void unlockDoor() { startDoorPulse(relay8); }
+void lockDoor() { doorRequest.store(DoorLock); }
+void unlockDoor() { doorRequest.store(DoorUnlock); }
 
 void doorLoop()
 {
-  if (doorPulsing && millis() - doorPulseStartMs >= 500)
+  const uint8_t request = doorRequest.exchange(DoorNone);
+  if (request != DoorNone)
+  {
+    relay7.Off();
+    relay8.Off();
+    (request == DoorLock ? relay7 : relay8).On();
+    doorPulseStartMs = millis();
+    doorPulsing = true;
+  }
+  else if (doorPulsing && millis() - doorPulseStartMs >= 500)
   {
     relay7.Off();
     relay8.Off();

@@ -2,6 +2,8 @@
 
 #include <RemoteProtocol.h>
 
+bool rxStale = false;
+
 static TaskHandle_t testProdcudureTaskHandle;
 static TaskHandle_t fireTaskHandle;
 
@@ -75,27 +77,39 @@ void registerCommands()
 {
   using namespace RemoteProtocol::FireBox;
 
+  // Frames that waited out a stall are dropped, pings included, so the link times
+  // out instead of an old arm and fire replaying.
   ping().onRequest([](const TransportAddress &, const Ping &, Pong &)
                    {
+                     if (rxStale)
+                       return false;
                      remoteConnected = true;
                      lastRemotePing = millis();
                      return true; });
 
   test().onReceive([](const TransportAddress &, const Test &)
-                   { runTestProcedure(); });
+                   {
+                     if (!rxStale)
+                       runTestProcedure(); });
 
   arm().onReceive([](const TransportAddress &, const Arm &msg)
                   {
+                    if (rxStale)
+                      return;
                     armed.setRemote(msg.armed != 0);
                     armed.update(); });
 
-  // Frames arrive in batches: re-read the switch so a disarm or switch-off just
-  // before this frame wins. The remote must be armed too, not only the switch (READY).
+  // Frames arrive in batches: refresh the state so a disarm just before this frame
+  // wins, and require the raw pin too, since the 50 ms debounce lags a switch-off.
+  // The remote must be armed as well, not only the switch (READY).
   fire().onReceive([](const TransportAddress &, const Fire &msg)
                    {
+                     if (rxStale)
+                       return;
                      armed.setSW(armedSW.read());
                      armed.update();
-                     if (armed.get() == ArmedState::ARMED)
+                     const bool switchClosed = digitalRead(ARMED_PIN) == LOW;
+                     if (armed.get() == ArmedState::ARMED && switchClosed)
                        fireRelays(msg.relayMask);
                      else
                        Serial.println("Not Armed"); });

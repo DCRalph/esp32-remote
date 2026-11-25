@@ -7,6 +7,8 @@ class CarControlScreen : public LVScreen
 {
 private:
   lv_obj_t *list;
+  lv_timer_t *updateTimer = nullptr;
+  lv_obj_t *switches[RemoteProtocol::CarRelays::kRelayCount] = {};
   std::vector<std::function<void()> *> callbacks;
 
 public:
@@ -41,10 +43,19 @@ public:
 
     // Create top bar with white background
     createTopBar(lv_color_white(), lv_color_black());
+
+    // Only while shown: LVGL timers keep running for cached screens.
+    updateTimer = lv_timer_create([](lv_timer_t *timer)
+                                  {
+      auto self = static_cast<CarControlScreen*>(timer->user_data);
+      if (lv_scr_act() == self->screen)
+        refreshCarRelaySwitches(self->switches); }, 500, this);
   }
 
   ~CarControlScreen()
   {
+    if (updateTimer)
+      lv_timer_del(updateTimer);
     for (auto cb : callbacks)
     {
       delete cb;
@@ -54,7 +65,6 @@ public:
   void onEnter() override
   {
     btnLed.SetColor(0xffffff);
-    fetchCarRelays();
   }
 
   void onExit() override
@@ -104,6 +114,7 @@ private:
     lv_obj_set_style_text_color(label, color, 0);
 
     lv_obj_t *sw = lv_switch_create(cont);
+    switches[index] = sw;
     lv_obj_align(sw, LV_ALIGN_RIGHT_MID, -10, 0);
     if (carRelays[index])
       lv_obj_add_state(sw, LV_STATE_CHECKED);

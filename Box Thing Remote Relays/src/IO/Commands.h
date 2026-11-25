@@ -12,3 +12,5 @@ extern void fireRelays(uint8_t relayMask);
 
 // Answers the Box Thing v2 fire box screen. Call once DirectComms is attached.
 extern void registerCommands();
+// Set before each receive drain: true when the loop stalled, so queued frames are stale.
+extern bool rxStale;

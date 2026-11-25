@@ -5,8 +5,8 @@
 
 #include "IO/GPIO.h"
 
-// Start a 500 ms pulse on the lock (relay 7) or unlock (relay 8) relay; doorLoop ends it.
-// Server.cpp calls these from the async web server task as well.
+// Queue a 500 ms pulse on the lock (relay 7) or unlock (relay 8) relay. Safe from any
+// task (Server.cpp's web handlers); doorLoop, on the Arduino loop, drives the relays.
 extern void lockDoor();
 extern void unlockDoor();
 extern void doorLoop();

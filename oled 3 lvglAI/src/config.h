@@ -9,6 +9,7 @@
 #include <Preferences.h>
 
 #include <RemoteProtocol.h>
+#include <lvgl.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include "esp_log.h"
@@ -84,6 +85,8 @@ void applyCarRelays(const RemoteProtocol::CarRelays::Relays &relays);
 // Ask the car to set relay `index`, or for every state; replies land in carRelays.
 void requestCarRelay(uint8_t index, bool on);
 void fetchCarRelays();
+// Ask for the car's states and show the last reply on relay switches (one per relay).
+void refreshCarRelaySwitches(lv_obj_t *const *switches);
 
 // Box Thing Car.
 static uint8_t remote_addr[6] = {0x30, 0x30, 0xf9, 0x2b, 0xba, 0xf0};

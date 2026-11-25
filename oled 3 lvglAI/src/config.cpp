@@ -34,6 +34,18 @@ void fetchCarRelays()
   RemoteProtocol::CarRelays::get().request(remote_addr, {}, 300, onCarRelays);
 }
 
+void refreshCarRelaySwitches(lv_obj_t *const *switches)
+{
+  fetchCarRelays();
+  for (uint8_t i = 0; i < RemoteProtocol::CarRelays::kRelayCount; i++)
+  {
+    if (carRelays[i])
+      lv_obj_add_state(switches[i], LV_STATE_CHECKED);
+    else
+      lv_obj_clear_state(switches[i], LV_STATE_CHECKED);
+  }
+}
+
 void initConfig()
 {
   Serial.begin(BAUD_RATE);

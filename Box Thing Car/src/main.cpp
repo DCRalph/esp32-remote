@@ -23,6 +23,7 @@ void noteCommand()
 void setup()
 {
   Serial.begin(115200);
+  Serial.setTimeout(10); // readString() otherwise blocks the loop, and the radio, for 1 s
 
   WiFi.mode(WIFI_AP_STA);
 
