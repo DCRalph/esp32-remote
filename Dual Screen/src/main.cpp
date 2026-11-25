@@ -85,4 +85,7 @@ void loop()
 
   Displays::render();
   Displays::logStats();
+
+  static TickType_t lastWake = xTaskGetTickCount();
+  xTaskDelayUntil(&lastWake, pdMS_TO_TICKS(FRAME_INTERVAL_MS));
 }

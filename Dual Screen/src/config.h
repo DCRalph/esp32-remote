@@ -36,6 +36,9 @@ namespace TouchPanelPins
   constexpr int8_t kTouchCS = 1;
 }
 
+// loop() is paced to this, so the rest of each period is idle time for Wi-Fi.
+#define FRAME_INTERVAL_MS 20 // 50 fps
+
 // XPT2046 filtering (dcr_display TouchInput::Config), values from the bioreactor controller.
 namespace TouchFilter
 {
