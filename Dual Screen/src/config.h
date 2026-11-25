@@ -36,8 +36,9 @@ namespace TouchPanelPins
   constexpr int8_t kTouchCS = 1;
 }
 
-// loop() is paced to this, so the rest of each period is idle time for Wi-Fi.
-#define FRAME_INTERVAL_MS 20 // 50 fps
+// loop() sleeps out what is left of each frame. Buttons are sampled once per frame,
+// so presses shorter than about 30 ms (20 ms debounce plus a sample) can be missed.
+#define FRAME_INTERVAL_MS 10 // up to 100 fps
 
 // XPT2046 filtering (dcr_display TouchInput::Config), values from the bioreactor controller.
 namespace TouchFilter

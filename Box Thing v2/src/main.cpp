@@ -58,7 +58,6 @@
 
 unsigned long batteryLoopMs = 0;
 
-uint64_t lastDraw = 0;
 
 void espNowCb(WirelessFrame *frame)
 {
@@ -227,6 +226,8 @@ void setup()
 
 void loop()
 {
+  const uint32_t frameStartMs = millis();
+
   if (wireless.isSetupDone())
     SyncManager::getInstance()->loop();
   else
@@ -258,15 +259,16 @@ void loop()
   if (ClickButtonEnc.clicks == -3)
     screenManager.setScreen(&ShutdownScreen2);
 
-  if (millis() - lastDraw > 25)
-  {
-    lastDraw = millis();
+  ClickButtonEnc.Update();
 
-    ClickButtonEnc.Update();
+  timeProfiler.increment(PROFILE_FRAME);
+  timeProfiler.start(PROFILE_FRAME);
+  display.render();
+  timeProfiler.stop(PROFILE_FRAME);
 
-    timeProfiler.increment(PROFILE_FRAME);
-    timeProfiler.start(PROFILE_FRAME);
-    display.render();
-    timeProfiler.stop(PROFILE_FRAME);
-  }
+  // Sleep out the rest of the frame. Not xTaskDelayUntil: after a slow frame it
+  // runs catch-up frames back to back, which shows as a burst.
+  const uint32_t spentMs = millis() - frameStartMs;
+  if (spentMs < FRAME_INTERVAL_MS)
+    vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS - spentMs));
 }

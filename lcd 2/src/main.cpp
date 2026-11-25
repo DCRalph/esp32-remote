@@ -186,6 +186,7 @@ bool sleepLoop()
 
 void loop()
 {
+  const uint32_t frameStartMs = millis();
   buttons.update();
   netLink.loop();
   if (CompanionHttp::isActive())
@@ -197,10 +198,13 @@ void loop()
   {
     prevMillis1 = millis();
     battery.update();
-
-    String voltageS = (String)battery.getVoltage();
   }
 
   if (!sleepLoop())
     display.render();
+
+  // Sleep out the rest of the frame rather than spinning (no catch-up bursts).
+  const uint32_t spentMs = millis() - frameStartMs;
+  if (spentMs < FRAME_INTERVAL_MS)
+    vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS - spentMs));
 }

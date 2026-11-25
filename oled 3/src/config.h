@@ -22,6 +22,10 @@ extern esp_sleep_wakeup_cause_t wakeup_reason;
 // The ESP-NOW transport singleton, under the name the screens use.
 extern Wireless &wireless;
 
+// loop() sleeps out what is left of each frame. Buttons are sampled once per frame,
+// so presses shorter than about 30 ms (20 ms debounce plus a sample) can be missed.
+#define FRAME_INTERVAL_MS 10 // up to 100 fps
+
 // dcr_timeProfiler key for display.render(): calls per second and duration.
 #define PROFILE_FRAME "frame"
 
