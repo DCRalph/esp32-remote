@@ -48,10 +48,10 @@ namespace
 
   String describe(const FrameStats &s)
   {
-    char buf[112];
-    snprintf(buf, sizeof(buf), "%2ufps %3u/s draw %.1fms push %.1fms max %.1fms upd %.2fms load %u%%", s.fps,
-             s.renders, s.avgDrawUs / 1000.0f, s.avgPushUs / 1000.0f, s.maxFrameUs / 1000.0f,
-             s.avgUpdateUs / 1000.0f, s.loadPercent);
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%2ufps %3u/s draw %.1fms push %.1fms (%u%%) max %.1fms upd %.2fms load %u%%",
+             s.fps, s.renders, s.avgDrawUs / 1000.0f, s.avgPushUs / 1000.0f, s.avgPushedPercent,
+             s.maxFrameUs / 1000.0f, s.avgUpdateUs / 1000.0f, s.loadPercent);
     return buf;
   }
 
