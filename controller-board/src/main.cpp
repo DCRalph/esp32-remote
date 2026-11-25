@@ -20,7 +20,6 @@
 
 namespace
 {
-  bool calibrationRequested = false;
   uint32_t lastStatsMs = 0;
 
   // Built on first use: the rotation comes from NVS, read in Device::begin().
@@ -28,16 +27,6 @@ namespace
   {
     static ControllerPanel driver(LCD_WIDTH, LCD_HEIGHT, Device::info().rotation);
     return driver;
-  }
-
-  void runCalibration()
-  {
-    calibrationRequested = false;
-    Touch::calibrate(panel().panelDevice());
-    // Calibration drew straight to the panel: push the whole next frame.
-    panel().resync();
-    display.invalidate();
-    Touch::input.suppressUntilRelease();
   }
 
   void logStats()
@@ -50,11 +39,6 @@ namespace
            s.avgDrawUs / 1000.0f, s.avgPushUs / 1000.0f, s.avgPushedPercent, s.maxFrameUs / 1000.0f,
            s.loadPercent, ESP.getFreeHeap() / 1024, ESP.getFreePsram() / 1024);
   }
-}
-
-void App::requestCalibration()
-{
-  calibrationRequested = true;
 }
 
 void setup()
@@ -94,9 +78,6 @@ void loop()
   display.render();
   // Catches a tap that starts and ends while the frame is drawing.
   Touch::input.sample();
-
-  if (calibrationRequested)
-    runCalibration();
 
   logStats();
 

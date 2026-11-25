@@ -1,12 +1,33 @@
 #include "Touch.h"
 
+#include <Preferences.h>
+
 #include "Device.h"
 #include "config.h"
+
+#undef LOG_TAG
+#define LOG_TAG "TOUCH"
+#include <dcr_Logger.h>
 
 namespace
 {
   TFT_eSPI *panel = nullptr;
-  bool savedCalibration = false;
+  Touch::Source calSource = Touch::Source::Generic;
+  Touch::Calibration cal;
+  // The bioreactor's TFT_eSPI calibration: x0, x1, y0, y1, orientation flags.
+  uint16_t bioreactorCal[5] = {};
+
+  // This board's own NVS namespace; the bioreactor's "prefs" is never written.
+  constexpr char kNamespace[] = "controller";
+  constexpr char kCalKey[] = "touchCal";
+  constexpr uint8_t kCalVersion = 1;
+
+  struct StoredCal
+  {
+    uint8_t version;
+    uint8_t rotation; // the calibration only holds at the rotation it was taken in
+    Touch::Calibration cal;
+  };
 
   enum class Synthetic : uint8_t
   {
@@ -21,8 +42,38 @@ namespace
   constexpr uint8_t kTapPolls = 4;
   constexpr uint16_t kSyntheticPressure = 2000;
 
-  // Placeholder until Calibrate runs: TFT_eSPI's x0, x1, y0, y1, orientation flags.
-  uint16_t calData[5] = {300, 3600, 300, 3600, 1};
+  bool loadSaved()
+  {
+    Preferences prefs;
+    if (!prefs.begin(kNamespace, true))
+      return false;
+    StoredCal stored{};
+    const bool ok = prefs.getBytesLength(kCalKey) == sizeof(stored) &&
+                    prefs.getBytes(kCalKey, &stored, sizeof(stored)) == sizeof(stored) &&
+                    stored.version == kCalVersion && stored.rotation == Device::info().rotation;
+    prefs.end();
+    if (ok)
+      cal = stored.cal;
+    return ok;
+  }
+
+  // Raw controller reading to panel pixels, unclamped so readings off the panel
+  // reach TouchInput's bounds check as noise.
+  void toPanel(uint16_t rawX, uint16_t rawY, int16_t &x, int16_t &y)
+  {
+    if (calSource == Touch::Source::Bioreactor)
+    {
+      uint16_t px = rawX, py = rawY;
+      panel->convertRawXY(&px, &py);
+      x = static_cast<int16_t>(px);
+      y = static_cast<int16_t>(py);
+      return;
+    }
+    const int32_t a = cal.swapXY ? rawY : rawX;
+    const int32_t b = cal.swapXY ? rawX : rawY;
+    x = static_cast<int16_t>(map(a, cal.xMin, cal.xMax, 0, LCD_WIDTH - 1));
+    y = static_cast<int16_t>(map(b, cal.yMin, cal.yMax, 0, LCD_HEIGHT - 1));
+  }
 
   // Raw z first so an idle panel costs one SPI transaction. Pressure goes to
   // TouchInput, which applies the start/hold thresholds.
@@ -44,9 +95,7 @@ namespace
       return false;
     uint16_t x = 0, y = 0;
     panel->getTouchRaw(&x, &y);
-    panel->convertRawXY(&x, &y);
-    s.x = static_cast<int16_t>(x);
-    s.y = static_cast<int16_t>(y);
+    toPanel(x, y, s.x, s.y);
     s.z = z;
     return true;
   }
@@ -70,29 +119,52 @@ TouchInput Touch::input(inputConfig());
 void Touch::begin(TFT_eSPI &tft)
 {
   panel = &tft;
-  savedCalibration = Device::loadTouchCalibration(calData);
-  // The saved calibration maps raw readings at the bioreactor's rotation; turned
-  // 180 degrees, both screen axes run the other way (TFT_eSPI invert x and y flags).
-  if (savedCalibration && ROTATE_180)
-    calData[4] ^= 0x06;
-  tft.setTouch(calData);
+  if (loadSaved())
+    calSource = Source::Saved;
+  else if (Device::loadTouchCalibration(bioreactorCal))
+  {
+    calSource = Source::Bioreactor;
+    // The file maps raw readings at the bioreactor's rotation; turned 180
+    // degrees, both screen axes run the other way (TFT_eSPI invert x and y flags).
+    if (ROTATE_180)
+      bioreactorCal[4] ^= 0x06;
+    tft.setTouch(bioreactorCal);
+  }
+  else
+    calSource = Source::Generic;
+  debugI("Touch calibration: %s", calSource == Source::Saved ? "saved" : calSource == Source::Bioreactor ? "bioreactor" : "generic");
 }
 
-bool Touch::hasSavedCalibration()
+Touch::Source Touch::source()
 {
-  return savedCalibration;
+  return calSource;
 }
 
-void Touch::calibrate(TFT_eSPI &tft)
+bool Touch::readRaw(int16_t &x, int16_t &y)
 {
-  // Same call and colours as the bioreactor's calibration screen. Draws straight
-  // to the panel and blocks until all four corners are touched.
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString("Touch each corner arrow", LCD_WIDTH / 2, LCD_HEIGHT / 2, 2);
-  tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
-  tft.setTouch(calData);
+  if (panel == nullptr || panel->getTouchRawZ() <= TouchFilter::kStartPressure)
+    return false;
+  uint16_t rx = 0, ry = 0;
+  panel->getTouchRaw(&rx, &ry);
+  x = static_cast<int16_t>(rx);
+  y = static_cast<int16_t>(ry);
+  return true;
+}
+
+void Touch::setCalibration(const Calibration &c)
+{
+  cal = c;
+  calSource = Source::Saved;
+  Preferences prefs;
+  if (!prefs.begin(kNamespace, false))
+  {
+    debugW("Could not open NVS; calibration kept until restart");
+    return;
+  }
+  const StoredCal stored{kCalVersion, Device::info().rotation, c};
+  prefs.putBytes(kCalKey, &stored, sizeof(stored));
+  prefs.end();
+  debugI("Touch calibration saved: swap %d x %d..%d y %d..%d", c.swapXY, c.xMin, c.xMax, c.yMin, c.yMax);
 }
 
 Touch::Reading Touch::read()
@@ -105,9 +177,7 @@ Touch::Reading Touch::read()
   if (r.z > TouchFilter::kHoldPressure)
   {
     panel->getTouchRaw(&r.rawX, &r.rawY);
-    r.x = r.rawX;
-    r.y = r.rawY;
-    panel->convertRawXY(&r.x, &r.y);
+    toPanel(r.rawX, r.rawY, r.x, r.y);
   }
   return r;
 }
