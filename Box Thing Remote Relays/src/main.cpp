@@ -77,9 +77,10 @@ void loop()
   }
   armed.update();
 
-  // A frame is at most one drain interval old; past 300 ms treat the queue as stale.
+  // Frames are at most one drain interval old. Any stall that trips the 1 s link
+  // timeout also trips this; an LCD redraw (about 200 ms of 50 kHz I2C) does not.
   static uint32_t lastDrainMs = millis();
-  rxStale = millis() - lastDrainMs > 300;
+  rxStale = millis() - lastDrainMs > 500;
   lastDrainMs = millis();
   DirectComms::getInstance()->loop();
   Wireless::getInstance()->loop();
