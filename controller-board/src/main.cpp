@@ -57,6 +57,8 @@ void setup()
   timeProfiler.begin(2048, 1, 0);
 
   display.begin(panel());
+  // This TN panel washes colours out compared with screenshots.
+  display.setContrastBoost(20);
   display.setTheme(Theme::bactosure());
   Touch::begin(panel().panelDevice());
   Inputs::addSource(Touch::input);
