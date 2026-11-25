@@ -2,18 +2,29 @@
 
 #include <RemoteProtocol.h>
 
-void lockDoor()
+static uint32_t doorPulseStartMs = 0;
+static bool doorPulsing = false;
+
+static void startDoorPulse(GpIO &relay)
 {
-  relay7.On();
-  delay(500);
   relay7.Off();
+  relay8.Off();
+  relay.On();
+  doorPulseStartMs = millis();
+  doorPulsing = true;
 }
 
-void unlockDoor()
+void lockDoor() { startDoorPulse(relay7); }
+void unlockDoor() { startDoorPulse(relay8); }
+
+void doorLoop()
 {
-  relay8.On();
-  delay(500);
-  relay8.Off();
+  if (doorPulsing && millis() - doorPulseStartMs >= 500)
+  {
+    relay7.Off();
+    relay8.Off();
+    doorPulsing = false;
+  }
 }
 
 namespace

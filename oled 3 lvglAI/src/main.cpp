@@ -487,8 +487,8 @@ void setup()
 
 void loop()
 {
-  Wireless::getInstance()->loop();
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
 
   // Update the physical buttons' state.
   buttons.update();

@@ -85,11 +85,16 @@ void registerCommands()
                    { runTestProcedure(); });
 
   arm().onReceive([](const TransportAddress &, const Arm &msg)
-                  { armed.setRemote(msg.armed != 0); });
+                  {
+                    armed.setRemote(msg.armed != 0);
+                    armed.update(); });
 
-  // The remote must be armed too, not only the switch (READY).
+  // Frames arrive in batches: re-read the switch so a disarm or switch-off just
+  // before this frame wins. The remote must be armed too, not only the switch (READY).
   fire().onReceive([](const TransportAddress &, const Fire &msg)
                    {
+                     armed.setSW(armedSW.read());
+                     armed.update();
                      if (armed.get() == ArmedState::ARMED)
                        fireRelays(msg.relayMask);
                      else

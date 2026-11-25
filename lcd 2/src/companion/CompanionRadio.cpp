@@ -6,6 +6,7 @@
 #include <dcr_NetLink.h>
 
 #include "Wireless.h"
+#include <Mesh.h>
 #include <RemoteProtocol.h>
 
 static bool s_meshSuspended = false;
@@ -34,7 +35,8 @@ void CompanionRadio::resumeMeshAfterCompanion() {
   Serial.println("[CompanionRadio] resuming WiFi / ESP-NOW");
 #endif
 
-  Wireless::getInstance()->begin();
+  // end() dropped every receive hook: begin() restarts the radio and the mesh's.
+  SyncManager::getInstance()->begin();
   RemoteProtocol::attachDirect();
 
   s_meshSuspended = false;

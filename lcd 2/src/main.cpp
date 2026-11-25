@@ -195,8 +195,8 @@ void loop()
     CompanionHttp::loop();
   if (!CompanionRadio::isMeshSuspended())
   {
+    DirectComms::getInstance()->loop(); // expire RPCs before a late reply is drained
     SyncManager::getInstance()->loop();
-    DirectComms::getInstance()->loop();
   }
 
   if (millis() - prevMillis1 > interval1)

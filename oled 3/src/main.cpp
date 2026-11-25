@@ -167,8 +167,8 @@ bool sleepLoop()
 void loop()
 {
   const uint32_t frameStartMs = millis();
+  DirectComms::getInstance()->loop(); // expire RPCs before a late reply is drained
   SyncManager::getInstance()->loop();
-  DirectComms::getInstance()->loop();
 
   if (millis() - prevMillis1 > interval1)
   {

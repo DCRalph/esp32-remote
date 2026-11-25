@@ -342,8 +342,8 @@ unsigned long batteryLoopMs = 0;
 char buffer[100];
 
 void loop() {
-  Wireless::getInstance()->loop();
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
 
   ClickButtonEnc.Update();
   // LVGL tick update

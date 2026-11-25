@@ -45,8 +45,9 @@ void setup()
 
 void loop()
 {
-  Wireless::getInstance()->loop();
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
+  doorLoop();
 
   if (relay1FlashCount > 0)
   {

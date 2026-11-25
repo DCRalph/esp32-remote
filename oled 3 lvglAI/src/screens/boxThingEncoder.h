@@ -39,16 +39,13 @@ public:
 
     // Create back button
     createBackButton();
-  }
 
-  // The handler holds `this`, so swap it for a no-op before the screen can go away.
-  void onEnter() override
-  {
     RemoteProtocol::Encoder::state().onReceive([this](const TransportAddress &, const RemoteProtocol::Encoder::State &s)
                                                { onRecv(s); });
   }
 
-  void onExit() override
+  // The handler holds `this`: swap in a no-op (DirectChannel has no unregister).
+  ~BoxThingEncoderScreen()
   {
     RemoteProtocol::Encoder::state().onReceive([](const TransportAddress &, const RemoteProtocol::Encoder::State &) {});
   }

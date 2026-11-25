@@ -67,8 +67,17 @@ uint64_t lastLoopPerSecondMs = 0;
 
 void loop()
 {
-  Wireless::getInstance()->loop();
+  // Before draining frames: a ping queued during a stalled loop must not hide a lost link.
+  if (millis() - lastRemotePing > 1000)
+  {
+    lastRemotePing = millis();
+    remoteConnected = false;
+    armed.setRemote(false);
+  }
+  armed.update();
+
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
 
   loopsPerSecond++;
 
@@ -119,12 +128,6 @@ void loop()
     armed.setSW(armedSW.read());
   }
 
-  if (millis() - lastRemotePing > 1000)
-  {
-    lastRemotePing = millis();
-    remoteConnected = false;
-    armed.setRemote(false);
-  }
 
   armed.update();
 

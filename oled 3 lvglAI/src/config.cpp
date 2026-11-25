@@ -24,9 +24,9 @@ static void onCarRelays(bool ok, const RemoteProtocol::CarRelays::Relays &relays
     applyCarRelays(relays);
 }
 
-void requestCarRelay(uint8_t index)
+void requestCarRelay(uint8_t index, bool on)
 {
-  RemoteProtocol::CarRelays::set().request(remote_addr, {index, !carRelays[index]}, 300, onCarRelays);
+  RemoteProtocol::CarRelays::set().request(remote_addr, {index, on}, 300, onCarRelays);
 }
 
 void fetchCarRelays()

@@ -74,7 +74,8 @@ private:
       lv_obj_add_state(sw, LV_STATE_CHECKED);
 
     lv_obj_add_event_cb(sw, [](lv_event_t *e)
-                        { requestCarRelay(static_cast<uint8_t>(reinterpret_cast<uintptr_t>(e->user_data))); },
+                        { requestCarRelay(static_cast<uint8_t>(reinterpret_cast<uintptr_t>(e->user_data)),
+                                          lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED)); },
                         LV_EVENT_VALUE_CHANGED, reinterpret_cast<void *>(static_cast<uintptr_t>(index)));
 
     if (navGroup)

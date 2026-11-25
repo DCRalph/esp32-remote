@@ -47,8 +47,8 @@ void setup()
 
 void loop()
 {
-  Wireless::getInstance()->loop();
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
 
   if (blinks > 0)
   {

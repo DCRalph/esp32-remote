@@ -81,8 +81,8 @@ extern uint32_t lastFrameTime;
 // Last relay states the car reported.
 extern bool carRelays[RemoteProtocol::CarRelays::kRelayCount];
 void applyCarRelays(const RemoteProtocol::CarRelays::Relays &relays);
-// Ask the car to flip relay `index`, or for every state; replies land in carRelays.
-void requestCarRelay(uint8_t index);
+// Ask the car to set relay `index`, or for every state; replies land in carRelays.
+void requestCarRelay(uint8_t index, bool on);
 void fetchCarRelays();
 
 // Box Thing Car.

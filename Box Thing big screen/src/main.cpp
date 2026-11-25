@@ -144,8 +144,8 @@ uint64_t lastTime = 0;
 
 void loop()
 {
-  Wireless::getInstance()->loop();
   DirectComms::getInstance()->loop();
+  Wireless::getInstance()->loop();
 
   // if (blinks > 0)
   // {

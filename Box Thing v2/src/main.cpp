@@ -231,8 +231,8 @@ void loop()
 
   if (wireless.isSetupDone())
   {
+    DirectComms::getInstance()->loop(); // expire RPCs before a late reply is drained
     SyncManager::getInstance()->loop();
-    DirectComms::getInstance()->loop();
   }
   else
     netLink.loop();
