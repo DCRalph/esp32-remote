@@ -11,33 +11,13 @@
 
 namespace
 {
-  Theme lightTheme()
-  {
-    Theme t;
-    t.background = Color::White;
-    t.text = Color::Black;
-    t.mutedText = Color::DarkGrey;
-    t.accent = Color::Blue;
-    t.highlight = Color::Blue;
-    t.highlightText = Color::White;
-    t.topBar = Color::DarkGrey;
-    t.topBarText = Color::White;
-    t.popupBackground = Color::LightGrey;
-    t.widget = Color::LightGrey;
-    t.widgetText = Color::Black;
-    return t;
-  }
-
   Theme amberTheme()
   {
-    Theme t;
-    t.text = Color::Orange;
-    t.mutedText = Color::rgb(120, 70, 0);
-    t.accent = Color::Orange;
-    t.highlight = Color::Orange;
-    t.topBar = Color::Orange;
-    t.focus = Color::Orange;
-    t.focusText = Color::Black;
+    Theme t = Theme::dark();
+    t.text = t.topBarText = t.popupTitle = t.widgetText = Color::Orange;
+    t.mutedText = t.popupText = Color::rgb(170, 110, 30);
+    t.accent = t.highlight = t.focus = t.popupProgress = Color::Orange;
+    t.onAccent = t.highlightText = t.focusText = Color::Black;
     return t;
   }
 
@@ -56,7 +36,7 @@ namespace
       themeItem.setOnChange([]()
                             {
                               const int i = themeItem.getCurrentIndex();
-                              touchDisplay.setTheme(i == 1 ? lightTheme() : i == 2 ? amberTheme() : Theme::dark()); });
+                              touchDisplay.setTheme(i == 1 ? Theme::light() : i == 2 ? amberTheme() : Theme::dark()); });
     }
     touchScreens.setScreen(&Demos::DashboardTouch);
   }
