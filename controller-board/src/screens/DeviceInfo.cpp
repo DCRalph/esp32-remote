@@ -42,7 +42,8 @@ namespace
     line(y += step, "Device type", String(info.deviceType));
     line(y += step, "Rotation", String(info.rotation));
     line(y += step, "Backlight on", info.backlightActiveHigh ? "high" : "low");
-    line(y += step, "Touch cal", Touch::hasSavedCalibration() ? "from bioreactor" : "generic");
+    const Touch::Source cal = Touch::source();
+    line(y += step, "Touch cal", cal == Touch::Source::Saved ? "saved on this board" : cal == Touch::Source::Bioreactor ? "from bioreactor" : "generic");
     line(y += step, "Frame", String(stats.fps) + " fps, " + String(stats.avgPushedPercent) + "% pushed");
     line(y += step, "Heap / PSRAM", String(ESP.getFreeHeap() / 1024) + "K / " + String(ESP.getFreePsram() / 1024) + "K");
     group.draw();

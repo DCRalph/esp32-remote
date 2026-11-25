@@ -9,7 +9,7 @@ class ControllerPanel : public TFTDisplayDriver
 public:
   using TFTDisplayDriver::TFTDisplayDriver;
 
-  /** The panel itself: touch reads, and calibration drawing (call resync() after). */
+  /** The panel itself, for touch reads. */
   TFT_eSPI &panelDevice() { return panel; }
 
   /** The frame as pushed, byte-swapped RGB565 (TFT_eSprite's layout); null without a sprite. */

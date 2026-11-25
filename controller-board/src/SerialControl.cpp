@@ -34,6 +34,7 @@ namespace
       {"ui", &UiTest::RootScreen},
       {"touch", &TouchTestScreen},
       {"device", &DeviceScreen},
+      {"cal", &TouchCalScreen},
   };
 
   // HWCDC drops queued bytes whenever its connection heuristic blinks, which a

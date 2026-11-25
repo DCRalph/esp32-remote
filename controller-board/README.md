@@ -10,9 +10,11 @@ It installs into the bioreactor's app slot. Reflash bioreactor-controller to put
 device back. Its data survives:
 
 - The partition table is the bioreactor's, so NVS and LittleFS stay where it expects them.
-- NVS is opened read-only, for the hardware version and device type.
-- LittleFS is mounted without format-on-fail, only to read the touch calibration,
-  and unmounted again. Calibrating here keeps the result in RAM; nothing is written.
+- The bioreactor's NVS (`prefs`) is opened read-only, for the hardware version and
+  device type. This project writes only its own namespace, `controller`, for the
+  touch calibration.
+- LittleFS is mounted without format-on-fail, only to read the bioreactor's touch
+  calibration, and unmounted again.
 - dcr_files is left out on purpose: its `Files::init()` formats LittleFS if a mount fails.
 
 The heater coprocessor, pumps, RFID and battery chips are not driven at all.
@@ -40,7 +42,12 @@ match, so touch lines up without recalibrating.
   keyboard, animation, drawing) on this panel.
 - **Touch test**: draw with a finger. Shows raw controller x, y and pressure next
   to the filtered pointer, with a crosshair that should sit under the finger.
-- **Calibrate touch**: the bioreactor's four-corner TFT_eSPI calibration.
+- **Calibrate touch**: Dual Screen's calibrator. Tap a marker in each corner,
+  holding still until you lift, then test it with a crosshair. The result is
+  saved to NVS and loaded on every boot. Until then the bioreactor's own
+  calibration file is used, else generic XPT2046 values. The calibrator also
+  works out whether the controller's raw axes are swapped or reversed for this
+  panel, and a saved calibration only applies at the rotation it was taken in.
 - **Device**: what the unit reported at boot, frame rate and memory.
 - **Power off**.
 
@@ -59,7 +66,7 @@ with a `> ` prompt.
 | `tap <x> <y>` | `TAP x,y`; a press and release over the next two frames |
 | `press <x> <y>` / `release` | `PRESS x,y` / `RELEASE`; a held touch, for long presses and drags |
 | `shot` | the screen as `SHOT-BEGIN w= h= fmt=rle565 bytes= crc=`, base64 lines, `SHOT-END` |
-| `screen <home\|ui\|touch\|device>` | `Switched to <name>` |
+| `screen <home\|ui\|touch\|device\|cal>` | `Switched to <name>` |
 | `version` | `Version: controller-board <build time>` |
 
 Coordinates are screen pixels (320 x 240, origin top left), so a point read off a

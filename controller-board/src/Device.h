@@ -1,5 +1,5 @@
 // What this board needs before the UI starts: the power latch, the backlight, and
-// facts the bioreactor firmware stored. Device data is only ever read, never written.
+// facts the bioreactor firmware stored. The bioreactor's data is only ever read.
 #pragma once
 
 #include <Arduino.h>
@@ -23,8 +23,9 @@ namespace Device
   void setBacklight(bool on);
 
   /**
-   * The bioreactor's saved TFT_eSPI touch calibration (5 values), from LittleFS.
-   * The filesystem is mounted without format-on-fail and unmounted again.
+   * The bioreactor's saved TFT_eSPI touch calibration (5 values), from LittleFS:
+   * the fallback until this board is calibrated. The filesystem is mounted without
+   * format-on-fail and unmounted again.
    */
   bool loadTouchCalibration(uint16_t (&calData)[5]);
 

@@ -7,8 +7,7 @@ namespace
   Menu menu(MenuSize::Large);
   MenuItemNavigate uiTestItem("UI test", &UiTest::RootScreen);
   MenuItemNavigate touchTestItem("Touch test", &TouchTestScreen);
-  MenuItemAction calibrateItem("Calibrate touch", 1, []()
-                               { App::requestCalibration(); });
+  MenuItemNavigate calibrateItem("Calibrate touch", &TouchCalScreen);
   MenuItemNavigate deviceItem("Device", &DeviceScreen);
   MenuItemAction powerItem("Power off", 1, []()
                            { Device::powerOff(); });
