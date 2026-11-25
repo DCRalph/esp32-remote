@@ -6,6 +6,7 @@
 #include <esp_log.h>
 #include "Display.h"
 #include "Menu.h"
+#include <UiTest.h>
 #include "ScreenManager.h"
 #include "IO/Buttons.h"
 #include "IO/GPIO.h"
@@ -33,6 +34,7 @@ namespace SettingsScreenNamespace
     static MenuItemBack backItem;
 
     static MenuItemNavigate batteryItem{"Battery", &BatteryScreen};
+    static MenuItemNavigate uiTestItem{"UI test", &UiTest::RootScreen};
     static MenuItemNavigate systemInfoItem{"System Info", &SystemInfoScreen};
     static MenuItemNavigate wifiItem{"Wi-Fi Info", &WiFiInfoScreen};
     static MenuItemNavigate rssiItem{"RSSI", &RSSIMeter};
@@ -68,6 +70,7 @@ namespace SettingsScreenNamespace
 
       menu.addMenuItem(&backItem);
       menu.addMenuItem(&batteryItem);
+      menu.addMenuItem(&uiTestItem);
       menu.addMenuItem(&systemInfoItem);
       menu.addMenuItem(&wifiItem);
       menu.addMenuItem(&rssiItem);
