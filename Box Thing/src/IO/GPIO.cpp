@@ -3,11 +3,21 @@
 GPIO led(LED_PIN, Output, LOW);
 GPIO latch(LATCH_PIN, Output);
 GPIO switchPin(SWITCH_PIN, InputPullup, LOW);
-GPIO encoderButton(ENCODER_PIN_BUTTON, Input);
 
-EncoderHelper encoder;
+// GPIO16 has no internal pull-up.
+Controls::Button knobButton([]
+{
+  Controls::Button::Config c;
+  c.pin = ENCODER_PIN_BUTTON;
+  c.pull = Controls::Button::Pull::None;
+  c.debounceMs = 20;
+  c.multiClickMs = 200;
+  c.longMs = 500;
+  return c;
+}());
 
-ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, LOW);
+// The ESP8266 has no PCNT, so dcr_input decodes this on pin-change interrupts.
+Controls::Encoder knob(ENCODER_PIN_A, ENCODER_PIN_B);
 
 String GPIO::PinModeString(PinMode mode)
 {
@@ -119,18 +129,12 @@ void GPIO::initIO()
   led.init();
   latch.init();
   switchPin.init();
-  encoderButton.init();
 
   led.On();
   latch.On();
 
-  encoder.init();
-
-  ClickButtonEnc.debounceTime = 20;
-  ClickButtonEnc.multiclickTime = 200;
-  ClickButtonEnc.longClickTime = 500;
-
-  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
+  Controls::add(knob);
+  Controls::add(knobButton);
 
   Serial.println("\t[INFO] [IO] Pins configured.");
   Serial.println();

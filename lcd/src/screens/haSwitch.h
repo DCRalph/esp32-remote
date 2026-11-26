@@ -63,16 +63,16 @@ void HASwitch::draw(void)
 
 void HASwitch::update(void)
 {
-  if (ClickButtonDOWN.clicks == -1)
+  if (btnDown.clicks() == -1)
     screenManager.back();
 
-  if (ClickButtonDOWN.clicks == 1)
+  if (btnDown.clicks() == 1)
   {
     ha.callService("switch", "toggle", entity_id);
     updateState();
   }
 
-  if (ClickButtonDOWN.clicks == 2)
+  if (btnDown.clicks() == 2)
     updateState();
 }
 

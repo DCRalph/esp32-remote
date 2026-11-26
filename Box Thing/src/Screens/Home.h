@@ -23,7 +23,6 @@ public:
 
   void draw() override;
   void update() override;
-  void onEnter() override;
   u8 active;
 };
 
@@ -51,9 +50,4 @@ void HomeScreen::draw()
 void HomeScreen::update()
 {
   menu.update();
-}
-
-void HomeScreen::onEnter()
-{
-  encoder.encoder.setPosition(0);
 }

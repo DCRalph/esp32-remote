@@ -35,27 +35,27 @@ void Settings::draw()
 
 void Settings::update()
 {
-  if (ClickButtonDOWN.clicks == 1)
+  if (btnDown.clicks() == 1)
     settingsMenu++;
-  else if (ClickButtonUP.clicks == 1)
+  else if (btnUp.clicks() == 1)
     settingsMenu--;
 
   switch (settingsMenu)
   {
   case 0:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("Menu");
     break;
   case 1:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("Battery");
     break;
   case 2:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("Wi-Fi");
     break;
   case 3:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("RSSI");
     break;
   }

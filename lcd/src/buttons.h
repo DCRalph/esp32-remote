@@ -1,20 +1,13 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ClickButton.h>
+#include <dcr_input.h>
 
-extern ClickButton ClickButtonUP;
-extern ClickButton ClickButtonDOWN;
+extern Controls::Button btnUp;
+extern Controls::Button btnDown;
+
 class Buttons
 {
-  const int sleepCountdownTime = 3000;
-  bool sleepCountdown = false;
-  unsigned long sleepCountdownMillis = 0;
-
-  long debounceTime = 20;
-  long multiclickTime = 100;
-  long longClickTime = 500;
-
 public:
   void setup();
   void update();

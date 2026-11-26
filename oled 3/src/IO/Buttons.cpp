@@ -1,33 +1,32 @@
 #include "Buttons.h"
 
-ClickButton ClickButtonUP(BTN_UP_PIN, LOW);
-ClickButton ClickButtonDOWN(BTN_DOWN_PIN, LOW);
-ClickButton ClickButtonTRIGGER(BTN_TRIGGER_PIN, LOW);
+namespace
+{
+  Controls::Button::Config buttonConfig(int pin)
+  {
+    Controls::Button::Config c;
+    c.pin = pin;
+    c.debounceMs = 10;
+    c.multiClickMs = 75;
+    c.longMs = 400;
+    return c;
+  }
+}
+
+Controls::Button btnUp(buttonConfig(BTN_UP_PIN));
+Controls::Button btnDown(buttonConfig(BTN_DOWN_PIN));
+Controls::Button btnTrigger(buttonConfig(BTN_TRIGGER_PIN));
 
 void Buttons::setup()
 {
-  ClickButtonUP.debounceTime = debounceTime;
-  ClickButtonUP.multiclickTime = multiclickTime;
-  ClickButtonUP.longClickTime = longClickTime;
-
-  ClickButtonDOWN.debounceTime = debounceTime;
-  ClickButtonDOWN.multiclickTime = multiclickTime;
-  ClickButtonDOWN.longClickTime = longClickTime;
-
-  ClickButtonTRIGGER.debounceTime = debounceTime;
-  ClickButtonTRIGGER.multiclickTime = multiclickTime;
-  ClickButtonTRIGGER.longClickTime = longClickTime;
-
-  pinMode(BTN_UP_PIN, INPUT_PULLUP);
-  pinMode(BTN_DOWN_PIN, INPUT_PULLUP);\
-  pinMode(BTN_TRIGGER_PIN, INPUT_PULLUP);
+  Controls::add(btnUp);
+  Controls::add(btnDown);
+  Controls::add(btnTrigger);
 }
 
 void Buttons::update()
 {
-  ClickButtonUP.Update();
-  ClickButtonDOWN.Update();
-  ClickButtonTRIGGER.Update();
+  Controls::update();
 }
 
 Buttons buttons;

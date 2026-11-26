@@ -111,7 +111,7 @@ void setup()
 
 bool sleepLoop()
 {
-  if (ClickButtonUP.depressed)
+  if (btnUp.pressed())
   {
     if (!sleepCountdown)
       sleepCountdownMillis = millis();

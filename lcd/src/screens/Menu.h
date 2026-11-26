@@ -33,20 +33,20 @@ void MenuScreen::draw()
 
 void MenuScreen::update()
 {
-  if (ClickButtonDOWN.clicks == 1)
+  if (btnDown.clicks() == 1)
     mainMenu++;
-  else if (ClickButtonUP.clicks == 1)
+  else if (btnUp.clicks() == 1)
     mainMenu--;
 
   switch (mainMenu)
   {
   case 0:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("Settings");
     break;
 
   case 1:
-    if (ClickButtonDOWN.clicks == 2)
+    if (btnDown.clicks() == 2)
       screenManager.setScreen("Espnow");
     break;
   }

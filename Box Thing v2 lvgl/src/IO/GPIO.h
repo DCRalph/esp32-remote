@@ -1,27 +1,19 @@
 #pragma once
 #include "config.h"
 
-#include <RotaryEncoder.h>
-#include <ESP32Encoder.h>
-#include <ClickButton.h>
-#include <FunctionalInterrupt.h>
+#include <dcr_input.h>
 
 class GpIO;
 
 extern GpIO led;
 extern GpIO latch;
-extern GpIO encoderButton;
 extern GpIO batterySense;
 extern GpIO MCPPowerGood;
 extern GpIO MCPState1;
 extern GpIO MCPState2;
 
-// extern RotaryEncoder encoder;
-extern ESP32Encoder encoder;
-
-extern ClickButton ClickButtonEnc;
-
-// void IRAM_ATTR encoderISR();
+extern Controls::Button knobButton;
+extern Controls::Encoder knob;
 
 enum PinMode
 {
@@ -63,7 +55,3 @@ public:
 
   static void initIO();
 };
-
-extern int64_t encoderGetCount();
-extern void encoderSetCount(int64_t _count);
-extern void encoderClearCount();

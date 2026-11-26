@@ -77,7 +77,7 @@ void WiFiInfoScreen::draw()
 
 void WiFiInfoScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1)
+  if (knobButton.clicks() == 1)
   {
     screenManager.back();
   }

@@ -59,7 +59,7 @@ void EspnowSwitchScreen::draw()
 
 void EspnowSwitchScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1)
+  if (knobButton.clicks() == 1)
   {
     screenManager.back();
   }

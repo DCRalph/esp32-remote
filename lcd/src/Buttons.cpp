@@ -1,23 +1,30 @@
 #include "Buttons.h"
 
-ClickButton ClickButtonUP(14, LOW);
-ClickButton ClickButtonDOWN(0, LOW);
+namespace
+{
+  Controls::Button::Config buttonConfig(int pin)
+  {
+    Controls::Button::Config c;
+    c.pin = pin;
+    c.debounceMs = 20;
+    c.multiClickMs = 100;
+    c.longMs = 500;
+    return c;
+  }
+}
+
+Controls::Button btnUp(buttonConfig(14));
+Controls::Button btnDown(buttonConfig(0));
 
 void Buttons::setup()
 {
-  ClickButtonUP.debounceTime = debounceTime;
-  ClickButtonUP.multiclickTime = multiclickTime;
-  ClickButtonUP.longClickTime = longClickTime;
-
-  ClickButtonDOWN.debounceTime = debounceTime;
-  ClickButtonDOWN.multiclickTime = multiclickTime;
-  ClickButtonDOWN.longClickTime = longClickTime;
+  Controls::add(btnUp);
+  Controls::add(btnDown);
 }
 
 void Buttons::update()
 {
-  ClickButtonUP.Update();
-  ClickButtonDOWN.Update();
+  Controls::update();
 }
 
 Buttons buttons;

@@ -1,21 +1,14 @@
 #pragma once
 
 #include "config.h"
-#include <ClickButton.h>
+#include <dcr_input.h>
 
-extern ClickButton ClickButtonUP;
-extern ClickButton ClickButtonDOWN;
-extern ClickButton ClickButtonTRIGGER;
+extern Controls::Button btnUp;
+extern Controls::Button btnDown;
+extern Controls::Button btnTrigger;
+
 class Buttons
 {
-  const int sleepCountdownTime = 3000;
-  bool sleepCountdown = false;
-  unsigned long sleepCountdownMillis = 0;
-
-  long debounceTime = 10;
-  long multiclickTime = 100;
-  long longClickTime = 400;
-
 public:
   void setup();
   void update();

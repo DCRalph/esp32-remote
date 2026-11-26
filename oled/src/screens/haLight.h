@@ -65,16 +65,16 @@ void HALight::draw(void)
 
 void HALight::update(void)
 {
-  if (ClickButton0.clicks == -1)
+  if (btn0.clicks() == -1)
     screenManager.setScreen("menu");
 
-  if (ClickButton0.clicks == 1)
+  if (btn0.clicks() == 1)
     updateState(ha.callService("light", "toggle", entity_id), 0);
 
-  if (ClickButton0.clicks == 2)
+  if (btn0.clicks() == 2)
     updateState(ha.getState(entity_id));
 
-  if (ClickButton21.clicks == 1)
+  if (btn21.clicks() == 1)
   {
     DynamicJsonDocument doc(64);
     doc["entity_id"] = entity_id;
@@ -86,7 +86,7 @@ void HALight::update(void)
     updateState(ha.callService("light", "turn_on", entity_id, payload), 0);
   }
 
-  if (ClickButton21.clicks == 2)
+  if (btn21.clicks() == 2)
   {
     DynamicJsonDocument doc(64);
     doc["entity_id"] = entity_id;

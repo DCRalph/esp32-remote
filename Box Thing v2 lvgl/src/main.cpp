@@ -35,9 +35,6 @@ static lv_disp_drv_t disp_drv;
 #define LVGL_TICK_PERIOD 50
 unsigned long lastTick = 0;
 
-// Global variables for encoder state
-int lastPosition = 0;
-
 // For tracking currently selected menu index (global menu navigation)
 uint8_t currentMenuItem = 0;  
 const uint8_t totalMenuItems = 6; // total number of interactive items
@@ -334,18 +331,18 @@ void setup() {
 
   // Wait for any encoder button depressed state to end.
   do {
-    ClickButtonEnc.Update();
-  } while (ClickButtonEnc.depressed);
+    Controls::update();
+  } while (knobButton.pressed());
 }
 
 unsigned long batteryLoopMs = 0;
 char buffer[100];
 
 void loop() {
+  Controls::update();
   DirectComms::getInstance()->loop();
   Wireless::getInstance()->loop();
 
-  ClickButtonEnc.Update();
   // LVGL tick update
   if (millis() - lastTick > LVGL_TICK_PERIOD) {
     lv_tick_inc(LVGL_TICK_PERIOD);
@@ -354,11 +351,10 @@ void loop() {
   lv_task_handler();
 
   // Handle encoder rotation
-  int newPosition = encoderGetCount();
-  if (newPosition != lastPosition) {
+  if (knob.delta() != 0) {
     // Positive rotation moves focus down; negative moves up.
-    int diff = newPosition - lastPosition;
-    lastPosition = newPosition;
+    int diff = knob.delta();
+    lastInteract = millis();
 
     if (diff > 0) {
       // Move focus forward
@@ -383,10 +379,9 @@ void loop() {
   }
 
   // Check for encoder button click
-  if (ClickButtonEnc.clicks != 0) {
+  if (knobButton.clicks() != 0) {
     // Use button click as a selection (or "enter") event.
     onEncoderButtonClick();
-    ClickButtonEnc.clicks = 0; // reset click count after handled
     lastInteract = millis();
   }
 

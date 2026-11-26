@@ -137,14 +137,15 @@ void setup()
 
 void loop()
 {
+  Controls::update();
+
   if (!wireless.isSetupDone())
     wm.process();
 
   ArduinoOTA.handle();
   mqtt.loop();
-  ClickButtonEnc.Update();
 
-  if (ClickButtonEnc.clicks == -3)
+  if (knobButton.clicks() == -3)
     latch.Off();
 
   display.display();

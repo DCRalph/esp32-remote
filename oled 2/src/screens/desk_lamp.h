@@ -52,16 +52,16 @@ void DeskLamp::draw()
 
 void DeskLamp::update()
 {
-  if (ClickButton0.clicks == -1)
+  if (btn0.clicks() == -1)
     screenManager.setScreen("menu");
 
-  if (ClickButton0.clicks == 1)
+  if (btn0.clicks() == 1)
     updateState(ha.callService("light", "toggle", "light.midesklamp1s_9479"), 0);
 
-  if (ClickButton0.clicks == 2)
+  if (btn0.clicks() == 2)
     updateState(ha.getState("light.midesklamp1s_9479"));
 
-  if (ClickButton21.clicks == 1)
+  if (btn21.clicks() == 1)
   {
     DynamicJsonDocument doc(64);
     doc["entity_id"] = "light.midesklamp1s_9479";
@@ -73,7 +73,7 @@ void DeskLamp::update()
     updateState(ha.callService("light", "turn_on", "light.midesklamp1s_9479", payload), 0);
   }
 
-  if (ClickButton21.clicks == 2)
+  if (btn21.clicks() == 2)
   {
     DynamicJsonDocument doc(64);
     doc["entity_id"] = "light.midesklamp1s_9479";

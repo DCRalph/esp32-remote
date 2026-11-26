@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdio.h>
 #include "driver/rm67162.h"
-#include "IO/buttons.h" // Definitions for physical buttons (ClickButtonUP, etc.)
+#include "IO/buttons.h" // Definitions for physical buttons (btnUp, etc.)
 #include "IO/Battery.h" // Battery monitoring definitions
 
 // Global LVGL group for menu navigation.
@@ -404,29 +404,27 @@ void loop()
   buttons.update();
 
   // Process navigation using the physical buttons.
-  if (ClickButtonUP.clicks != 0)
+  if (btnUp.clicks() != 0)
   {
-    for (int i = 0; i < abs(ClickButtonUP.clicks); i++)
+    for (int i = 0; i < abs(btnUp.clicks()); i++)
     {
-      if (ClickButtonUP.clicks > 0)
+      if (btnUp.clicks() > 0)
         lv_group_focus_prev(menuGroup);
       else
         lv_group_focus_next(menuGroup);
     }
-    ClickButtonUP.clicks = 0;
   }
-  if (ClickButtonDOWN.clicks != 0)
+  if (btnDown.clicks() != 0)
   {
-    for (int i = 0; i < abs(ClickButtonDOWN.clicks); i++)
+    for (int i = 0; i < abs(btnDown.clicks()); i++)
     {
-      if (ClickButtonDOWN.clicks > 0)
+      if (btnDown.clicks() > 0)
         lv_group_focus_next(menuGroup);
       else
         lv_group_focus_prev(menuGroup);
     }
-    ClickButtonDOWN.clicks = 0;
   }
-  if (ClickButtonTRIGGER.clicks != 0)
+  if (btnTrigger.clicks() != 0)
   {
     // When the trigger is pressed, send a click event to the focused object.
     lv_obj_t *focused = lv_group_get_focused(menuGroup);
@@ -434,7 +432,6 @@ void loop()
     {
       lv_event_send(focused, LV_EVENT_CLICKED, NULL);
     }
-    ClickButtonTRIGGER.clicks = 0;
   }
 
   // Handle LVGL tasks.

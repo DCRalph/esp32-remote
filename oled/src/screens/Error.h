@@ -32,6 +32,6 @@ void ErrorScreen::draw()
 
 void ErrorScreen::update()
 {
-  if (ClickButton0.clicks != 0 || ClickButton21.clicks != 0)
+  if (btn0.clicks() != 0 || btn21.clicks() != 0)
     screenManager.setScreen("menu");
 }

@@ -73,39 +73,39 @@ void MenuScreen::draw()
 void MenuScreen::update()
 {
 
-  if (ClickButton0.clicks == 1)
+  if (btn0.clicks() == 1)
     mainMenu--;
-  else if (ClickButton21.clicks == 1)
+  else if (btn21.clicks() == 1)
     mainMenu++;
 
   switch (mainMenu)
   {
   case 0:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("rssi");
     break;
   case 1:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("deskLamp");
     break;
   case 2:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("leds");
     break;
   case 3:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("matrix");
     break;
   case 4:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("bedLight");
     break;
   case 5:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("michaelLeds");
     break;
   case 6:
-    if (ClickButton0.clicks == 2)
+    if (btn0.clicks() == 2)
       screenManager.setScreen("michaelFan");
     break;
   }
