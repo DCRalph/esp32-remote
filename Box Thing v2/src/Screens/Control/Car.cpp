@@ -1,4 +1,3 @@
-#pragma once
 
 #include <Display.h>
 #include <Menu.h>
@@ -11,6 +10,10 @@
 #include "IO/TopBar.h"
 #include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
+
+#undef LOG_TAG
+#define LOG_TAG "CAR"
+#include <dcr_Logger.h>
 
 static uint8_t led_controller_addrs[8][8] = {
     {0x30, 0x30, 0xF9, 0x2A, 0x05, 0x20}, // s3 dev 1
