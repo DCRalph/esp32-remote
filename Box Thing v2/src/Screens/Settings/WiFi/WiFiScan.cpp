@@ -130,13 +130,13 @@ namespace
   {
     wifiScanPoll();
 
-    if (ClickButtonEnc.clicks == -1)
+    if (knobButton.clicks() == -1)
     {
       screenManager.back();
       return;
     }
 
-    if (gWiFiScanState == WiFiScanState::Failed && ClickButtonEnc.clicks == 1)
+    if (gWiFiScanState == WiFiScanState::Failed && knobButton.clicks() == 1)
     {
       wifiScanStart();
       return;
@@ -145,7 +145,7 @@ namespace
     if (gWiFiScanState != WiFiScanState::Results)
       return;
 
-    const int32_t delta = encoderTakeDetents();
+    const int32_t delta = knob.delta();
     if (delta != 0)
     {
       gWiFiScanActive = constrain(gWiFiScanActive + delta, 0, gWiFiScanCount - 1);
@@ -158,7 +158,7 @@ namespace
       haptic.playEffect(4);
     }
 
-    if (ClickButtonEnc.clicks == 1)
+    if (knobButton.clicks() == 1)
     {
       WiFiProvision::pendingSsid = WiFi.SSID(gWiFiScanActive);
       WiFiProvision::pendingHidden = WiFiProvision::pendingSsid.isEmpty();

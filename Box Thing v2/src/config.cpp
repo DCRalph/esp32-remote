@@ -9,7 +9,6 @@ Wireless &wireless = *Wireless::getInstance();
 
 bool wifiConnectedAtSomePoint = false;
 
-uint64_t lastInteract;
 int autoOffMin;
 
 void initConfig()
@@ -27,5 +26,4 @@ void initConfig()
 
   autoOffMin = preferences.getInt("autoOffMin", 5);
 
-  lastInteract = millis();
 }

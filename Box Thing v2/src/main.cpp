@@ -116,14 +116,14 @@ EncoderInput encoderInput([]
   EncoderInput::Config c;
   c.readDelta = []() -> int32_t
   {
-    const int32_t delta = encoderTakeDetents();
+    const int32_t delta = knob.delta();
     if (delta != 0)
       haptic.playEffect(4);
     return delta;
   };
   c.readClicks = []()
   {
-    const int clicks = (int)ClickButtonEnc.clicks;
+    const int clicks = knobButton.clicks();
     if (clicks != 0)
       haptic.playEffect(40);
     return clicks;
@@ -192,11 +192,6 @@ void setup()
 
   debugI("Done");
 
-  do
-  {
-    ClickButtonEnc.Update();
-  } while (ClickButtonEnc.depressed);
-
   if (StartUp::getState() != StartUpState::ApStarted)
   {
     screenManager.setScreen(&HomeScreen2);
@@ -207,6 +202,7 @@ void setup()
 void loop()
 {
   const uint32_t frameStartMs = millis();
+  Controls::update();
 
   if (wireless.isSetupDone())
   {
@@ -233,16 +229,14 @@ void loop()
                              current == &UpdateProgressScreen2;
 
   if (autoOffMin != 0 && !autoOffExempt &&
-      millis() - lastInteract > autoOffMin * 60000)
+      millis() - Controls::lastActivityMs() > autoOffMin * 60000UL)
   {
     debugI("Auto off timer");
     screenManager.setScreen(&ShutdownScreen2);
   }
 
-  if (ClickButtonEnc.clicks == -3)
+  if (knobButton.clicks() == -3)
     screenManager.setScreen(&ShutdownScreen2);
-
-  ClickButtonEnc.Update();
 
   timeProfiler.increment(PROFILE_FRAME);
   timeProfiler.start(PROFILE_FRAME);

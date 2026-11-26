@@ -14,7 +14,7 @@ Never run two builds at once: they share `.pio/build` and corrupt it.
 ## Libraries
 
 Shared infrastructure comes from the `dcr_*` libraries (logger, netLink, httpClient,
-files, taskManager, timeProfiler, fatalHandler, display) and `wireless_mesh`. Use them
+files, taskManager, timeProfiler, fatalHandler, display, input) and `wireless_mesh`. Use them
 instead of hand-rolling the same thing here:
 
 - Logging: `debugI/W/E/D` with a per-file `LOG_TAG`, never `Serial.print`.
@@ -22,8 +22,9 @@ instead of hand-rolling the same thing here:
 - Timing and rates: `timeProfiler.start/stop/increment`, not ad hoc counters.
 - Screens: `Screen2` descriptors, declared in `src/Screens/Screens.h`.
 
-- Input: register an `EncoderInput` with `Inputs::addSource`; menus, popups and widgets
-  read events, never the encoder directly.
+- Input: `knob` and `knobButton` (dcr_input, `IO/GPIO`) are sampled by `Controls::update()`
+  at the top of `loop()`; each reading holds for that frame. Menus, popups and widgets read
+  them through the `EncoderInput` registered with `Inputs::addSource`.
 - Fonts: `display.setTextSize(U8G2_TEXT_*)` picks a face from `IO/BoxThingDisplay`.
 
 ## Comments

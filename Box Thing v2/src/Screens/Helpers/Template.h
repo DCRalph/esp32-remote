@@ -26,7 +26,7 @@ namespace
 
   void templateUpdate()
   {
-    if (ClickButtonEnc.clicks == 1)
+    if (knobButton.clicks() == 1)
       screenManager.back();
   }
 }

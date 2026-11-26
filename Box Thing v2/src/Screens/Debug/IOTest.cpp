@@ -13,8 +13,8 @@ namespace
 
   void ioTestDraw()
   {
-    if (ClickButtonEnc.clicks != 0)
-      gIoTestLastClicks = ClickButtonEnc.clicks;
+    if (knobButton.clicks() != 0)
+      gIoTestLastClicks = knobButton.clicks();
 
     display.setTextSize(U8G2_TEXT_TITLE);
     display.setTextColor(Color::White);
@@ -22,20 +22,20 @@ namespace
 
     char buffer[64];
 
-    snprintf(buffer, sizeof(buffer), "Enc: %d:%d", (int)encoder.getCount(), (int)encoderDetents());
+    snprintf(buffer, sizeof(buffer), "Enc: %d:%d", (int)knob.rawCount(), (int)knob.position());
     display.drawString(buffer, 0, 12);
 
-    snprintf(buffer, sizeof(buffer), "Btn: %d : %d", ClickButtonEnc.depressed, gIoTestLastClicks);
+    snprintf(buffer, sizeof(buffer), "Btn: %d : %d", knobButton.pressed(), gIoTestLastClicks);
     display.drawString(buffer, 0, 30);
   }
 
   void ioTestUpdate()
   {
-    if (ClickButtonEnc.clicks == 1)
+    if (knobButton.clicks() == 1)
       screenManager.back();
 
-    if (ClickButtonEnc.clicks == 3)
-      encoderReset();
+    if (knobButton.clicks() == 3)
+      knob.reset();
   }
 }
 
