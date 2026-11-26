@@ -25,15 +25,23 @@
 WiFiClient espClient;
 AmoledDisplayDriver displayDriver(LCD_WIDTH, LCD_HEIGHT, TFT_ROT);
 
-// Up/down move, a double click on either selects, the trigger selects too.
-ButtonInput buttonInput([]
-                        {
-  ButtonInput::Config c;
-  c.up = []() { return btnUp.clicks(); };
-  c.down = []() { return btnDown.clicks(); };
-  c.select = []() { return btnTrigger.clicks(); };
+// The two buttons sit left (btnUp) and right (btnDown), so they step like an encoder:
+// left moves up a menu and decreases a value being edited, right the opposite.
+// A double click on either selects, the trigger selects too.
+EncoderInput buttonInput([]
+                         {
+  EncoderInput::Config c;
+  c.readDelta = []() -> int32_t { return (btnDown.clicks() == 1) - (btnUp.clicks() == 1); };
+  c.readClicks = []()
+  {
+    if (btnUp.clicks() > 1)
+      return btnUp.clicks();
+    if (btnDown.clicks() > 1)
+      return btnDown.clicks();
+    return btnTrigger.clicks();
+  };
   c.defaultSelectClicks = 2;
-  c.multiClickSelects = true;
+  c.accelerate = false;
   return c; }());
 
 unsigned long long prevMillis1;
