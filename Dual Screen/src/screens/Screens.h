@@ -20,6 +20,7 @@ namespace Demos
   extern const Screen2 CrossoverLcd, CrossoverTouch;
   extern const Screen2 TypingLcd, TypingTouch;
   extern const Screen2 DashboardLcd, DashboardTouch;
+  extern const Screen2 MeshLcd, MeshTouch;
   extern const Screen2 TouchCalTouch;
 }
 

@@ -6,6 +6,7 @@
 #include <dcr_Logger.h>
 #include <dcr_NetLink.h>
 #include <dcr_TaskManager.h>
+#include <Mesh.h>
 
 #include "config.h"
 #include "Displays.h"
@@ -77,6 +78,7 @@ void loop()
   const uint32_t frameStartMs = millis();
   buttons.update();
   netLink.loop();
+  SyncManager::getInstance()->loop(); // idle until the Mesh demo starts it
 
   if (millis() - lastBatteryMs > 500)
   {

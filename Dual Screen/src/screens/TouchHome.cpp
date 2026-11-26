@@ -16,6 +16,8 @@ namespace
                             { screenManager.setScreen(&Demos::TypingLcd); });
   MenuItemAction dashboardItem("Dashboard", 1, []()
                                { screenManager.setScreen(&Demos::DashboardLcd); });
+  MenuItemAction meshItem("Mesh with oled 3", 1, []()
+                          { screenManager.setScreen(&Demos::MeshLcd); });
   MenuItemNavigate uiTestItem("UI test (touch)", &UiTest::RootScreen);
 
   void enter()
@@ -24,7 +26,8 @@ namespace
       return;
     for (MenuItem *item : {static_cast<MenuItem *>(&controlsItem), static_cast<MenuItem *>(&sketchItem),
                            static_cast<MenuItem *>(&crossoverItem), static_cast<MenuItem *>(&typingItem),
-                           static_cast<MenuItem *>(&dashboardItem), static_cast<MenuItem *>(&uiTestItem)})
+                           static_cast<MenuItem *>(&dashboardItem), static_cast<MenuItem *>(&meshItem),
+                           static_cast<MenuItem *>(&uiTestItem)})
       menu.addMenuItem(item);
   }
 }

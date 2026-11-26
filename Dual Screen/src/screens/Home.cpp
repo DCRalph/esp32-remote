@@ -10,6 +10,7 @@ namespace
   MenuItemNavigate crossoverItem("Cross popups", &Demos::CrossoverLcd);
   MenuItemNavigate typingItem("Type to LCD", &Demos::TypingLcd);
   MenuItemNavigate dashboardItem("Dashboard", &Demos::DashboardLcd);
+  MenuItemNavigate meshItem("Mesh with oled 3", &Demos::MeshLcd);
   MenuItemNavigate uiTestItem("UI test (LCD)", &UiTest::RootScreen);
   MenuItemNavigate settingsItem("Settings", &SettingsScreen);
 
@@ -19,7 +20,8 @@ namespace
       return;
     for (MenuItem *item : {static_cast<MenuItem *>(&controlsItem), static_cast<MenuItem *>(&sketchItem),
                            static_cast<MenuItem *>(&crossoverItem), static_cast<MenuItem *>(&typingItem),
-                           static_cast<MenuItem *>(&dashboardItem), static_cast<MenuItem *>(&uiTestItem),
+                           static_cast<MenuItem *>(&dashboardItem), static_cast<MenuItem *>(&meshItem),
+                           static_cast<MenuItem *>(&uiTestItem),
                            static_cast<MenuItem *>(&settingsItem)})
       menu.addMenuItem(item);
   }
