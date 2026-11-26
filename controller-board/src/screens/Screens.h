@@ -7,3 +7,4 @@ extern const Screen2 TouchTestScreen;
 extern const Screen2 DeviceScreen;
 extern const Screen2 TouchCalScreen;
 extern const Screen2 BacklightScreen;
+extern const Screen2 ButtonsScreen;
