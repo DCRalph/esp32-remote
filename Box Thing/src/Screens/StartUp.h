@@ -85,7 +85,7 @@ void StartUpScreen::update()
 {
   if (state == StartUpState::ApStarted)
   {
-    if (ClickButtonEnc.clicks == -1)
+    if (knobButton.clicks() == -1)
     {
       screenManager.setScreen("Home");
     }

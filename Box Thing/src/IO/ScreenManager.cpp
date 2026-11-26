@@ -33,7 +33,7 @@ void ScreenManager::setScreen(int screen)
     screens[currentScreen]->onExit();
   }
 
-  encoder.encoder.setPosition(0);
+  knob.reset();
 
   currentScreen = screen;
 

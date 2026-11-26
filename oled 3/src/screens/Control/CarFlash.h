@@ -62,7 +62,7 @@
 // {
 //   menu.update();
 
-//   if (ClickButtonTRIGGER.clicks == 1)
+//   if (btnTrigger.clicks() == 1)
 //   {
 //     data_packet p;
 //     p.type = CMD_RELAY_1_FLASH;

@@ -29,13 +29,13 @@ namespace CarLocksScreenNamespace
 
   void update()
   {
-    if (ClickButtonUP.clicks == 1)
+    if (btnUp.clicks() == 1)
       RemoteProtocol::CarRelays::lock().sendTo(car_addr, {0});
 
-    if (ClickButtonDOWN.clicks == -1)
+    if (btnDown.clicks() == -1)
       RemoteProtocol::CarRelays::lock().sendTo(car_addr, {1});
 
-    if (ClickButtonDOWN.clicks == 1)
+    if (btnDown.clicks() == 1)
       screenManager.back();
   }
 

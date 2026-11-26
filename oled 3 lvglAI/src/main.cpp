@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdio.h>
 #include "driver/rm67162.h"
-#include "IO/buttons.h" // Definitions for physical buttons (ClickButtonUP, etc.)
+#include "IO/buttons.h" // Definitions for physical buttons (btnUp, etc.)
 #include "IO/Battery.h" // Battery monitoring definitions
 #include "IO/ScreenManager.h"
 #include "IO/ScreenFactory.h"
@@ -494,32 +494,30 @@ void loop()
   buttons.update();
 
   // Process navigation using the physical buttons.
-  if (ClickButtonUP.clicks != 0)
+  if (btnUp.clicks() != 0)
   {
     Serial.println("up");
-    for (int i = 0; i < abs(ClickButtonUP.clicks); i++)
+    for (int i = 0; i < abs(btnUp.clicks()); i++)
     {
-      if (ClickButtonUP.clicks > 0)
+      if (btnUp.clicks() > 0)
         lv_group_focus_prev(menuGroup);
       else
         lv_group_focus_next(menuGroup);
     }
-    ClickButtonUP.clicks = 0;
   }
-  if (ClickButtonDOWN.clicks != 0)
+  if (btnDown.clicks() != 0)
   {
     Serial.println("down");
 
-    for (int i = 0; i < abs(ClickButtonDOWN.clicks); i++)
+    for (int i = 0; i < abs(btnDown.clicks()); i++)
     {
-      if (ClickButtonDOWN.clicks > 0)
+      if (btnDown.clicks() > 0)
         lv_group_focus_next(menuGroup);
       else
         lv_group_focus_prev(menuGroup);
     }
-    ClickButtonDOWN.clicks = 0;
   }
-  if (ClickButtonTRIGGER.clicks != 0)
+  if (btnTrigger.clicks() != 0)
   {
     Serial.println("TRIGGER");
 
@@ -529,7 +527,6 @@ void loop()
     {
       lv_event_send(focused, LV_EVENT_CLICKED, NULL);
     }
-    ClickButtonTRIGGER.clicks = 0;
   }
 
   // Handle LVGL tasks.
@@ -537,38 +534,10 @@ void loop()
   delay(2);
 }
 
-// Input device read callback
+// loop() handles every button click, so the encoder indev stays idle.
+// Reading clicks here as well would move focus twice in one frame.
 void my_input_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 {
-  static int32_t last_encoder_diff = 0;
-  int32_t encoder_diff = 0;
-
-  // Handle UP button
-  if (ClickButtonUP.clicks == 1)
-  {
-    encoder_diff--;
-    screenManager.handleUpButton();
-  }
-
-  // Handle DOWN button
-  if (ClickButtonDOWN.clicks == 1)
-  {
-    encoder_diff++;
-    screenManager.handleDownButton();
-  }
-
-  // Handle TRIGGER button
-  if (ClickButtonTRIGGER.clicks == 1)
-  {
-    data->state = LV_INDEV_STATE_PRESSED;
-    screenManager.handleTriggerButton();
-  }
-  else
-  {
-    data->state = LV_INDEV_STATE_RELEASED;
-  }
-
-  // Update encoder value
-  data->enc_diff = encoder_diff - last_encoder_diff;
-  last_encoder_diff = encoder_diff;
+  data->state = LV_INDEV_STATE_RELEASED;
+  data->enc_diff = 0;
 }

@@ -27,19 +27,19 @@ void IOTestScreen::draw()
   display.u8g2.drawStr(0, 8, "IO Test");
   display.u8g2.drawLine(0, 10, DISPLAY_WIDTH, 10);
 
-  if (ClickButtonEnc.clicks != 0)
+  if (knobButton.clicks() != 0)
   {
-    lastEncoderClicks = ClickButtonEnc.clicks;
+    lastEncoderClicks = knobButton.clicks();
   }
 
   display.u8g2.setFont(u8g2_font_logisoso16_tf);
   display.u8g2.setDrawColor(1);
 
   char buffer[32];
-  sprintf(buffer, "Encoder: %i", encoder.encoder.getPosition());
+  sprintf(buffer, "Encoder: %i", (int)knob.position());
   display.u8g2.drawStr(0, 28, buffer);
 
-  sprintf(buffer, "Btn: %d : %d", ClickButtonEnc.depressed, lastEncoderClicks);
+  sprintf(buffer, "Btn: %d : %d", knobButton.pressed(), lastEncoderClicks);
   display.u8g2.drawStr(0, 46, buffer);
 
   sprintf(buffer, "Switch: %s", switchPin.read() ? "ON" : "OFF");
@@ -48,7 +48,7 @@ void IOTestScreen::draw()
 
 void IOTestScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1 && switchPin.read() == 0)
+  if (knobButton.clicks() == 1 && switchPin.read() == 0)
   {
     screenManager.back();
   }

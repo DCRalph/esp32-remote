@@ -2,22 +2,32 @@
 
 GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
-GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
 GpIO batterySense(BATTERY_SENSE_PIN, Input);
 GpIO MCPPowerGood(MCP_POWER_GOOD_PIN, Input, LOW);
 GpIO MCPState1(MCP_STATE_1_PIN, Input, LOW);
 GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 
-ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
+Controls::Button knobButton([]
+{
+  Controls::Button::Config c;
+  c.pin = ENCODER_PIN_BUTTON;
+  c.activeHigh = true;
+  c.pull = Controls::Button::Pull::None;
+  c.debounceMs = 20;
+  c.multiClickMs = 200;
+  c.longMs = 500;
+  return c;
+}());
 
-// RotaryEncoder encoder = RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);
-ESP32Encoder encoder;
-static uint64_t lastEncoderValue = 0;
-
-// void IRAM_ATTR encoderISR()
-// {
-//   encoder.readAB();
-// }
+// Pull-downs on A and B, as ESP32Encoder's default set them.
+Controls::Encoder knob([]
+{
+  Controls::Encoder::Config c;
+  c.pinA = ENCODER_PIN_A;
+  c.pinB = ENCODER_PIN_B;
+  c.pull = Controls::Pull::Down;
+  return c;
+}());
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -130,7 +140,6 @@ void GpIO::initIO()
 
   led.init();
   latch.init();
-  encoderButton.init();
   batterySense.init();
   MCPPowerGood.init();
   MCPState1.init();
@@ -138,13 +147,6 @@ void GpIO::initIO()
 
   // led.On();
   latch.On();
-
-  ClickButtonEnc.debounceTime = 20;
-  ClickButtonEnc.multiclickTime = 200;
-  ClickButtonEnc.longClickTime = 500;
-
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-  // attachInterrupt(ENCODER_PIN_A, encoderISR, CHANGE);
 
 #ifdef DEBUG_GPIO
   Serial.println("\t[INFO] [IO] Pins configured.");
@@ -155,33 +157,8 @@ void GpIO::initIO()
   Serial.println("\t[Encoder] Initializing...");
 #endif
 
-  // encoder.begin();
-
-  encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
-  encoder.clearCount();
+  Controls::add(knob);
+  Controls::add(knobButton);
 
   Serial.println("\t[Encoder] Initialized");
-}
-
-int64_t encoderGetCount()
-{
-  uint64_t value = encoder.getCount() / 4;
-
-  if (value != lastEncoderValue)
-  {
-    lastEncoderValue = value;
-    lastInteract = millis();
-  }
-
-  return value;
-}
-
-void encoderSetCount(int64_t _count)
-{
-  encoder.setCount(_count * 4);
-}
-
-void encoderClearCount()
-{
-  encoder.clearCount();
 }

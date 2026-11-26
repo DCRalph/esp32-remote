@@ -334,7 +334,7 @@ namespace CompanionScreenNamespace
 
   void update()
   {
-    if (ClickButtonUP.clicks == 2 || ClickButtonDOWN.clicks == 2)
+    if (btnUp.clicks() == 2 || btnDown.clicks() == 2)
     {
       screenManager.back();
       return;
@@ -342,15 +342,15 @@ namespace CompanionScreenNamespace
 
     if (CompanionHttp::getPairState() != CompanionPairState::Ready)
     {
-      if (ClickButtonUP.clicks == 1)
+      if (btnUp.clicks() == 1)
         CompanionHttp::restartPairing();
       return;
     }
 
-    if (ClickButtonUP.clicks == 1) {
+    if (btnUp.clicks() == 1) {
       CompanionHttp::sendPagePrev();
       prevPage();
-    } else if (ClickButtonDOWN.clicks == 1) {
+    } else if (btnDown.clicks() == 1) {
       CompanionHttp::sendPageNext();
       nextPage();
     }

@@ -1,7 +1,5 @@
 #include "GPIO.h"
 
-#include <ESP32Encoder.h>
-
 #undef LOG_TAG
 #define LOG_TAG "GPIO"
 
@@ -11,11 +9,6 @@ GpIO batterySense(BATTERY_SENSE_PIN, Input);
 GpIO MCPPowerGood(MCP_POWER_GOOD_PIN, Input, LOW);
 GpIO MCPState1(MCP_STATE_1_PIN, Input, LOW);
 GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
-
-namespace
-{
-  ESP32Encoder pcnt;
-}
 
 // Active high on an external pull-down. Also the power button, so the press that
 // turned the box on is still held when it is added, and never counts.
@@ -30,8 +23,16 @@ Controls::Button knobButton([]
   c.longMs = 500;
   return c; }());
 
+// Pull-downs on A and B. The PCNT glitch filter defaults to its maximum,
+// which this knob's contact bounce needs.
 Controls::Encoder knob([]
-                       { return pcnt.getCount(); }, ENCODER_COUNTS_PER_DETENT);
+                       {
+  Controls::Encoder::Config c;
+  c.pinA = ENCODER_PIN_A;
+  c.pinB = ENCODER_PIN_B;
+  c.pull = Controls::Pull::Down;
+  c.countsPerDetent = ENCODER_COUNTS_PER_DETENT;
+  return c; }());
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -153,9 +154,6 @@ void GpIO::initIO()
   debugI("Pins configured");
   debugI("Encoder initializing...");
 
-  pcnt.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
-  // Longest PCNT glitch filter (1023 APB cycles, ~12.8 us); the default 250 passes contact bounce.
-  pcnt.setFilter(1023);
   Controls::add(knob);
   Controls::add(knobButton);
 

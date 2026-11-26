@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ClickButton.h>
+#include <dcr_input.h>
 
-ClickButton ClickButton21(21, LOW);
-ClickButton ClickButton0(0, LOW);
+extern Controls::Button btn21;
+extern Controls::Button btn0;

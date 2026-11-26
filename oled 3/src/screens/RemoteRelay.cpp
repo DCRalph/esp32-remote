@@ -88,14 +88,14 @@ namespace RemoteRelayScreenNamespace
     if (menu.items[menu.getActive()] == &relay1Item)
     {
       btnLed.SetColor(255, 0, 0);
-      if (ClickButtonTRIGGER.clicks == 1)
+      if (btnTrigger.clicks() == 1)
         relay1Item.executeFunc(2);
     }
 
     if (menu.items[menu.getActive()] == &relay2Item)
     {
       btnLed.SetColor(0, 0, 255);
-      if (ClickButtonTRIGGER.clicks == 1)
+      if (btnTrigger.clicks() == 1)
         relay2Item.executeFunc(2);
     }
 

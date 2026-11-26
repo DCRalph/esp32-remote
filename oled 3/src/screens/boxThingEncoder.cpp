@@ -32,7 +32,7 @@ namespace BoxThingEncoderScreenNamespace
 
   void update()
   {
-    if (ClickButtonUP.clicks != 0 || ClickButtonDOWN.clicks != 0)
+    if (btnUp.clicks() != 0 || btnDown.clicks() != 0)
     {
       screenManager.back();
     }

@@ -20,7 +20,7 @@ namespace CarScreenNamespace
 
   void update()
   {
-    if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0)
+    if (btnDown.clicks() != 0 || btnUp.clicks() != 0)
       screenManager.back();
   }
 

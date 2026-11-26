@@ -28,7 +28,7 @@ public:
     // Add button event handlers
     lv_obj_add_event_cb(screen, [](lv_event_t *e)
                         {
-            if (ClickButtonDOWN.clicks != 0 || ClickButtonUP.clicks != 0) {
+            if (btnDown.clicks() != 0 || btnUp.clicks() != 0) {
                 screenManager.setScreen("Home");
             } }, LV_EVENT_PRESSED, nullptr);
   }

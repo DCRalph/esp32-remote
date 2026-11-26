@@ -25,7 +25,6 @@ public:
 
   void draw() override;
   void update() override;
-  void onEnter() override;
   u8 active;
 };
 
@@ -53,9 +52,4 @@ void SettingsScreen::draw()
 void SettingsScreen::update()
 {
   menu.update();
-}
-
-void SettingsScreen::onEnter()
-{
-  encoder.encoder.setPosition(0);
 }

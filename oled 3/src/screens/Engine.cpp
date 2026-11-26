@@ -117,10 +117,10 @@ namespace EngineScreenNamespace
 
   void update()
   {
-    if (ClickButtonDOWN.clicks != 0)
+    if (btnDown.clicks() != 0)
       screenManager.back();
 
-    if (ClickButtonUP.clicks == 1)
+    if (btnUp.clicks() == 1)
       testMode = !testMode;
 
     if (testMode)

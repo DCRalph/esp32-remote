@@ -1,24 +1,16 @@
 #pragma once
 #include "config.h"
 
-#include "IO/EncoderHelper.h"
-#include <ClickButton.h>
+#include <dcr_input.h>
 
 class GPIO;
 
 extern GPIO led;
 extern GPIO latch;
 extern GPIO switchPin;
-extern GPIO encoderButton;
 
-extern EncoderHelper encoder;
-
-extern ClickButton ClickButtonEnc;
-
-static void IRAM_ATTR encoderISR()
-{
-  encoder.encoder.readAB();
-}
+extern Controls::Button knobButton;
+extern Controls::Encoder knob;
 
 enum PinMode
 {

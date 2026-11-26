@@ -63,8 +63,8 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   battery.init();
 
-  ClickButton21.Update();
-  ClickButton0.Update();
+  Controls::add(btn21);
+  Controls::add(btn0);
 
   display.init();
   // screenManager.init(&display);
@@ -84,7 +84,7 @@ void setup()
 
   //********************************************
   {
-    bool setupDebug = ClickButton21.depressed;
+    bool setupDebug = btn21.pressed();
 
     display.sprite.fillScreen(TFT_BLACK);
 
@@ -134,9 +134,9 @@ void setup()
 
       display.push();
 
-      while (ClickButton21.clicks != 1)
-        ClickButton21.Update();
-      ClickButton21.Update();
+      while (btn21.clicks() != 1)
+        Controls::update();
+      Controls::update();
     }
 
     display.sprite.fillScreen(TFT_BLACK);
@@ -185,9 +185,9 @@ void setup()
 
       display.push();
 
-      while (ClickButton21.clicks != 1)
-        ClickButton21.Update();
-      ClickButton21.Update();
+      while (btn21.clicks() != 1)
+        Controls::update();
+      Controls::update();
     }
 
     display.sprite.fillScreen(TFT_BLACK);
@@ -236,19 +236,18 @@ void loop()
     mqttConnect();
   client.loop();
 
-  ClickButton21.Update();
-  ClickButton0.Update();
+  Controls::update();
 
   if (millis() - prevMillis1 > interval1)
     battery.update();
 
-  if (ClickButton21.clicks == -2)
+  if (btn21.clicks() == -2)
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 
-  if (ClickButton0.clicks > 1 || ClickButton0.clicks < 0)
+  if (btn0.clicks() > 1 || btn0.clicks() < 0)
   {
     char buf[10];
-    sprintf(buf, "%d", ClickButton0.clicks);
+    sprintf(buf, "%d", btn0.clicks());
     client.publish("esp-remote/btn0", buf);
   }
 

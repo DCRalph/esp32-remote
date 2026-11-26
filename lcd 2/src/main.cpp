@@ -34,8 +34,8 @@ TFTDisplayDriver displayDriver(LCD_WIDTH, LCD_HEIGHT, TFT_ROT);
 ButtonInput buttonInput([]
                         {
   ButtonInput::Config c;
-  c.up = []() { return (int)ClickButtonUP.clicks; };
-  c.down = []() { return (int)ClickButtonDOWN.clicks; };
+  c.up = []() { return btnUp.clicks(); };
+  c.down = []() { return btnDown.clicks(); };
   c.defaultSelectClicks = 2;
   c.multiClickSelects = true;
   return c; }());
@@ -133,7 +133,7 @@ void setup()
 
 bool sleepLoop()
 {
-  if (ClickButtonUP.depressed)
+  if (btnUp.pressed())
   {
     if (!sleepCountdown)
       sleepCountdownMillis = millis();

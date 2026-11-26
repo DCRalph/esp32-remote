@@ -27,7 +27,7 @@ void MQTTInfoScreen::draw()
 
 void MQTTInfoScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1)
+  if (knobButton.clicks() == 1)
   {
     screenManager.back();
   }

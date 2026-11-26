@@ -27,7 +27,7 @@ void MQTTSwitchScreen::draw()
 
 void MQTTSwitchScreen::update()
 {
-  if (ClickButtonEnc.clicks == 1)
+  if (knobButton.clicks() == 1)
   {
     screenManager.back();
   }

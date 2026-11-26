@@ -54,7 +54,7 @@ void MenuItem::run()
 {
   for (u8 i = 0; i < functions.size(); i++)
   {
-    if (ClickButtonEnc.clicks == functions[i].clicksToRun)
+    if (knobButton.clicks() == functions[i].clicksToRun)
     {
       functions[i].func();
       break;
@@ -291,29 +291,27 @@ void Menu::update()
 {
   if (numItems < 1)
   {
-    if (ClickButtonEnc.clicks == 1)
+    if (knobButton.clicks() == 1)
       screenManager.back();
 
     return;
   }
 
-  if (ClickButtonEnc.clicks != 0)
+  if (knobButton.clicks() != 0)
     items[active]->run();
 
-  if (encoder.encoder.getPosition() > 0)
+  if (knob.delta() > 0)
   {
     if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
       ((MenuItemNumber *)items[active])->increase();
     else
       nextItem();
-    encoder.encoder.setPosition(0);
   }
-  else if (encoder.encoder.getPosition() < 0)
+  else if (knob.delta() < 0)
   {
     if (items[active]->getType() == MenuItemType::Number && ((MenuItemNumber *)items[active])->isSelected())
       ((MenuItemNumber *)items[active])->decrease();
     else
       prevItem();
-    encoder.encoder.setPosition(0);
   }
 }

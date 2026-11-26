@@ -32,9 +32,9 @@ namespace
   {
     ButtonInput::Config c;
     c.up = []()
-    { return (int)ClickButtonUP.clicks; };
+    { return btnUp.clicks(); };
     c.down = []()
-    { return (int)ClickButtonDOWN.clicks; };
+    { return btnDown.clicks(); };
     c.defaultSelectClicks = 2;
     c.multiClickSelects = true;
     return c;
