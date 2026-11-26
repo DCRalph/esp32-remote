@@ -3,6 +3,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <dcr_input.h>
 
 namespace Device
 {
@@ -32,7 +33,11 @@ namespace Device
    */
   bool loadTouchCalibration(uint16_t (&calData)[5]);
 
-  /** Polls the power button; a long hold switches the board off. */
+  /** Samples the buttons; holding power for POWER_OFF_HOLD_MS switches the board off. */
   void loop();
   void powerOff();
+
+  // Sampled by loop(); each reading holds for that frame.
+  extern Controls::Button powerButton;
+  extern Controls::Button bootButton;
 }

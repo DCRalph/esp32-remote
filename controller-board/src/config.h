@@ -9,6 +9,7 @@ constexpr uint16_t LCD_HEIGHT = 240;
 // From bioreactor-controller src/config.h.
 constexpr uint8_t LATCH_PWR_PIN = 5;          // high holds the power supply on
 constexpr uint8_t POWER_BUTTON_PIN = 15;      // active high, pulled down
+constexpr uint8_t BOOT_BUTTON_PIN = 0;        // the ESP32-S3 BOOT button, active low
 constexpr uint8_t DISPLAY_BACKLIGHT_PIN = 38; // active level depends on hardware version
 
 // The panel turned 180 degrees from the bioreactor's orientation.

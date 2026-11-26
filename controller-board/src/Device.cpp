@@ -40,8 +40,6 @@ namespace
   constexpr uint8_t kBacklightBits = 8;
   bool backlightOn = false;
   uint8_t backlightPercent = 100;
-  uint32_t powerPressedSinceMs = 0;
-  bool powerArmed = false; // the press that switched the board on must be released first
 
   void readDeviceInfo()
   {
@@ -69,11 +67,30 @@ namespace
   }
 }
 
+Controls::Button Device::powerButton([] {
+  Controls::Button::Config c;
+  c.pin = POWER_BUTTON_PIN;
+  c.activeHigh = true;
+  c.pull = Controls::Button::Pull::Down;
+  c.longMs = POWER_OFF_HOLD_MS;
+  return c;
+}());
+
+// The repeat is only there for the Buttons screen to show.
+Controls::Button Device::bootButton([] {
+  Controls::Button::Config c;
+  c.pin = BOOT_BUTTON_PIN;
+  c.repeatMs = 200;
+  return c;
+}());
+
 void Device::begin()
 {
   pinMode(LATCH_PWR_PIN, OUTPUT);
   digitalWrite(LATCH_PWR_PIN, HIGH);
-  pinMode(POWER_BUTTON_PIN, INPUT_PULLDOWN);
+  // The press that switched the board on is still held here, so it never counts.
+  Controls::add(powerButton);
+  Controls::add(bootButton);
 
   readDeviceInfo();
   // Same choices as bioreactor-controller's setDeviceSettings(), then turned if asked.
@@ -155,18 +172,8 @@ bool Device::loadTouchCalibration(uint16_t (&calData)[5])
 
 void Device::loop()
 {
-  const bool pressed = digitalRead(POWER_BUTTON_PIN) == HIGH;
-  if (!pressed)
-  {
-    powerArmed = true;
-    powerPressedSinceMs = 0;
-    return;
-  }
-  if (!powerArmed)
-    return;
-  if (powerPressedSinceMs == 0)
-    powerPressedSinceMs = millis() | 1;
-  if (millis() - powerPressedSinceMs >= POWER_OFF_HOLD_MS)
+  Controls::update();
+  if (powerButton.longPressed())
     powerOff();
 }
 

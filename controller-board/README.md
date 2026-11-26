@@ -29,6 +29,7 @@ The heater coprocessor, pumps, RFID and battery chips are not driven at all.
 | Backlight | 38 | active high on hardware v0, v1, v4; low on v2, v3 |
 | Power latch | 5 | held high from boot |
 | Power button | 15 | active high; hold 2 s to switch off |
+| BOOT button | 0 | active low; only read by the Buttons screen |
 
 Pins and the TFT_eSPI setup are build flags in `platformio.ini`, copied from
 bioreactor-controller's `lib/TFT_eSPI/User_Setup.h` and `src/config.h`. The screen
@@ -51,6 +52,10 @@ match, so touch lines up without recalibrating.
 - **Backlight**: a brightness slider, 5-100 %. The backlight pin is driven by
   20 kHz PWM with the hardware version's polarity. The level is not saved, so
   it is back to 100 % after a restart.
+- **Buttons**: the power and BOOT buttons through dcr_input. Shows whether each
+  is pressed, how long it has been held, and its last click sequence (clicks, or
+  clicks then a long press). BOOT repeats every 200 ms while held past its long
+  press; holding power for 2 s still switches the board off.
 - **Device**: what the unit reported at boot, frame rate and memory.
 - **Power off**.
 

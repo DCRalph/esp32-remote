@@ -9,6 +9,7 @@ namespace
   MenuItemNavigate touchTestItem("Touch test", &TouchTestScreen);
   MenuItemNavigate calibrateItem("Calibrate touch", &TouchCalScreen);
   MenuItemNavigate backlightItem("Backlight", &BacklightScreen);
+  MenuItemNavigate buttonsItem("Buttons", &ButtonsScreen);
   MenuItemNavigate deviceItem("Device", &DeviceScreen);
   MenuItemAction powerItem("Power off", 1, []()
                            { Device::powerOff(); });
@@ -19,7 +20,7 @@ namespace
       return;
     for (MenuItem *item : {static_cast<MenuItem *>(&uiTestItem), static_cast<MenuItem *>(&touchTestItem),
                            static_cast<MenuItem *>(&calibrateItem), static_cast<MenuItem *>(&backlightItem),
-                           static_cast<MenuItem *>(&deviceItem),
+                           static_cast<MenuItem *>(&buttonsItem), static_cast<MenuItem *>(&deviceItem),
                            static_cast<MenuItem *>(&powerItem)})
       menu.addMenuItem(item);
   }
