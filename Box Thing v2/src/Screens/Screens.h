@@ -1,9 +1,8 @@
 // Every screen in the firmware, declared in one place.
 //
 // dcr_display navigates by `const Screen2 *` rather than by name, so anything
-// that wants to jump to a screen needs its address. Screen headers are single
-// translation units included once by main.cpp, and they reference each other
-// freely, so the declarations live here to break the ordering cycle.
+// that wants to jump to a screen needs its address. Each screen is its own .cpp;
+// StartUp and Shutdown stay headers for main.cpp, which calls into them.
 #pragma once
 
 #include <ScreenTypes.h>

@@ -1,4 +1,3 @@
-#pragma once
 
 #include <Display.h>
 #include <ScreenManager.h>
@@ -11,6 +10,10 @@
 #include "IO/BoxThingDisplay.h"
 #include "Screens/Screens.h"
 #include "Screens/Settings/WiFi/WiFiProvision.h"
+
+#undef LOG_TAG
+#define LOG_TAG "WIFI_PASS"
+#include <dcr_Logger.h>
 
 namespace
 {

@@ -1,9 +1,12 @@
-#pragma once
 
 #include <Menu.h>
 
 #include "config.h"
 #include "Screens/Screens.h"
+
+#undef LOG_TAG
+#define LOG_TAG "SETTINGS"
+#include <dcr_Logger.h>
 
 namespace
 {

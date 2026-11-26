@@ -1,4 +1,3 @@
-#pragma once
 
 #include <Display.h>
 #include <RemoteProtocol.h>
