@@ -26,7 +26,6 @@ extern Wireless &wireless;
 /** Required by dcr_netLink: it declares this extern and latches it on first join. */
 extern bool wifiConnectedAtSomePoint;
 
-extern uint64_t lastInteract;
 extern int autoOffMin;
 
 // dcr_timeProfiler key for display.render(): calls per second and duration.

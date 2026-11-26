@@ -26,24 +26,24 @@ namespace
 
   void encoderTxUpdate()
   {
-    if (ClickButtonEnc.clicks == -2)
+    if (knobButton.clicks() == -2)
       screenManager.back();
 
-    if (ClickButtonEnc.clicks != 0)
-      gEncoderTxNextClicks = ClickButtonEnc.clicks;
+    if (knobButton.clicks() != 0)
+      gEncoderTxNextClicks = knobButton.clicks();
 
     if (millis() - gEncoderTxLastSend <= 10)
       return;
 
     gEncoderTxLastSend = millis();
 
-    RemoteProtocol::Encoder::state().sendTo(wireless.broadcastAddress(), {encoderDetents(), gEncoderTxNextClicks});
+    RemoteProtocol::Encoder::state().sendTo(wireless.broadcastAddress(), {knob.position(), gEncoderTxNextClicks});
     gEncoderTxNextClicks = 0;
   }
 
   void encoderTxOnEnter()
   {
-    encoderReset();
+    knob.reset();
   }
 }
 

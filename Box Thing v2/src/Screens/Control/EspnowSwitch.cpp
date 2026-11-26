@@ -46,16 +46,16 @@ namespace
 
   void espnowSwitchUpdate()
   {
-    if (ClickButtonEnc.clicks == 1)
+    if (knobButton.clicks() == 1)
       screenManager.back();
 
-    if (ClickButtonEnc.clicks == 2)
+    if (knobButton.clicks() == 2)
     {
       espnowSwitchSendLock(0); // lock
       gEspnowSwitchState = 1;
     }
 
-    if (ClickButtonEnc.clicks == 3)
+    if (knobButton.clicks() == 3)
     {
       espnowSwitchSendLock(1); // unlock
       gEspnowSwitchState = 2;

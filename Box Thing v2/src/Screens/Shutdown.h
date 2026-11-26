@@ -59,7 +59,7 @@ namespace
     case ShutdownState::Countdown:
       if (elapsed > kShutdownCountdownMs)
         gShutdownState = ShutdownState::Warning;
-      else if (ClickButtonEnc.clicks == 1)
+      else if (knobButton.clicks() == 1)
         screenManager.back();
       break;
 

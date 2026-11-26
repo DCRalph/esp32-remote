@@ -102,7 +102,7 @@ namespace
 
   void wifiPasswordUpdate()
   {
-    const int32_t delta = encoderTakeDetents();
+    const int32_t delta = knob.delta();
     if (delta != 0)
     {
       gWiFiPasswordCharIndex = ((gWiFiPasswordCharIndex + delta) % kWiFiPasswordCharsetLen + kWiFiPasswordCharsetLen) %
@@ -110,7 +110,7 @@ namespace
       haptic.playEffect(4);
     }
 
-    switch (ClickButtonEnc.clicks)
+    switch (knobButton.clicks())
     {
     case 1:
       if (gWiFiPassword.length() < kWiFiPasswordMaxLen)
@@ -147,7 +147,6 @@ namespace
   {
     gWiFiPassword = "";
     gWiFiPasswordCharIndex = 0;
-    encoderTakeDetents(); // drop turns made before this screen
   }
 }
 

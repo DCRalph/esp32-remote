@@ -63,7 +63,7 @@ namespace
 
   void startUpUpdate()
   {
-    if (gStartUpState == StartUpState::ApStarted && ClickButtonEnc.clicks == 1)
+    if (gStartUpState == StartUpState::ApStarted && knobButton.clicks() == 1)
       screenManager.setScreen(&HomeScreen2);
   }
 }

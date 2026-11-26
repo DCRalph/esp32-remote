@@ -1,25 +1,37 @@
 #include "GPIO.h"
 
+#include <ESP32Encoder.h>
+
 #undef LOG_TAG
 #define LOG_TAG "GPIO"
 
 GpIO led(LED_PIN, Output, HIGH);
 GpIO latch(LATCH_PIN, Output);
-GpIO encoderButton(ENCODER_PIN_BUTTON, Input);
 GpIO batterySense(BATTERY_SENSE_PIN, Input);
 GpIO MCPPowerGood(MCP_POWER_GOOD_PIN, Input, LOW);
 GpIO MCPState1(MCP_STATE_1_PIN, Input, LOW);
 GpIO MCPState2(MCP_STATE_2_PIN, Input, LOW);
 
-ClickButton ClickButtonEnc(ENCODER_PIN_BUTTON, HIGH);
-
-ESP32Encoder encoder;
-
 namespace
 {
-  int64_t detentPosition = 0; // hysteresis-tracked position, in detents
-  int64_t takenDetents = 0;   // position already handed out by encoderTakeDetents()
+  ESP32Encoder pcnt;
 }
+
+// Active high on an external pull-down. Also the power button, so the press that
+// turned the box on is still held when it is added, and never counts.
+Controls::Button knobButton([]
+                            {
+  Controls::Button::Config c;
+  c.pin = ENCODER_PIN_BUTTON;
+  c.activeHigh = true;
+  c.pull = Controls::Button::Pull::None;
+  c.debounceMs = 20;
+  c.multiClickMs = 200;
+  c.longMs = 500;
+  return c; }());
+
+Controls::Encoder knob([]
+                       { return pcnt.getCount(); }, ENCODER_COUNTS_PER_DETENT);
 
 String GpIO::PinModeString(PinMode mode)
 {
@@ -131,7 +143,6 @@ void GpIO::initIO()
 
   led.init();
   latch.init();
-  encoderButton.init();
   batterySense.init();
   MCPPowerGood.init();
   MCPState1.init();
@@ -139,46 +150,14 @@ void GpIO::initIO()
 
   latch.On();
 
-  ClickButtonEnc.debounceTime = 20;
-  ClickButtonEnc.multiclickTime = 200;
-  ClickButtonEnc.longClickTime = 500;
-
   debugI("Pins configured");
   debugI("Encoder initializing...");
 
-  encoder.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
+  pcnt.attachFullQuad(ENCODER_PIN_A, ENCODER_PIN_B);
   // Longest PCNT glitch filter (1023 APB cycles, ~12.8 us); the default 250 passes contact bounce.
-  encoder.setFilter(1023);
-  encoderReset();
+  pcnt.setFilter(1023);
+  Controls::add(knob);
+  Controls::add(knobButton);
 
   debugI("Encoder initialized");
-}
-
-// A detent counts only once the shaft is ENCODER_COUNTS_PER_DETENT - 1 counts
-// past the last one, so bounce or a knob resting near a boundary cannot flicker.
-int64_t encoderDetents()
-{
-  constexpr int64_t cpd = ENCODER_COUNTS_PER_DETENT;
-  const int64_t count = encoder.getCount();
-  while (count >= detentPosition * cpd + (cpd - 1))
-    detentPosition++;
-  while (count <= detentPosition * cpd - (cpd - 1))
-    detentPosition--;
-  return detentPosition;
-}
-
-int32_t encoderTakeDetents()
-{
-  const int64_t position = encoderDetents();
-  const int32_t delta = static_cast<int32_t>(position - takenDetents);
-  takenDetents = position;
-  if (delta != 0)
-    lastInteract = millis();
-  return delta;
-}
-
-void encoderReset()
-{
-  encoder.clearCount();
-  detentPosition = takenDetents = 0;
 }
