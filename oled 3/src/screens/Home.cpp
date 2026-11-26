@@ -15,6 +15,7 @@
 #include "boxThingEncoder.h"
 #include "TestLoading.h"
 #include "Engine.h"
+#include "MeshDemo.h"
 
 namespace HomeScreenNamespace
 {
@@ -42,6 +43,7 @@ namespace HomeScreenNamespace
     static MenuItemNavigate boxThingEncoderItem{"BoxThingEncoder", &BoxThingEncoderScreen};
     static MenuItemNavigate testLoadingItem{"Test Loading", &TestLoadingScreen};
     static MenuItemNavigate engineItem{"Engine", &EngineScreen};
+    static MenuItemNavigate meshDemoItem{"Mesh demo", &MeshDemoScreen};
 
     static uint32_t fps = 0;
     static uint32_t frameUs = 0;
@@ -66,6 +68,7 @@ namespace HomeScreenNamespace
 
       menu.addMenuItem(&controlMenuItem);
       menu.addMenuItem(&settingsMenuItem);
+      menu.addMenuItem(&meshDemoItem);
       menu.addMenuItem(&remoteRelay);
       menu.addMenuItem(&boxThingEncoderItem);
       menu.addMenuItem(&testLoadingItem);

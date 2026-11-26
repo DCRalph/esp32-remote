@@ -1,13 +1,16 @@
 #pragma once
 
 #include <Direct.h>
+#include <Mesh.h>
 #include <Wireless.h>
 
 #include <cstdint>
+#include <cstring>
+#include <vector>
 
-// Point-to-point messages between the esp32-remote devices, as wireless_mesh
-// DirectComms channels. Both ends include this header, so a link's ids and
-// payloads cannot drift apart. Payloads are memcpy'd: keep them trivially copyable.
+// Messages between the esp32-remote devices: wireless_mesh DirectComms channels,
+// plus the SyncManager keys of the mesh demo. Both ends include this header, so ids
+// and payloads cannot drift apart. Payloads are memcpy'd: keep them trivially copyable.
 namespace RemoteProtocol
 {
   // Feeds direct frames from Wireless into DirectComms through a packet-type hook,
@@ -118,5 +121,53 @@ namespace RemoteProtocol
     };
 
     inline DirectChannel<Message> message() { return DirectComms::getInstance()->channel<Message>(0x0501); }
+  }
+
+  // Dual Screen hosts a mesh group that oled 3 joins (its default JOIN mode). Each
+  // member publishes its own Status; a Ping pops up on every other member.
+  namespace MeshDemo
+  {
+    struct Status
+    {
+      char name[12]; // NUL padded
+      uint8_t level; // 0-100
+    };
+
+    struct Peer
+    {
+      uint32_t deviceId;
+      Status status;
+    };
+
+    inline PropertyHandle<Status> status() { return SyncManager::getInstance()->property<Status>(0x0601); }
+    inline EventHandle<void> ping() { return SyncManager::getInstance()->event<void>(0x0602); }
+
+    inline void publish(const char *name, uint8_t level)
+    {
+      Status s{};
+      strncpy(s.name, name, sizeof(s.name) - 1);
+      s.level = level;
+      status().set(s);
+    }
+
+    /** The other group members that have published a Status. */
+    inline std::vector<Peer> peers()
+    {
+      SyncManager *mesh = SyncManager::getInstance();
+      const PropertyHandle<Status> prop = status();
+      std::vector<Peer> out;
+      if (!mesh->isInGroup())
+        return out;
+      for (const auto &kv : mesh->getGroupInfo().members)
+      {
+        const uint32_t id = kv.second.deviceId;
+        if (id == mesh->getDeviceId() || !prop.has(id))
+          continue;
+        Peer p{id, prop.get(id)};
+        p.status.name[sizeof(p.status.name) - 1] = '\0';
+        out.push_back(p);
+      }
+      return out;
+    }
   }
 }
