@@ -5,6 +5,7 @@
 namespace
 {
   Menu menu(MenuSize::Large);
+  MenuItemGroup testGroup("Test"), hardwareGroup("Hardware"), powerGroup("Power");
   MenuItemNavigate uiTestItem("UI test", &UiTest::RootScreen);
   MenuItemNavigate touchTestItem("Touch test", &TouchTestScreen);
   MenuItemNavigate calibrateItem("Calibrate touch", &TouchCalScreen);
@@ -18,10 +19,9 @@ namespace
   {
     if (!menu.items.empty())
       return;
-    for (MenuItem *item : {static_cast<MenuItem *>(&uiTestItem), static_cast<MenuItem *>(&touchTestItem),
-                           static_cast<MenuItem *>(&calibrateItem), static_cast<MenuItem *>(&backlightItem),
-                           static_cast<MenuItem *>(&buttonsItem), static_cast<MenuItem *>(&deviceItem),
-                           static_cast<MenuItem *>(&powerItem)})
+    for (MenuItem *item : std::initializer_list<MenuItem *>{&testGroup, &uiTestItem, &touchTestItem, &calibrateItem,
+                                                            &hardwareGroup, &backlightItem, &buttonsItem, &deviceItem,
+                                                            &powerGroup, &powerItem})
       menu.addMenuItem(item);
   }
 }
